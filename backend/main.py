@@ -4,7 +4,15 @@ from app.api.endpoints import uploads, dashboard, years, places, users, flowers,
 from app.db.database import engine, Base
 import uvicorn
 
+from sqlalchemy import text
 Base.metadata.create_all(bind=engine)
+
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE bill_records ADD COLUMN print_taken BOOLEAN DEFAULT FALSE;"))
+except Exception:
+    pass
+
 
 app = FastAPI(title="Excel Validation API")
 
