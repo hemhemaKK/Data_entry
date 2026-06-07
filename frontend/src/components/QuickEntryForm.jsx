@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi } from '../services/api';
 import { PlusCircle } from 'lucide-react';
 
 const QuickEntryForm = ({ onRecordAdded }) => {
+  const placeRef = useRef(null);
   const [years, setYears] = useState([]);
   const [places, setPlaces] = useState([]);
   const [users, setUsers] = useState([]);
@@ -115,6 +116,9 @@ const QuickEntryForm = ({ onRecordAdded }) => {
       if (onRecordAdded) {
         onRecordAdded();
       }
+      if (placeRef.current) {
+        placeRef.current.focus();
+      }
     } catch (err) {
       alert("Failed to add record.");
       console.error(err);
@@ -131,69 +135,70 @@ const QuickEntryForm = ({ onRecordAdded }) => {
       </div>
 
       <form onSubmit={handleSubmit}>
-        {/* Selection Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Year</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Year --</option>
+        {/* Selection Row - Vertical / Compact Stack */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxWidth: '400px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Year:</label>
+            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+              <option value="">-- Select Year --</option>
               {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
             </select>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Place</label>
-            <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Place --</option>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Place:</label>
+            <select ref={placeRef} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+              <option value="">-- Select Place --</option>
               {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>User</label>
-            <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- User --</option>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>User:</label>
+            <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+              <option value="">-- Select User --</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </div>
-          <div>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Flower</label>
-            <select className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Flower --</option>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Flower:</label>
+            <select className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+              <option value="">-- Select Flower --</option>
               {flowers.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>
           </div>
         </div>
 
-        {/* Data Entry Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '1rem', marginBottom: '1.5rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
-          <div>
+        {/* Data Entry Row with Button on same line */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
+          <div style={{ flex: '1 1 120px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div>
+          <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Van</label>
             <input type="text" value={van} onChange={e => setVan(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div>
+          <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Weight (kg)</label>
             <input type="number" step="0.001" value={weight} onChange={e => setWeight(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div>
+          <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Rate (₹)</label>
             <input type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div>
+          <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Laggage (₹)</label>
             <input type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div>
+          <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Collie (₹)</label>
             <input type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
+          <div style={{ flex: '0 0 auto' }}>
+            <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', height: '38px' }} disabled={loading || !selectedFlower}>
+              {loading ? "..." : "Add Record"}
+            </button>
+          </div>
         </div>
-
-        <button type="submit" className="btn btn-primary" style={{ width: '100%', padding: '0.75rem' }} disabled={loading || !selectedFlower}>
-          {loading ? "Adding..." : "Add Record"}
-        </button>
       </form>
     </div>
   );

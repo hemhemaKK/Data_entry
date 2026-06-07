@@ -11,6 +11,7 @@ import YearDetails from './pages/YearDetails';
 import PlaceDetails from './pages/PlaceDetails';
 import BulkAdd from './pages/BulkAdd';
 import Ledger from './pages/Ledger';
+import CustomPrint from './pages/CustomPrint';
 
 function App() {
   const [theme, setTheme] = useState('dark');
@@ -42,6 +43,7 @@ function App() {
               <Route path="/place/:placeId" element={<PlaceDetails />} />
               <Route path="/bulk-add" element={<BulkAdd />} />
               <Route path="/ledger" element={<Ledger />} />
+              <Route path="/custom-print" element={<CustomPrint />} />
             </Routes>
           </main>
         </div>

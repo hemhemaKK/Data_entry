@@ -48,6 +48,7 @@ class Place(Base):
     year_id = Column(Integer, ForeignKey("years.id"))
     year = relationship("Year", back_populates="places")
     users = relationship("User", back_populates="place", cascade="all, delete-orphan")
+    advance_entries = relationship("AdvanceEntry", back_populates="place", cascade="all, delete-orphan")
 
 class User(Base):
     __tablename__ = "users"
@@ -65,13 +66,15 @@ class AdvanceEntry(Base):
     __tablename__ = "advance_entries"
 
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    place_id = Column(Integer, ForeignKey("places.id"), nullable=True)
     date = Column(Date, nullable=False)
     advance_amount = Column(Float, default=0.0)
     deduction_amount = Column(Float, default=0.0)
     notes = Column(String, nullable=True)
     
     user = relationship("User", back_populates="advance_entries")
+    place = relationship("Place", back_populates="advance_entries")
 
 class Flower(Base):
     __tablename__ = "flowers"

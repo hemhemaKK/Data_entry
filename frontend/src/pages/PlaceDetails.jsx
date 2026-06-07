@@ -14,6 +14,7 @@ import {
   advancesApi
 } from "../services/api";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
+import { Printer } from "lucide-react";
 import ClientCard from "../components/ClientCard.jsx";
 import FlowerCard from "../components/FlowerCard.jsx";
 import axios from 'axios';
@@ -57,6 +58,10 @@ const PlaceDetails = () => {
   const [globalMonth, setGlobalMonth] = useState("");
   const [isGlobalPrinting, setIsGlobalPrinting] = useState(false);
   const [globalPrintData, setGlobalPrintData] = useState([]);
+  
+  const [columns, setColumns] = useState({
+    date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true
+  });
 
   const fetchClients = async () => {
     const data = await getUsers(placeId);
@@ -197,6 +202,129 @@ const PlaceDetails = () => {
       alert("Failed to delete flower");
     }
   };
+  const handleUserBulkPrint = async () => {
+      if (!bulkMonth && (!fromDate && !toDate)) {
+          alert("Please select a month or date range to bulk print.");
+          return;
+      }
+      
+      try {
+          setIsGlobalPrinting(true);
+          const printMap = {};
+          
+          filteredFlowers.forEach(flower => {
+              if (!flower.bill_records || flower.bill_records.length === 0) return;
+              
+              const filteredRecords = flower.bill_records.filter(r => {
+                  if (!r.date) return true;
+                  if (bulkMonth && !r.date.startsWith(bulkMonth)) return false;
+                  
+                  const recordDate = new Date(r.date);
+                  if (isNaN(recordDate.getTime())) return true;
+                  recordDate.setHours(0,0,0,0);
+
+                  if (fromDate) {
+                      const fDate = new Date(fromDate);
+                      fDate.setHours(0,0,0,0);
+                      if (recordDate < fDate) return false;
+                  }
+                  if (toDate) {
+                      const tDate = new Date(toDate);
+                      tDate.setHours(0,0,0,0);
+                      if (recordDate > tDate) return false;
+                  }
+                  return true;
+              });
+              
+              if (filteredRecords.length > 0) {
+                  if (!printMap[selectedClient.id]) {
+                      printMap[selectedClient.id] = { client: selectedClient, flowers: [] };
+                  }
+                  
+                  filteredRecords.sort((a,b) => new Date(a.date) - new Date(b.date));
+                  
+                  const totals = filteredRecords.reduce((acc, curr) => {
+                    const w = curr.weight || 0;
+                    const rt = curr.rate || 0;
+                    const l = curr.laggage || 0;
+                    const c = curr.collie || 0;
+                    acc.weight += w;
+                    acc.laggage += l;
+                    acc.collie += c;
+                    acc.price += (w * rt);
+                    return acc;
+                  }, { weight: 0, laggage: 0, collie: 0, price: 0 });
+                  
+                  printMap[selectedClient.id].flowers.push({
+                      ...flower,
+                      records: filteredRecords,
+                      totals
+                  });
+              }
+          });
+          
+          if (!printMap[selectedClient.id] || printMap[selectedClient.id].flowers.length === 0) {
+              alert("No records found for the selected date range/month.");
+              setIsGlobalPrinting(false);
+              return;
+          }
+          
+          const group = printMap[selectedClient.id];
+          const advances = await advancesApi.getUserAdvances(selectedClient.id);
+          const totalAdvance = advances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+          const totalDeduction = advances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+          
+          const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
+          const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+          const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
+          
+          const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
+          const grandTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+          
+          group.finalBalance = grandTotal - totalAdvance + totalDeduction;
+          group.clientTotalPrice = clientTotalPrice;
+          group.clientTotalLaggage = clientTotalLaggage;
+          group.clientTotalCollie = clientTotalCollie;
+          group.commissionDeduction = commissionDeduction;
+          group.grandTotal = grandTotal;
+          
+          setGlobalPrintData([group]);
+          
+          setTimeout(() => {
+              const afterPrint = async () => {
+                  window.removeEventListener('afterprint', afterPrint);
+                  setTimeout(async () => {
+                      const success = window.confirm("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
+                      
+                      const recordIds = [];
+                      group.flowers.forEach(f => {
+                          f.records.forEach(r => recordIds.push(r.id));
+                      });
+                      
+                      if (recordIds.length > 0) {
+                          try {
+                              await billRecordsApi.markRecordsPrinted(recordIds, success);
+                              fetchFlowers(selectedClient.id);
+                          } catch (err) {
+                              console.error("Failed to mark printed", err);
+                          }
+                      }
+                      setIsGlobalPrinting(false);
+                      setGlobalPrintData([]);
+                  }, 300);
+              };
+              
+              window.addEventListener('afterprint', afterPrint);
+              window.print();
+          }, 500);
+          
+      } catch (err) {
+          console.error(err);
+          alert("Failed to load records for printing");
+          setIsGlobalPrinting(false);
+      }
+  };
+
   const handleGlobalPrint = async () => {
       if (!globalMonth && (!globalFromDate && !globalToDate)) {
           alert("Please select a month or date range to bulk print.");
@@ -250,7 +378,7 @@ const PlaceDetails = () => {
                     acc.weight += w;
                     acc.laggage += l;
                     acc.collie += c;
-                    acc.price += (w * rt) + l + c;
+                    acc.price += (w * rt);
                     return acc;
                   }, { weight: 0, laggage: 0, collie: 0, price: 0 });
                   
@@ -263,6 +391,26 @@ const PlaceDetails = () => {
           });
           
           const printArray = Object.values(printMap).sort((a, b) => a.client.name.localeCompare(b.client.name));
+          
+          for (let group of printArray) {
+              const advances = await advancesApi.getUserAdvances(group.client.id);
+              const totalAdvance = advances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+              const totalDeduction = advances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+              
+              const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
+              const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+              const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
+              
+              const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
+              const grandTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+              
+              group.finalBalance = grandTotal - totalAdvance + totalDeduction;
+              group.clientTotalPrice = clientTotalPrice;
+              group.clientTotalLaggage = clientTotalLaggage;
+              group.clientTotalCollie = clientTotalCollie;
+              group.commissionDeduction = commissionDeduction;
+              group.grandTotal = grandTotal;
+          }
           
           if (printArray.length === 0) {
               alert("No records found for the selected date range/month.");
@@ -382,7 +530,8 @@ const PlaceDetails = () => {
 
   const totalAdvance = filteredAdvances.reduce((sum, a) => sum + (a.advance_amount || 0), 0);
   const totalDeduction = filteredAdvances.reduce((sum, a) => sum + (a.deduction_amount || 0), 0);
-  const finalBalance = summaryFlowerPrice - totalAdvance - totalDeduction;
+  const commissionDeduction = summaryFlowerPrice * (commissionPercent / 100);
+  const finalBalance = summaryFlowerPrice - commissionDeduction - totalAdvance - totalDeduction;
 
   // =============================================
   // VIEW: Client's Flower Details
@@ -427,34 +576,11 @@ const PlaceDetails = () => {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Weight</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{summaryWeight.toFixed(3)} kg</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Laggage</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>₹{summaryLaggage.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Collie</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>₹{summaryCollie.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Flower Price</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary)' }}>₹{summaryFlowerPrice.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Advances / Deductions</span>
-                <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'red' }}>- ₹{(totalAdvance + totalDeduction).toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid var(--border)', paddingLeft: '1rem' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Final Balance</span>
-                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: finalBalance >= 0 ? 'green' : 'red' }}>
-                    ₹{finalBalance.toFixed(2)}
-                </span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Final Balance (After advances & commission)</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: finalBalance >= 0 ? 'var(--success)' : 'red' }}>₹{finalBalance.toFixed(2)}</span>
             </div>
           </div>
         </div>
-
         <div className="no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
           <div style={{ flex: 1, minWidth: '250px' }}>
             <SearchBar value={flowerFilter} onChange={setFlowerFilter} placeholder="Search flowers..." />
@@ -485,45 +611,8 @@ const PlaceDetails = () => {
                   onChange={(e) => setBulkMonth(e.target.value)}
                   style={{ padding: '0.5rem', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                 />
-                <button className="btn btn-primary" style={{ padding: '0.5rem' }} onClick={async () => {
-                    if (!bulkMonth) {
-                        alert("Please select a month to bulk print.");
-                        return;
-                    }
-                    window.dispatchEvent(new CustomEvent('printMonth', { detail: bulkMonth }));
-                    
-                    const afterPrint = async () => {
-                        window.removeEventListener('afterprint', afterPrint);
-                        setTimeout(async () => {
-                            const success = window.confirm("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
-                            
-                            // Collect all record IDs for the bulk month to mark them
-                            const recordIds = [];
-                            filteredFlowers.forEach(f => {
-                                if (f.bill_records) {
-                                    f.bill_records.forEach(r => {
-                                        if (r.date && r.date.startsWith(bulkMonth)) {
-                                            recordIds.push(r.id);
-                                        }
-                                    });
-                                }
-                            });
-                            
-                            if (recordIds.length > 0) {
-                                try {
-                                    await billRecordsApi.markRecordsPrinted(recordIds, success);
-                                    fetchFlowers(selectedClient.id);
-                                } catch (err) {
-                                    console.error("Failed to mark printed", err);
-                                }
-                            }
-                        }, 300);
-                    };
-                    
-                    window.addEventListener('afterprint', afterPrint);
-                    setTimeout(() => window.print(), 500);
-                }}>
-                   Bulk Print Month
+                <button className="btn btn-primary" style={{ padding: '0.5rem' }} onClick={handleUserBulkPrint} disabled={isGlobalPrinting}>
+                   {isGlobalPrinting ? "Preparing..." : "Bulk Print Month"}
                 </button>
             </div>
           </div>
@@ -565,6 +654,7 @@ const PlaceDetails = () => {
                 clientName={selectedClient.name}
                 clientPhone={selectedClient.contact_number}
                 placeName={selectedPlace?.name || ''}
+                clientBalance={finalBalance}
                 fromDate={fromDate}
                 toDate={toDate}
                 commissionPercent={commissionPercent}
@@ -636,11 +726,34 @@ const PlaceDetails = () => {
           <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
             <input type="month" value={globalMonth} onChange={(e) => setGlobalMonth(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
-            <button className="btn btn-primary" onClick={handleGlobalPrint} disabled={isGlobalPrinting}>
-               {isGlobalPrinting ? "Preparing..." : "Bulk Print All"}
-            </button>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div>
+                <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Commission (%)</label>
+                <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} style={{ width: '100px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+              </div>
+              <button className="btn btn-primary" onClick={handleGlobalPrint} style={{ padding: '0.5rem 1rem' }} disabled={isGlobalPrinting}>
+                <Printer size={18} style={{ marginRight: '8px' }} />
+                {isGlobalPrinting ? 'Generating...' : 'Bulk Print'}
+              </button>
+            </div>
           </div>
-      </div>
+          
+          <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>
+            <label style={{ display: 'block', marginBottom: '0.75rem', fontSize: '0.95rem', fontWeight: 'bold' }}>Select Columns to Print:</label>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              {Object.keys(columns).map(col => (
+                <label key={col} style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', textTransform: 'capitalize' }}>
+                  <input 
+                    type="checkbox" 
+                    checked={columns[col]} 
+                    onChange={(e) => setColumns({ ...columns, [col]: e.target.checked })} 
+                  />
+                  {col}
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
 
       <SearchBar value={clientFilter} onChange={setClientFilter} placeholder="Search clients..." />
 
@@ -685,86 +798,103 @@ const PlaceDetails = () => {
       {isGlobalPrinting && (
         <div className="print-only">
             {globalPrintData.map(group => (
-                <div key={group.client.id}>
+                <div key={group.client.id} style={{ pageBreakAfter: 'always', paddingBottom: '2rem' }}>
+                    <div className="print-header" style={{ marginBottom: '1rem' }}>
+                        <img 
+                            src="/header.jpeg" 
+                            alt="Header Image" 
+                            style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
+                        />
+                        <div style={{ marginTop: '10px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
+                                <tbody>
+                                    <tr>
+                                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
+                                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{group.client.name}</td>
+                                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
+                                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{group.client.contact_number || ''}</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Dates:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', fontSize: '0.85rem' }}>
+                                          {fromDate || toDate ? `${fromDate ? fromDate : '...'} to ${toDate ? toDate : '...'}` : 'All Dates'}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{group.finalBalance.toFixed(2)}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     {group.flowers.map(flower => (
-                        <div key={flower.id} style={{ marginBottom: '2rem', pageBreakAfter: 'always' }}>
-                            <div className="print-header" style={{ marginBottom: '1rem' }}>
-                                <img 
-                                    src="/header.jpeg" 
-                                    alt="Header Image" 
-                                    style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
-                                />
-                                <div style={{ marginTop: '10px' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
-                                        <tbody>
-                                            <tr>
-                                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
-                                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{group.client.name}</td>
-                                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
-                                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{group.client.contact_number || ''}</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{flower.totals.price.toFixed(2)}</td>
-                                            </tr>
-                                            <tr>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Flower:</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{flower.name}</td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                            
+                        <div key={flower.id} style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>Flower: {flower.name}</h4>
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
-                                        <th className="col-date" style={{ padding: '4px' }}>Date</th>
-                                        <th className="col-van" style={{ padding: '4px' }}>Van</th>
-                                        <th className="col-weight" style={{ padding: '4px' }}>Weight</th>
-                                        <th className="col-rate" style={{ padding: '4px' }}>Rate</th>
-                                        <th className="col-total" style={{ padding: '4px' }}>Total</th>
-                                        <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>
-                                        <th className="col-collie" style={{ padding: '4px' }}>Collie</th>
+                                        {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
+                                        {columns.van && <th className="col-van" style={{ padding: '4px' }}>Van</th>}
+                                        {columns.weight && <th className="col-weight" style={{ padding: '4px' }}>Weight</th>}
+                                        {columns.rate && <th className="col-rate" style={{ padding: '4px' }}>Rate</th>}
+                                        {columns.total && <th className="col-total" style={{ padding: '4px' }}>Total</th>}
+                                        {columns.laggage && <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>}
+                                        {columns.collie && <th className="col-collie" style={{ padding: '4px' }}>Collie</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {flower.records.map((r, idx) => (
                                         <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
-                                            <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>
-                                            <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>
-                                            <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>
-                                            <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>
-                                            <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>
-                                            <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>
-                                            <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>
+                                            {columns.date && <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>}
+                                            {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
+                                            {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
+                                            {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
+                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
+                                            {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
+                                            {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
                                         </tr>
                                     ))}
                                 </tbody>
                             </table>
-                            <div style={{ marginTop: '12px', padding: '8px', background: 'transparent', border: '1px solid #ccc', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap', fontWeight: 'bold' }}>
+                            <div style={{ marginTop: '8px', padding: '4px', background: 'transparent', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap', fontWeight: 'bold' }}>
                                 <span>Total Weight: {flower.totals.weight.toFixed(3)} kg</span>
                                 <span>Laggage: ₹{flower.totals.laggage.toFixed(3)}</span>
                                 <span>Collie: ₹{flower.totals.collie.toFixed(3)}</span>
-                                <span>Monthly Total: ₹{flower.totals.price.toFixed(3)}</span>
-                                {commissionPercent > 0 && (
-                                    <span style={{ color: 'var(--primary)' }}>
-                                        Commission ({commissionPercent}%): ₹{(flower.totals.price * (commissionPercent / 100)).toFixed(2)}
-                                    </span>
-                                )}
+                                <span>Flower Total: ₹{flower.totals.price.toFixed(3)}</span>
                             </div>
                         </div>
                     ))}
+                    
+                    <div style={{ marginTop: '16px', padding: '12px', background: 'transparent', border: '2px solid black', fontSize: '1rem', fontWeight: 'bold' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                            <span>Total of All Flowers:</span>
+                            <span>₹{group.clientTotalPrice.toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
+                            <span>Total Laggage:</span>
+                            <span>-₹{group.clientTotalLaggage.toFixed(2)}</span>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
+                            <span>Total Collie:</span>
+                            <span>-₹{group.clientTotalCollie.toFixed(2)}</span>
+                        </div>
+                        {commissionPercent > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
+                                <span>Commission ({commissionPercent}%):</span>
+                                <span>-₹{group.commissionDeduction.toFixed(2)}</span>
+                            </div>
+                        )}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: '8px', color: 'green', fontSize: '1.1rem' }}>
+                            <span>Grand Total:</span>
+                            <span>₹{group.grandTotal.toFixed(2)}</span>
+                        </div>
+                    </div>
                 </div>
             ))}
         </div>

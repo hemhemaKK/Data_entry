@@ -60,8 +60,10 @@ class BillRecordCreate(BillRecordBase):
 
 class TransactionOut(BillRecordBase):
     id: int
+    flower_id: int
     flower_name: str
     client_name: str
+    place_name: str
 
     class Config:
         orm_mode = True
@@ -91,7 +93,8 @@ class Flower(FlowerBase):
         from_attributes = True
 
 class AdvanceEntryBase(BaseModel):
-    user_id: int
+    user_id: Optional[int] = None
+    place_id: Optional[int] = None
     date: datetime.date
     advance_amount: Optional[float] = 0.0
     deduction_amount: Optional[float] = 0.0

@@ -10,7 +10,7 @@ const formatMonthLabel = (yyyyMm) => {
   return date.toLocaleString('default', { month: 'long', year: 'numeric' });
 };
 
-const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDeleteRecord, onRecordsUpdated, flowerName, clientName, clientPhone, placeName, printTargetMonth, flowerId }) => {
+const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDeleteRecord, onRecordsUpdated, flowerName, clientName, clientPhone, placeName, clientBalance, printTargetMonth, flowerId }) => {
   const [expanded, setExpanded] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
@@ -136,7 +136,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>{placeName || ''}</td>
                         <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{totals.price.toFixed(2)}</td>
+                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{(clientBalance !== undefined ? clientBalance : totals.price).toFixed(2)}</td>
                     </tr>
                     <tr>
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Flower:</td>
@@ -248,9 +248,14 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
             <span><strong>Collie:</strong> ₹{totals.collie.toFixed(3)}</span>
             <span><strong>Monthly Total:</strong> ₹{totals.price.toFixed(3)}</span>
             {commissionPercent > 0 && (
-              <span style={{ color: 'var(--primary)' }}>
-                <strong>Commission ({commissionPercent}%):</strong> ₹{(totals.price * (commissionPercent / 100)).toFixed(2)}
-              </span>
+              <>
+                <span style={{ color: 'red' }}>
+                  <strong>Commission ({commissionPercent}%):</strong> -₹{(totals.price * (commissionPercent / 100)).toFixed(2)}
+                </span>
+                <span style={{ color: 'green', fontSize: '1rem' }}>
+                  <strong>Grand Total:</strong> ₹{(totals.price - (totals.price * (commissionPercent / 100))).toFixed(2)}
+                </span>
+              </>
             )}
           </div>
         </div>
@@ -316,7 +321,7 @@ const InlineAddForm = ({ flowerId, onSave, onCancel }) => {
   );
 };
 
-const FlowerCard = ({ flower, clientName, fromDate, toDate, commissionPercent, onEdit, onDelete, onRecordsUpdated }) => {
+const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance, fromDate, toDate, commissionPercent, onEdit, onDelete, onRecordsUpdated }) => {
   const [expanded, setExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [printTargetMonth, setPrintTargetMonth] = useState(null);
@@ -453,6 +458,9 @@ const FlowerCard = ({ flower, clientName, fromDate, toDate, commissionPercent, o
                 flowerId={flower.id}
                 flowerName={flower.name}
                 clientName={clientName}
+                clientPhone={clientPhone}
+                placeName={placeName}
+                clientBalance={clientBalance}
                 records={groupedRecords[month]} 
                 commissionPercent={commissionPercent}
                 onUpdateRecord={handleUpdateRecord}

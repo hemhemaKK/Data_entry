@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Upload, FileSpreadsheet, Table2, Users, Wallet } from 'lucide-react';
+import { LayoutDashboard, Upload, FileSpreadsheet, Table2, Users, Wallet, Printer } from 'lucide-react';
 
 const Navbar = () => (
   <aside className="sidebar">
@@ -33,6 +33,11 @@ const Navbar = () => (
         <li>
           <NavLink to="/ledger" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Wallet size={20} /> Ledger
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/custom-print" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Printer size={20} /> Custom Print
           </NavLink>
         </li>
       </ul>

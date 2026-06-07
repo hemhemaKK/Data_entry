@@ -22,7 +22,18 @@ const BulkAdd = () => {
   const fetchYears = async () => {
     try {
       const data = await getYears();
-      setYears(data || []);
+      const yearsData = data || [];
+      setYears(yearsData);
+      
+      if (yearsData.length > 0) {
+        const currentYearStr = new Date().getFullYear().toString();
+        const currentYearObj = yearsData.find(y => y.year === currentYearStr);
+        if (currentYearObj) {
+            handleYearChange({ target: { value: currentYearObj.id } });
+        } else {
+            handleYearChange({ target: { value: yearsData[0].id } });
+        }
+      }
     } catch (err) {
       console.error(err);
     }

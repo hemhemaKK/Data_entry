@@ -164,9 +164,15 @@ th, td {
   border-bottom: 1px solid var(--border);
 }
 
+td {
+  font-weight: 600;
+}
+
 th {
   color: var(--text-secondary);
   font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.75rem 1rem;
   background-color: rgba(0, 0, 0, 0.02);
 }
 

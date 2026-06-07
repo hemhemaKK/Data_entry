@@ -19,6 +19,9 @@ const Ledger = () => {
   
   const [loading, setLoading] = useState(false);
 
+  const [searchQuery, setSearchQuery] = useState('');
+  const [allUsersForYear, setAllUsersForYear] = useState([]);
+
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     setDate(today);
@@ -28,7 +31,18 @@ const Ledger = () => {
   const fetchYears = async () => {
     try {
       const data = await getYears();
-      setYears(data || []);
+      const yearsData = data || [];
+      setYears(yearsData);
+      
+      if (yearsData.length > 0) {
+        const currentYearStr = new Date().getFullYear().toString();
+        const currentYearObj = yearsData.find(y => y.year === currentYearStr);
+        if (currentYearObj) {
+            handleYearChange({ target: { value: currentYearObj.id } });
+        } else {
+            handleYearChange({ target: { value: yearsData[0].id } });
+        }
+      }
     } catch (err) {
       console.error(err);
     }
@@ -44,10 +58,23 @@ const Ledger = () => {
     if (yId) {
       try {
         const p = await getPlaces(yId);
-        setPlaces(p || []);
+        const placesData = p || [];
+        setPlaces(placesData);
+        
+        // Fetch all users to allow global search by name or place
+        const allU = await getUsers();
+        const validPlaceIds = new Set(placesData.map(pl => pl.id));
+        const usersInYear = (allU || []).filter(u => validPlaceIds.has(u.place_id)).map(u => ({
+           ...u,
+           placeName: placesData.find(pl => pl.id === u.place_id)?.name || 'Unknown'
+        }));
+        setAllUsersForYear(usersInYear);
+        setUsers(usersInYear); // By default show all users for the year if no place selected
       } catch (err) { console.error(err); }
     } else {
       setPlaces([]);
+      setAllUsersForYear([]);
+      setUsers([]);
     }
   };
 
@@ -57,12 +84,10 @@ const Ledger = () => {
     setSelectedUser('');
     setEntries([]);
     if (pId) {
-      try {
-        const u = await getUsers(pId);
-        setUsers(u || []);
-      } catch (err) { console.error(err); }
+      const filtered = allUsersForYear.filter(u => u.place_id === parseInt(pId));
+      setUsers(filtered);
     } else {
-      setUsers([]);
+      setUsers(allUsersForYear);
     }
   };
 
@@ -76,10 +101,10 @@ const Ledger = () => {
     }
   };
 
-  const fetchEntries = async (uId) => {
+  const fetchEntries = async (id) => {
     setLoading(true);
     try {
-      const data = await advancesApi.getUserAdvances(uId);
+      const data = await advancesApi.getUserAdvances(id);
       setEntries(data || []);
     } catch (err) {
       console.error(err);
@@ -88,9 +113,17 @@ const Ledger = () => {
     }
   };
 
+  useEffect(() => {
+    setEntries([]);
+    if (selectedUser) {
+        fetchEntries(selectedUser);
+    }
+  }, [selectedUser]);
+
   const handleAddEntry = async (e) => {
     e.preventDefault();
-    if (!selectedUser || !date) return;
+    if (!selectedUser) return;
+    if (!date) return;
     
     const adv = parseFloat(advanceAmount) || 0;
     const ded = parseFloat(deductionAmount) || 0;
@@ -99,13 +132,15 @@ const Ledger = () => {
 
     setLoading(true);
     try {
-      await advancesApi.createAdvance({
-        user_id: parseInt(selectedUser),
+      const payload = {
         date: date,
         advance_amount: adv,
         deduction_amount: ded,
-        notes: notes
-      });
+        notes: notes,
+        user_id: parseInt(selectedUser)
+      };
+
+      await advancesApi.createAdvance(payload);
       setAdvanceAmount('');
       setDeductionAmount('');
       setNotes('');
@@ -138,20 +173,45 @@ const Ledger = () => {
         <h1 className="page-title"><Wallet className="icon" /> Ledger: Advances & Deductions</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+
         <select className="select-input" value={selectedYear} onChange={handleYearChange}>
           <option value="">-- Select Year --</option>
           {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
         </select>
         
         <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear}>
-          <option value="">-- Select Place --</option>
+          <option value="">-- All Places --</option>
           {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
 
-        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace}>
+        <input 
+          type="text" 
+          placeholder="Search by name or place..." 
+          value={searchQuery}
+          onChange={(e) => {
+            const query = e.target.value;
+            setSearchQuery(query);
+            if (query.trim() !== '') {
+                const filtered = users.filter(u => 
+                     (u.name || '').toLowerCase().includes(query.toLowerCase()) || 
+                     (u.placeName || '').toLowerCase().includes(query.toLowerCase())
+                );
+                if (filtered.length > 0) {
+                    setSelectedUser(filtered[0].id.toString());
+                }
+            }
+          }}
+          className="select-input"
+          style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+        />
+
+        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear}>
           <option value="">-- Select User --</option>
-          {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+          {users.filter(u => 
+             (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+             (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
+          ).map(u => <option key={u.id} value={u.id}>{u.name} ({u.placeName})</option>)}
         </select>
       </div>
 
@@ -199,26 +259,39 @@ const Ledger = () => {
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
                     <th style={{ padding: '8px' }}>Date</th>
-                    <th style={{ padding: '8px', color: 'green' }}>Advance</th>
-                    <th style={{ padding: '8px', color: 'red' }}>Deduction</th>
+                    <th style={{ padding: '8px' }}>Previous Balance</th>
+                    <th style={{ padding: '8px', color: 'green' }}>Advance Added</th>
+                    <th style={{ padding: '8px', color: 'red' }}>Amount Deducted</th>
+                    <th style={{ padding: '8px', color: 'var(--primary)' }}>New Balance</th>
                     <th style={{ padding: '8px' }}>Notes</th>
                     <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {entries.map(e => (
-                    <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '8px' }}>{e.date}</td>
-                      <td style={{ padding: '8px', color: 'green' }}>{e.advance_amount > 0 ? `₹${e.advance_amount.toFixed(2)}` : '-'}</td>
-                      <td style={{ padding: '8px', color: 'red' }}>{e.deduction_amount > 0 ? `₹${e.deduction_amount.toFixed(2)}` : '-'}</td>
-                      <td style={{ padding: '8px' }}>{e.notes || '-'}</td>
-                      <td style={{ padding: '8px', textAlign: 'right' }}>
-                        <button onClick={() => handleDelete(e.id)} className="icon-btn icon-btn-sm icon-btn-danger">
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {(() => {
+                    let runningBalance = 0;
+                    const entriesWithBalance = [...entries].reverse().map(e => {
+                        const prev = runningBalance;
+                        runningBalance += (e.advance_amount || 0) - (e.deduction_amount || 0);
+                        return { ...e, previousBalance: prev, newBalance: runningBalance };
+                    }).reverse();
+                    
+                    return entriesWithBalance.map(e => (
+                      <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                        <td style={{ padding: '8px' }}>{e.date}</td>
+                        <td style={{ padding: '8px', fontWeight: 'bold' }}>₹{e.previousBalance.toFixed(2)}</td>
+                        <td style={{ padding: '8px', color: 'green' }}>{e.advance_amount > 0 ? `₹${e.advance_amount.toFixed(2)}` : '-'}</td>
+                        <td style={{ padding: '8px', color: 'red' }}>{e.deduction_amount > 0 ? `₹${e.deduction_amount.toFixed(2)}` : '-'}</td>
+                        <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>₹{e.newBalance.toFixed(2)}</td>
+                        <td style={{ padding: '8px' }}>{e.notes || '-'}</td>
+                        <td style={{ padding: '8px', textAlign: 'right' }}>
+                          <button onClick={() => handleDelete(e.id)} className="icon-btn icon-btn-sm icon-btn-danger">
+                            <Trash2 size={14} />
+                          </button>
+                        </td>
+                      </tr>
+                    ));
+                  })()}
                 </tbody>
               </table>
             )}

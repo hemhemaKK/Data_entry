@@ -11,12 +11,21 @@ router = APIRouter()
 def get_user_advances(user_id: int, db: Session = Depends(get_db)):
     return db.query(AdvanceEntry).filter(AdvanceEntry.user_id == user_id).order_by(AdvanceEntry.date.desc()).all()
 
+@router.get("/place/{place_id}", response_model=List[AdvanceEntrySchema])
+def get_place_advances(place_id: int, db: Session = Depends(get_db)):
+    return db.query(AdvanceEntry).filter(AdvanceEntry.place_id == place_id).order_by(AdvanceEntry.date.desc()).all()
+
 @router.post("/", response_model=AdvanceEntrySchema)
 def create_advance(advance: AdvanceEntryCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == advance.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
+    if not advance.user_id and not advance.place_id:
+        raise HTTPException(status_code=400, detail="Must provide user_id or place_id")
+    
+    if advance.user_id:
+        user = db.query(User).filter(User.id == advance.user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+            
+    # Assuming place exists if place_id is given (can also check if needed)
     db_advance = AdvanceEntry(**advance.dict())
     db.add(db_advance)
     db.commit()

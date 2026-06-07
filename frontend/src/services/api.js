@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'https://data-entry-ed9f.onrender.com/api';
+const API_BASE_URL = 'http://localhost:8000/api';
 
 export const createYear = async (year) => {
   const response = await axios.post(`${API_BASE_URL}/years`, { year });
@@ -182,6 +182,10 @@ export const bulkApi = {
 export const advancesApi = {
     getUserAdvances: async (userId) => {
         const response = await axios.get(`${API_BASE_URL}/advances/user/${userId}`);
+        return response.data;
+    },
+    getPlaceAdvances: async (placeId) => {
+        const response = await axios.get(`${API_BASE_URL}/advances/place/${placeId}`);
         return response.data;
     },
     createAdvance: async (payload) => {

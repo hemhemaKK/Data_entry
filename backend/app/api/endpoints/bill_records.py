@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.db.database import get_db
-from app.db.models import BillRecord, Flower, User
+from app.db.models import BillRecord, Flower, User, Place
 from app.schemas.hierarchy import BillRecordCreate, BillRecord as BillRecordSchema, TransactionOut, MarkPrintedPayload
 
 router = APIRouter()
@@ -11,17 +11,19 @@ router = APIRouter()
 @router.get("/transactions", response_model=List[TransactionOut])
 def get_all_transactions(db: Session = Depends(get_db)):
     records = (
-        db.query(BillRecord, Flower, User)
+        db.query(BillRecord, Flower, User, Place)
         .join(Flower, BillRecord.flower_id == Flower.id)
         .join(User, Flower.user_id == User.id)
+        .join(Place, User.place_id == Place.id)
         .order_by(BillRecord.date.desc())
         .all()
     )
     
     result = []
-    for br, f, u in records:
+    for br, f, u, p in records:
         result.append({
             "id": br.id,
+            "flower_id": br.flower_id,
             "date": br.date,
             "weight": br.weight,
             "van": br.van,
@@ -30,7 +32,8 @@ def get_all_transactions(db: Session = Depends(get_db)):
             "collie": br.collie,
             "print_taken": br.print_taken,
             "flower_name": f.name,
-            "client_name": u.name
+            "client_name": u.name,
+            "place_name": p.name
         })
     return result
 
