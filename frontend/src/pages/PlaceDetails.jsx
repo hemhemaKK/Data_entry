@@ -11,6 +11,7 @@ import {
   deleteFlower,
   billRecordsApi,
   getPlace,
+  advancesApi
 } from "../services/api";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import ClientCard from "../components/ClientCard.jsx";
@@ -44,6 +45,7 @@ const PlaceDetails = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [bulkMonth, setBulkMonth] = useState("");
+  const [clientAdvances, setClientAdvances] = useState([]);
   const [printCols, setPrintCols] = useState({ date: true, weight: true, van: true, rate: true, laggage: true, collie: true });
   const [selectedPlace, setSelectedPlace] = useState(null);
 
@@ -79,13 +81,23 @@ const PlaceDetails = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placeId]);
 
-  // When a client is selected, fetch their flowers
+  // When a client is selected, fetch their flowers and advances
   useEffect(() => {
     if (selectedClient) {
       fetchFlowers(selectedClient.id);
+      fetchClientAdvances(selectedClient.id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedClient]);
+
+  const fetchClientAdvances = async (userId) => {
+    try {
+      const data = await advancesApi.getUserAdvances(userId);
+      setClientAdvances(data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   // Sync print columns to body classes for CSS handling (WYSIWYG)
   useEffect(() => {
@@ -303,8 +315,68 @@ const PlaceDetails = () => {
   const filteredFlowers = [...flowers]
     .sort((a, b) => b.id - a.id)
     .filter(
-      (f) => f.name.toLowerCase().includes(flowerFilter.toLowerCase())
+      (f) => f.name.toLowerCase().includes(flowerFilter.toLowerCase()) && f.bill_records && f.bill_records.length > 0
     );
+
+  // Calculate Client Summary
+  let summaryWeight = 0;
+  let summaryLaggage = 0;
+  let summaryCollie = 0;
+  let summaryFlowerPrice = 0;
+
+  filteredFlowers.forEach(flower => {
+      // Apply the same date filters as FlowerCard to calculate accurate summary
+      const fRecords = (flower.bill_records || []).filter(r => {
+        if (!r.date) return true;
+        const recordDate = new Date(r.date);
+        if (isNaN(recordDate.getTime())) return true;
+        recordDate.setHours(0,0,0,0);
+        if (fromDate) {
+            const fD = new Date(fromDate);
+            fD.setHours(0,0,0,0);
+            if (recordDate < fD) return false;
+        }
+        if (toDate) {
+            const tD = new Date(toDate);
+            tD.setHours(0,0,0,0);
+            if (recordDate > tD) return false;
+        }
+        return true;
+      });
+
+      fRecords.forEach(r => {
+          const w = r.weight || 0;
+          const rt = r.rate || 0;
+          const l = r.laggage || 0;
+          const c = r.collie || 0;
+          summaryWeight += w;
+          summaryLaggage += l;
+          summaryCollie += c;
+          summaryFlowerPrice += (w * rt) + l + c;
+      });
+  });
+
+  const filteredAdvances = clientAdvances.filter(a => {
+      if (!a.date) return true;
+      const aDate = new Date(a.date);
+      if (isNaN(aDate.getTime())) return true;
+      aDate.setHours(0,0,0,0);
+      if (fromDate) {
+          const fD = new Date(fromDate);
+          fD.setHours(0,0,0,0);
+          if (aDate < fD) return false;
+      }
+      if (toDate) {
+          const tD = new Date(toDate);
+          tD.setHours(0,0,0,0);
+          if (aDate > tD) return false;
+      }
+      return true;
+  });
+
+  const totalAdvance = filteredAdvances.reduce((sum, a) => sum + (a.advance_amount || 0), 0);
+  const totalDeduction = filteredAdvances.reduce((sum, a) => sum + (a.deduction_amount || 0), 0);
+  const finalBalance = summaryFlowerPrice - totalAdvance - totalDeduction;
 
   // =============================================
   // VIEW: Client's Flower Details
@@ -326,9 +398,41 @@ const PlaceDetails = () => {
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>{selectedClient.contact_number}</p>
             )}
           </div>
-          <button className="btn" onClick={() => { setEditFlower(null); setShowFlowerForm(true); }}>
-            <FaPlus size={12} /> Add Flower
-          </button>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn" onClick={() => { setEditFlower(null); setShowFlowerForm(true); }}>
+              <FaPlus size={12} /> Add Flower
+            </button>
+          </div>
+        </div>
+
+        {/* Client Balance Summary */}
+        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Weight</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{summaryWeight.toFixed(3)} kg</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Laggage</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>₹{summaryLaggage.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Collie</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>₹{summaryCollie.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Flower Price</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'var(--primary)' }}>₹{summaryFlowerPrice.toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Advances / Deductions</span>
+                <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: 'red' }}>- ₹{(totalAdvance + totalDeduction).toFixed(2)}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', borderLeft: '2px solid var(--border)', paddingLeft: '1rem' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Final Balance</span>
+                <span style={{ fontSize: '1.25rem', fontWeight: 'bold', color: finalBalance >= 0 ? 'green' : 'red' }}>
+                    ₹{finalBalance.toFixed(2)}
+                </span>
+            </div>
         </div>
 
         <div className="no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>

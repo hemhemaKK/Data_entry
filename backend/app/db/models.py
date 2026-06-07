@@ -59,6 +59,19 @@ class User(Base):
     place_id = Column(Integer, ForeignKey("places.id"))
     place = relationship("Place", back_populates="users")
     flowers = relationship("Flower", back_populates="user", cascade="all, delete-orphan")
+    advance_entries = relationship("AdvanceEntry", back_populates="user", cascade="all, delete-orphan")
+
+class AdvanceEntry(Base):
+    __tablename__ = "advance_entries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"))
+    date = Column(Date, nullable=False)
+    advance_amount = Column(Float, default=0.0)
+    deduction_amount = Column(Float, default=0.0)
+    notes = Column(String, nullable=True)
+    
+    user = relationship("User", back_populates="advance_entries")
 
 class Flower(Base):
     __tablename__ = "flowers"

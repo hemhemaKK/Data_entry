@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Upload, FileSpreadsheet, Table2 } from 'lucide-react';
+import { LayoutDashboard, Upload, FileSpreadsheet, Table2, Users, Wallet } from 'lucide-react';
 
 const Navbar = () => (
   <aside className="sidebar">
@@ -23,6 +23,16 @@ const Navbar = () => (
         <li>
           <NavLink to="/transactions" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Table2 size={20} /> Transactions
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/bulk-add" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Users size={20} /> Bulk Add
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/ledger" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <Wallet size={20} /> Ledger
           </NavLink>
         </li>
       </ul>

@@ -9,6 +9,8 @@ import Transactions from './pages/Transactions';
 import ValidationResults from './pages/ValidationResults';
 import YearDetails from './pages/YearDetails';
 import PlaceDetails from './pages/PlaceDetails';
+import BulkAdd from './pages/BulkAdd';
+import Ledger from './pages/Ledger';
 
 function App() {
   const [theme, setTheme] = useState('dark');
@@ -38,6 +40,8 @@ function App() {
               <Route path="/results/:id" element={<ValidationResults />} />
               <Route path="/year/:yearId" element={<YearDetails />} />
               <Route path="/place/:placeId" element={<PlaceDetails />} />
+              <Route path="/bulk-add" element={<BulkAdd />} />
+              <Route path="/ledger" element={<Ledger />} />
             </Routes>
           </main>
         </div>

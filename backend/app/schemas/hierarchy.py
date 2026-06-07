@@ -89,3 +89,32 @@ class Flower(FlowerBase):
     class Config:
         orm_mode = True
         from_attributes = True
+
+class AdvanceEntryBase(BaseModel):
+    user_id: int
+    date: datetime.date
+    advance_amount: Optional[float] = 0.0
+    deduction_amount: Optional[float] = 0.0
+    notes: Optional[str] = None
+
+class AdvanceEntryCreate(AdvanceEntryBase):
+    pass
+
+class AdvanceEntry(AdvanceEntryBase):
+    id: int
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
+class BulkPlacesCreate(BaseModel):
+    year_id: int
+    names: List[str]
+
+class BulkUsersCreate(BaseModel):
+    place_id: int
+    names: List[str]
+
+class BulkFlowersCreate(BaseModel):
+    place_id: int
+    flower_names: List[str]
+
