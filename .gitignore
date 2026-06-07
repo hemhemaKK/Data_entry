@@ -1,0 +1,31 @@
+# Python / Backend
+backend/venv/
+backend/__pycache__/
+backend/.pytest_cache/
+*.pyc
+*.pyo
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.eslintcache
+
+# Databases & Uploads
+*.db
+*.sqlite3
+backend/sql_app.db
+backend/bill_entry.db
+backend/uploads/
+backend/reports/
+uploads/
+reports/
+
+# Excel & Temp Files
+*.xlsx
+*.xls
+~$*.xlsx
+*.csv
+.DS_Store
+
+# Environment
+.env

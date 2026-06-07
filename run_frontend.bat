@@ -1,0 +1,9 @@
+@echo off
+echo Setting up and starting the Frontend Server...
+cd frontend
+echo Installing Node.js dependencies...
+call npm install
+call npm install axios react-router-dom lucide-react
+echo Starting Vite server...
+call npm run dev
+pause

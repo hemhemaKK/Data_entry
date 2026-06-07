@@ -1,0 +1,49 @@
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Sun, Moon } from 'lucide-react';
+import Navbar from './components/Navbar';
+import ThemeProvider from './components/ThemeProvider';
+import Home from './pages/Home';
+import UploadPage from './pages/Upload';
+import Transactions from './pages/Transactions';
+import ValidationResults from './pages/ValidationResults';
+import YearDetails from './pages/YearDetails';
+import PlaceDetails from './pages/PlaceDetails';
+
+function App() {
+  const [theme, setTheme] = useState('dark');
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(theme === 'dark' ? 'light' : 'dark');
+
+  return (
+    <ThemeProvider>
+      <Router>
+        <div className="app-container">
+          <Navbar />
+          <main className="main-content">
+            <header className="header">
+              <div></div>
+              <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
+                {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
+              </button>
+            </header>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/upload" element={<UploadPage />} />
+              <Route path="/transactions" element={<Transactions />} />
+              <Route path="/results/:id" element={<ValidationResults />} />
+              <Route path="/year/:yearId" element={<YearDetails />} />
+              <Route path="/place/:placeId" element={<PlaceDetails />} />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </ThemeProvider>
+  );
+}
+
+export default App;
