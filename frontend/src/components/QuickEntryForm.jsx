@@ -236,9 +236,9 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         </div>
       </form>
 
-      {/* Right Column: Year Management */}
+      {/* Right Column: Years */}
       <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Year Management</h3>
+        <h3 style={{ fontSize: '1.2rem', margin: 0 }}>Years</h3>
         <form onSubmit={handleCreateYear} style={{ display: 'flex', gap: '0.5rem' }}>
           <input 
             type="number" 
@@ -246,19 +246,19 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             value={newYear} 
             onChange={e => setNewYear(e.target.value)} 
             required 
-            style={{ width: '80px', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
+            style={{ width: '90px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
           />
-          <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>Add</button>
+          <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Add</button>
         </form>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
           {years.map(y => (
-            <div key={y.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', gap: '0.5rem', fontSize: '0.9rem' }}>
+            <div key={y.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.5rem 0.75rem', borderRadius: '6px', border: '1px solid var(--border)', gap: '0.75rem', fontSize: '1rem' }}>
               <Link to={`/year/${y.id}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'var(--text-primary)' }} title="View details">
                 {y.year}
               </Link>
-              <div style={{ borderLeft: '1px solid var(--border)', height: '16px', margin: '0 2px' }}></div>
-              <button type="button" onClick={() => handleEditYear(y.id, y.year)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} title="Edit">✏️</button>
-              <button type="button" onClick={() => handleDeleteYear(y.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} title="Delete">❌</button>
+              <div style={{ borderLeft: '1px solid var(--border)', height: '18px', margin: '0 2px' }}></div>
+              <button type="button" onClick={() => handleEditYear(y.id, y.year)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title="Edit">✏️</button>
+              <button type="button" onClick={() => handleDeleteYear(y.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title="Delete">❌</button>
             </div>
           ))}
         </div>
