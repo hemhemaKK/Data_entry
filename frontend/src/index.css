@@ -739,6 +739,10 @@ tr:hover td {
 }
 
 /* ========== Print Styles ========== */
+.print-only {
+  display: none;
+}
+
 @media print {
   @page {
     margin: 0; /* Forces browser to remove default URL and Title headers */
@@ -747,6 +751,10 @@ tr:hover td {
   /* Hide UI elements that shouldn't be printed */
   .sidebar, .header, .theme-toggle, .no-print, button, input, .search-bar, .place-details-header, .back-btn, .client-grid, .dropzone {
     display: none !important;
+  }
+  
+  .print-only {
+    display: block !important;
   }
   
   /* Remove background colors for cleaner printing */

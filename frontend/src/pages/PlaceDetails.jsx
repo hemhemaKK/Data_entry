@@ -47,6 +47,13 @@ const PlaceDetails = () => {
   const [printCols, setPrintCols] = useState({ date: true, weight: true, van: true, rate: true, laggage: true, collie: true });
   const [selectedPlace, setSelectedPlace] = useState(null);
 
+  // ----- Global Print State -----
+  const [globalFromDate, setGlobalFromDate] = useState("");
+  const [globalToDate, setGlobalToDate] = useState("");
+  const [globalMonth, setGlobalMonth] = useState("");
+  const [isGlobalPrinting, setIsGlobalPrinting] = useState(false);
+  const [globalPrintData, setGlobalPrintData] = useState([]);
+
   const fetchClients = async () => {
     const data = await getUsers(placeId);
     setClients(data);
@@ -176,7 +183,102 @@ const PlaceDetails = () => {
       alert("Failed to delete flower");
     }
   };
-
+  const handleGlobalPrint = async () => {
+      if (!globalMonth && (!globalFromDate && !globalToDate)) {
+          alert("Please select a month or date range to bulk print.");
+          return;
+      }
+      
+      try {
+          setIsGlobalPrinting(true);
+          const allFlowers = await getFlowers(placeId);
+          const printMap = {};
+          
+          allFlowers.forEach(flower => {
+              if (!flower.bill_records || flower.bill_records.length === 0) return;
+              
+              const filteredRecords = flower.bill_records.filter(r => {
+                  const d = r.date;
+                  if (!d) return false;
+                  if (globalMonth && !d.startsWith(globalMonth)) return false;
+                  if (globalFromDate && d < globalFromDate) return false;
+                  if (globalToDate && d > globalToDate) return false;
+                  return true;
+              });
+              
+              if (filteredRecords.length > 0) {
+                  const client = clients.find(c => c.id === flower.user_id) || { name: 'Unknown', id: flower.user_id };
+                  
+                  if (!printMap[client.id]) {
+                      printMap[client.id] = { client, flowers: [] };
+                  }
+                  
+                  filteredRecords.sort((a,b) => new Date(a.date) - new Date(b.date));
+                  
+                  const totals = filteredRecords.reduce((acc, curr) => {
+                    const w = curr.weight || 0;
+                    const rt = curr.rate || 0;
+                    const l = curr.laggage || 0;
+                    const c = curr.collie || 0;
+                    acc.weight += w;
+                    acc.laggage += l;
+                    acc.collie += c;
+                    acc.price += (w * rt) + l + c;
+                    return acc;
+                  }, { weight: 0, laggage: 0, collie: 0, price: 0 });
+                  
+                  printMap[client.id].flowers.push({
+                      ...flower,
+                      records: filteredRecords,
+                      totals
+                  });
+              }
+          });
+          
+          const printArray = Object.values(printMap).sort((a, b) => a.client.name.localeCompare(b.client.name));
+          
+          if (printArray.length === 0) {
+              alert("No records found for the selected date range/month.");
+              setIsGlobalPrinting(false);
+              return;
+          }
+          
+          setGlobalPrintData(printArray);
+          
+          setTimeout(() => {
+              const afterPrint = async () => {
+                  window.removeEventListener('afterprint', afterPrint);
+                  setTimeout(async () => {
+                      const success = window.confirm("Did the global document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
+                      
+                      const recordIds = [];
+                      printArray.forEach(group => {
+                          group.flowers.forEach(f => {
+                              f.records.forEach(r => recordIds.push(r.id));
+                          });
+                      });
+                      
+                      if (recordIds.length > 0) {
+                          try {
+                              await billRecordsApi.markRecordsPrinted(recordIds, success);
+                          } catch (err) {
+                              console.error("Failed to mark printed", err);
+                          }
+                      }
+                      setIsGlobalPrinting(false);
+                  }, 300);
+              };
+              
+              window.addEventListener('afterprint', afterPrint);
+              window.print();
+          }, 500);
+          
+      } catch (err) {
+          console.error(err);
+          alert("Failed to load records for printing");
+          setIsGlobalPrinting(false);
+      }
+  };
   const filteredClients = [...clients]
     .sort((a, b) => b.id - a.id)
     .filter(
@@ -372,6 +474,26 @@ const PlaceDetails = () => {
         </button>
       </div>
 
+      <div className="no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ fontWeight: 600, color: 'var(--primary)' }}>Print All Clients:</div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>From:</label>
+            <input type="date" value={globalFromDate} onChange={(e) => setGlobalFromDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>To:</label>
+            <input type="date" value={globalToDate} onChange={(e) => setGlobalToDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+            {(globalFromDate || globalToDate) && (
+                <button className="btn btn-secondary" onClick={() => { setGlobalFromDate(''); setGlobalToDate(''); }}>Clear</button>
+            )}
+          </div>
+          <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
+            <input type="month" value={globalMonth} onChange={(e) => setGlobalMonth(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+            <button className="btn btn-primary" onClick={handleGlobalPrint} disabled={isGlobalPrinting}>
+               {isGlobalPrinting ? "Preparing..." : "Bulk Print All"}
+            </button>
+          </div>
+      </div>
+
       <SearchBar value={clientFilter} onChange={setClientFilter} placeholder="Search clients..." />
 
       <div className="client-grid">
@@ -409,6 +531,68 @@ const PlaceDetails = () => {
           onConfirm={() => { handleClientDelete(clientConfirm.clientId); setClientConfirm({ open: false, clientId: null }); }}
           onClose={() => setClientConfirm({ open: false, clientId: null })}
         />
+      )}
+
+      {/* Global Print View (Hidden until printed) */}
+      {isGlobalPrinting && (
+        <div className="print-only">
+            {globalPrintData.map(group => (
+                <div key={group.client.id} style={{ marginBottom: '2rem', pageBreakAfter: 'always' }}>
+                    <div className="print-header">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <div style={{ width: '60px', height: '60px', background: 'black', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1rem' }}>
+                            <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>S</span>
+                         </div>
+                         <div>
+                            <h2 style={{ textAlign: 'center', fontSize: '1.25rem', margin: 0, textTransform: 'uppercase' }}>S M P P Flower Commission Mundy</h2>
+                            <p style={{ textAlign: 'center', fontSize: '0.8rem', margin: '2px 0 0 0', textTransform: 'uppercase' }}>New Bus Stand Back Side, GUNDLUPET - 571111</p>
+                            <p style={{ textAlign: 'center', fontSize: '0.8rem', margin: 0, textTransform: 'uppercase' }}>Phone: 9945088188 / 9164222049</p>
+                         </div>
+                      </div>
+                      <div style={{ marginTop: '1rem', borderTop: '2px solid black', borderBottom: '2px solid black', padding: '0.5rem 0', display: 'flex', justifyContent: 'space-between' }}>
+                          <div style={{ fontWeight: 'bold', fontSize: '0.9rem', textTransform: 'uppercase' }}>{group.client.name}</div>
+                          <div style={{ fontSize: '0.9rem', textTransform: 'uppercase' }}>{selectedPlace ? selectedPlace.name : ''}</div>
+                      </div>
+                    </div>
+                    
+                    {group.flowers.map(flower => (
+                        <div key={flower.id} style={{ marginBottom: '1rem' }}>
+                            <h4 style={{ margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>{flower.name}</h4>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '1px solid black' }}>
+                                        <th style={{ padding: '4px' }}>Date</th>
+                                        <th style={{ padding: '4px' }}>Weight</th>
+                                        <th style={{ padding: '4px' }}>Rate</th>
+                                        <th style={{ padding: '4px' }}>Laggage</th>
+                                        <th style={{ padding: '4px' }}>Collie</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {flower.records.map((r, idx) => (
+                                        <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
+                                            <td style={{ padding: '4px' }}>{r.date}</td>
+                                            <td style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>
+                                            <td style={{ padding: '4px' }}>{r.rate || '-'}</td>
+                                            <td style={{ padding: '4px' }}>{r.laggage || '0'}</td>
+                                            <td style={{ padding: '4px' }}>{r.collie || '0'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontWeight: 'bold', fontSize: '0.85rem' }}>
+                                <span>Total Wgt: {flower.totals.weight.toFixed(3)}kg</span>
+                                <span>Total Price: ₹{flower.totals.price.toFixed(3)}</span>
+                            </div>
+                        </div>
+                    ))}
+                    
+                    <div style={{ borderTop: '2px solid black', marginTop: '1rem', paddingTop: '0.5rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1rem' }}>
+                        Grand Total: ₹{group.flowers.reduce((sum, f) => sum + f.totals.price, 0).toFixed(3)}
+                    </div>
+                </div>
+            ))}
+        </div>
       )}
     </div>
   );
