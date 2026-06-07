@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { bulkApi, getYears, getPlaces } from '../services/api';
-import { Users, MapPin } from 'lucide-react';
+import { Users, MapPin, Flower2 } from 'lucide-react';
 
 const BulkAdd = () => {
   const [years, setYears] = useState([]);
@@ -11,6 +11,7 @@ const BulkAdd = () => {
 
   const [bulkPlacesText, setBulkPlacesText] = useState('');
   const [bulkUsersText, setBulkUsersText] = useState('');
+  const [bulkFlowersText, setBulkFlowersText] = useState('');
 
   const [loading, setLoading] = useState(false);
 
@@ -99,8 +100,25 @@ const BulkAdd = () => {
     }
   };
 
+  const handleAddFlowers = async () => {
+    if (!selectedPlace) return alert("Please select a Group.");
+    if (!bulkFlowersText.trim()) return alert("Please enter flowers.");
+    
+    const flower_names = bulkFlowersText.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+    if (flower_names.length === 0) return;
 
-
+    setLoading(true);
+    try {
+      const res = await bulkApi.createFlowers({ place_id: parseInt(selectedPlace), flower_names });
+      alert(res.detail);
+      setBulkFlowersText('');
+    } catch (err) {
+      alert("Failed to add flowers.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="page-container fade-in">
       <div className="page-header">
@@ -167,6 +185,30 @@ const BulkAdd = () => {
           </div>
           <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleAddUsers} disabled={loading || !selectedPlace || !bulkUsersText}>
             Add Parties
+          </button>
+        </div>
+
+        {/* Add Flowers */}
+        <div className="card">
+          <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Flower2 className="icon" />
+            <h2 className="card-title">3. Add Flowers</h2>
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
+            Assigns these flowers to ALL parties inside the selected group above.
+          </p>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Flowers List (comma or line separated)</label>
+            <textarea 
+              rows={5} 
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
+              placeholder="Rose&#10;Jasmine&#10;Lily"
+              value={bulkFlowersText}
+              onChange={(e) => setBulkFlowersText(e.target.value)}
+            />
+          </div>
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleAddFlowers} disabled={loading || !selectedPlace || !bulkFlowersText}>
+            Add Flowers to All
           </button>
         </div>
 

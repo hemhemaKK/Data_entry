@@ -122,7 +122,7 @@ const Ledger = () => {
 
   const handleAddEntry = async (e) => {
     e.preventDefault();
-    if (!selectedUser) return;
+    if (!selectedUser) return alert("Please select a Party first.");
     if (!date) return;
     
     const adv = parseFloat(advanceAmount) || 0;
@@ -175,14 +175,22 @@ const Ledger = () => {
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
 
-        <select className="select-input" value={selectedYear} onChange={handleYearChange}>
+        <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '120px' }}>
           <option value="">-- Select Year --</option>
           {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
         </select>
         
-        <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear}>
+        <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '150px' }}>
           <option value="">-- All Groups --</option>
           {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        </select>
+
+        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '150px' }}>
+          <option value="">-- Select Party --</option>
+          {users.filter(u => 
+             (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+             (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
+          ).map(u => <option key={u.id} value={u.id}>{u.name} ({u.placeName})</option>)}
         </select>
 
         <div style={{ marginLeft: 'auto' }}>
@@ -204,21 +212,12 @@ const Ledger = () => {
               }
             }}
             className="select-input"
-            style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+            style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '200px' }}
           />
         </div>
-
-        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear}>
-          <option value="">-- Select Party --</option>
-          {users.filter(u => 
-             (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-             (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
-          ).map(u => <option key={u.id} value={u.id}>{u.name} ({u.placeName})</option>)}
-        </select>
       </div>
 
-      {selectedUser && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
           
           <div className="card">
             <h2 className="card-title">Add Entry</h2>
@@ -254,9 +253,10 @@ const Ledger = () => {
               </div>
             </div>
 
-            {entries.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>No entries found for this party.</p>
-            ) : (
+            {selectedUser ? (
+              entries.length === 0 ? (
+                <p style={{ color: 'var(--text-secondary)' }}>No entries found for this party.</p>
+              ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
@@ -296,11 +296,13 @@ const Ledger = () => {
                   })()}
                 </tbody>
               </table>
+            )
+            ) : (
+              <p style={{ color: 'var(--text-secondary)' }}>Please select a party from the dropdown above to view their history.</p>
             )}
           </div>
 
         </div>
-      )}
     </div>
   );
 };
