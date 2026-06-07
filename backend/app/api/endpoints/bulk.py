@@ -22,7 +22,8 @@ def create_bulk_places(bulk_data: BulkPlacesCreate, db: Session = Depends(get_db
             created_count += 1
             
     db.commit()
-    return {"detail": f"Created {created_count} places."}
+    msg = f"Created {created_count} places." if created_count > 0 else "These places are already created."
+    return {"detail": msg}
 
 @router.post("/users")
 def create_bulk_users(bulk_data: BulkUsersCreate, db: Session = Depends(get_db)):
@@ -39,7 +40,8 @@ def create_bulk_users(bulk_data: BulkUsersCreate, db: Session = Depends(get_db))
             created_count += 1
             
     db.commit()
-    return {"detail": f"Created {created_count} users."}
+    msg = f"Created {created_count} users." if created_count > 0 else "These users are already created."
+    return {"detail": msg}
 
 @router.post("/flowers")
 def create_bulk_flowers(bulk_data: BulkFlowersCreate, db: Session = Depends(get_db)):
@@ -63,4 +65,5 @@ def create_bulk_flowers(bulk_data: BulkFlowersCreate, db: Session = Depends(get_
                 created_count += 1
                 
     db.commit()
-    return {"detail": f"Added common flowers. Total {created_count} flower records created across {len(users)} users."}
+    msg = f"Added common flowers. Total {created_count} flower records created across {len(users)} users." if created_count > 0 else "These flowers are already assigned to all users in this place."
+    return {"detail": msg}

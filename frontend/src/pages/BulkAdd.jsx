@@ -126,7 +126,7 @@ const BulkAdd = () => {
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Year</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px' }}>
+            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="">-- Select Year --</option>
               {years.map(y => (
                 <option key={y.id} value={y.id}>{y.year}</option>
@@ -137,7 +137,7 @@ const BulkAdd = () => {
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Places List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
               placeholder="Mysore&#10;Bangalore&#10;Ooty"
               value={bulkPlacesText}
               onChange={(e) => setBulkPlacesText(e.target.value)}
@@ -156,7 +156,7 @@ const BulkAdd = () => {
           </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Place</label>
-            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px' }}>
+            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="">-- Select Place --</option>
               {places.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -167,7 +167,7 @@ const BulkAdd = () => {
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Users List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
               placeholder="Ramesh&#10;Suresh&#10;Mahesh"
               value={bulkUsersText}
               onChange={(e) => setBulkUsersText(e.target.value)}
@@ -191,7 +191,7 @@ const BulkAdd = () => {
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Flowers List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
               placeholder="Rose&#10;Jasmine&#10;Lily"
               value={bulkFlowersText}
               onChange={(e) => setBulkFlowersText(e.target.value)}
