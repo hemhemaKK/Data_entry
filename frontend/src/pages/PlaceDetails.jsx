@@ -198,11 +198,24 @@ const PlaceDetails = () => {
               if (!flower.bill_records || flower.bill_records.length === 0) return;
               
               const filteredRecords = flower.bill_records.filter(r => {
-                  const d = r.date;
-                  if (!d) return false;
-                  if (globalMonth && !d.startsWith(globalMonth)) return false;
-                  if (globalFromDate && d < globalFromDate) return false;
-                  if (globalToDate && d > globalToDate) return false;
+                  if (!r.date) return true;
+                  
+                  if (globalMonth && !r.date.startsWith(globalMonth)) return false;
+                  
+                  const recordDate = new Date(r.date);
+                  if (isNaN(recordDate.getTime())) return true;
+                  recordDate.setHours(0,0,0,0);
+
+                  if (globalFromDate) {
+                      const fDate = new Date(globalFromDate);
+                      fDate.setHours(0,0,0,0);
+                      if (recordDate < fDate) return false;
+                  }
+                  if (globalToDate) {
+                      const tDate = new Date(globalToDate);
+                      tDate.setHours(0,0,0,0);
+                      if (recordDate > tDate) return false;
+                  }
                   return true;
               });
               
@@ -537,27 +550,47 @@ const PlaceDetails = () => {
       {isGlobalPrinting && (
         <div className="print-only">
             {globalPrintData.map(group => (
-                <div key={group.client.id} style={{ marginBottom: '2rem', pageBreakAfter: 'always' }}>
-                    <div className="print-header">
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                         <div style={{ width: '60px', height: '60px', background: 'black', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginRight: '1rem' }}>
-                            <span style={{ color: 'white', fontSize: '24px', fontWeight: 'bold' }}>S</span>
-                         </div>
-                         <div>
-                            <h2 style={{ textAlign: 'center', fontSize: '1.25rem', margin: 0, textTransform: 'uppercase' }}>S M P P Flower Commission Mundy</h2>
-                            <p style={{ textAlign: 'center', fontSize: '0.8rem', margin: '2px 0 0 0', textTransform: 'uppercase' }}>New Bus Stand Back Side, GUNDLUPET - 571111</p>
-                            <p style={{ textAlign: 'center', fontSize: '0.8rem', margin: 0, textTransform: 'uppercase' }}>Phone: 9945088188 / 9164222049</p>
-                         </div>
-                      </div>
-                      <div style={{ marginTop: '1rem', borderTop: '2px solid black', borderBottom: '2px solid black', padding: '0.5rem 0', display: 'flex', justifyContent: 'space-between' }}>
-                          <div style={{ fontWeight: 'bold', fontSize: '0.9rem', textTransform: 'uppercase' }}>{group.client.name}</div>
-                          <div style={{ fontSize: '0.9rem', textTransform: 'uppercase' }}>{selectedPlace ? selectedPlace.name : ''}</div>
-                      </div>
-                    </div>
-                    
+                <div key={group.client.id}>
                     {group.flowers.map(flower => (
-                        <div key={flower.id} style={{ marginBottom: '1rem' }}>
-                            <h4 style={{ margin: '0 0 0.5rem 0', textTransform: 'uppercase' }}>{flower.name}</h4>
+                        <div key={flower.id} style={{ marginBottom: '2rem', pageBreakAfter: 'always' }}>
+                            <div className="print-header" style={{ marginBottom: '1rem' }}>
+                                <img 
+                                    src="/header.jpeg" 
+                                    alt="Header Image" 
+                                    style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
+                                />
+                                <div style={{ marginTop: '10px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
+                                        <tbody>
+                                            <tr>
+                                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
+                                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{group.client.name}</td>
+                                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
+                                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
+                                            </tr>
+                                            <tr>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{group.client.contact_number || ''}</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                                            </tr>
+                                            <tr>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{flower.totals.price.toFixed(2)}</td>
+                                            </tr>
+                                            <tr>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Flower:</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{flower.name}</td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                                                <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
@@ -580,16 +613,14 @@ const PlaceDetails = () => {
                                     ))}
                                 </tbody>
                             </table>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '0.5rem', fontWeight: 'bold', fontSize: '0.85rem' }}>
-                                <span>Total Wgt: {flower.totals.weight.toFixed(3)}kg</span>
-                                <span>Total Price: ₹{flower.totals.price.toFixed(3)}</span>
+                            <div style={{ marginTop: '12px', padding: '8px', background: 'transparent', border: '1px solid #ccc', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap', fontWeight: 'bold' }}>
+                                <span>Total Weight: {flower.totals.weight.toFixed(3)} kg</span>
+                                <span>Laggage: ₹{flower.totals.laggage.toFixed(3)}</span>
+                                <span>Collie: ₹{flower.totals.collie.toFixed(3)}</span>
+                                <span>Monthly Total: ₹{flower.totals.price.toFixed(3)}</span>
                             </div>
                         </div>
                     ))}
-                    
-                    <div style={{ borderTop: '2px solid black', marginTop: '1rem', paddingTop: '0.5rem', textAlign: 'right', fontWeight: 'bold', fontSize: '1rem' }}>
-                        Grand Total: ₹{group.flowers.reduce((sum, f) => sum + f.totals.price, 0).toFixed(3)}
-                    </div>
                 </div>
             ))}
         </div>

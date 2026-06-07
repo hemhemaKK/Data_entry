@@ -318,8 +318,23 @@ const FlowerCard = ({ flower, clientName, fromDate, toDate, onEdit, onDelete, on
   // Date Range Filtering
   records = records.filter(r => {
     if (!r.date) return true;
-    if (fromDate && r.date < fromDate) return false;
-    if (toDate && r.date > toDate) return false;
+    
+    const recordDate = new Date(r.date);
+    if (isNaN(recordDate.getTime())) return true;
+    recordDate.setHours(0,0,0,0);
+
+    if (fromDate) {
+        const fDate = new Date(fromDate);
+        fDate.setHours(0,0,0,0);
+        if (recordDate < fDate) return false;
+    }
+    
+    if (toDate) {
+        const tDate = new Date(toDate);
+        tDate.setHours(0,0,0,0);
+        if (recordDate > tDate) return false;
+    }
+    
     return true;
   });
 
