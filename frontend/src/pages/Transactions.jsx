@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { uploadsApi } from '../services/api';
 import { Link } from 'react-router-dom';
-import { Trash2, Download, Table2 } from 'lucide-react';
+import { Trash2, Download, Table2, ArrowLeft } from 'lucide-react';
 
 export default function Transactions() {
     const [files, setFiles] = useState([]);
@@ -38,6 +38,11 @@ export default function Transactions() {
 
     return (
         <div>
+            <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+                <Link to="/" className="btn" style={{background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}>
+                    <ArrowLeft size={16} /> Back to Dashboard
+                </Link>
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '1.5rem' }}>
               <Table2 size={28} style={{ color: 'var(--primary)' }} />
               <h1 className="page-title" style={{ margin: 0 }}>Transactions</h1>

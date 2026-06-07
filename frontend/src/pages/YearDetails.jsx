@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { getPlaces, createPlace, updatePlace, deletePlace } from "../services/api";
 import PlaceCard from "../components/PlaceCard";
 
@@ -83,6 +84,11 @@ const YearDetails = () => {
 
   return (
     <div>
+      <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+          <Link to="/" className="btn" style={{background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}}>
+              <ArrowLeft size={16} /> Back to Dashboard
+          </Link>
+      </div>
       <h1 className="page-title">Places for Year {yearId}</h1>
       <div style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
         <input

@@ -2,7 +2,7 @@ import os
 
 class Settings:
     PROJECT_NAME: str = "Excel Validation API"
-    DATABASE_URL: str = "sqlite:///./sql_app.db"
+    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./sql_app.db")
     UPLOAD_DIR: str = "uploads"
     REPORTS_DIR: str = "reports"
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   getUsers,
   createUser,
@@ -23,6 +23,7 @@ import FlowerFormModal from "../components/FlowerFormModal.jsx";
 
 const PlaceDetails = () => {
   const { placeId } = useParams();
+  const navigate = useNavigate();
 
   // ----- Clients -----
   const [clients, setClients] = useState([]);
@@ -197,10 +198,11 @@ const PlaceDetails = () => {
     return (
       <div className="place-details-page">
         {/* Back button + header */}
-        <button className="back-btn" onClick={() => setSelectedClient(null)}>
-          <FaArrowLeft size={14} />
-          Back to Clients
-        </button>
+        <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+            <button className="btn" style={{background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}} onClick={() => setSelectedClient(null)}>
+              <FaArrowLeft size={14} /> Back to Clients
+            </button>
+        </div>
 
         <div className="detail-header no-print">
           <div>
@@ -358,8 +360,13 @@ const PlaceDetails = () => {
   // =============================================
   return (
     <div className="place-details-page">
+      <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
+          <button className="btn" style={{background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: '1px solid var(--border)', display: 'inline-flex', alignItems: 'center', gap: '0.5rem'}} onClick={() => navigate(-1)}>
+            <FaArrowLeft size={14} /> Back
+          </button>
+      </div>
       <div className="place-details-header">
-        <h1 className="page-title">Clients</h1>
+        <h1 className="page-title">Clients {selectedPlace ? `- ${selectedPlace.name}` : ''}</h1>
         <button className="btn" onClick={() => { setEditClient(null); setShowClientForm(true); }}>
           + Add Client
         </button>
