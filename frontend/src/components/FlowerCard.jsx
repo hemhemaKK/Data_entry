@@ -167,9 +167,10 @@ const MonthCard = ({ month, records, onUpdateRecord, onDeleteRecord, onRecordsUp
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
                 <th className="col-date" style={{ padding: '8px 4px' }}>Date</th>
-                <th className="col-weight" style={{ padding: '8px 4px' }}>Weight (kg)</th>
                 <th className="col-van" style={{ padding: '8px 4px' }}>Van</th>
+                <th className="col-weight" style={{ padding: '8px 4px' }}>Weight (kg)</th>
                 <th className="col-rate" style={{ padding: '8px 4px' }}>Rate (₹)</th>
+                <th className="col-total" style={{ padding: '8px 4px' }}>Total (₹)</th>
                 <th className="col-laggage" style={{ padding: '8px 4px' }}>Laggage (₹)</th>
                 <th className="col-collie" style={{ padding: '8px 4px' }}>Collie (₹)</th>
                 <th className="col-printed no-print" style={{ padding: '8px 4px', textAlign: 'center' }}>Printed</th>
@@ -188,14 +189,17 @@ const MonthCard = ({ month, records, onUpdateRecord, onDeleteRecord, onRecordsUp
                       <td className="col-date" style={{ padding: '4px' }}>
                         <input type="date" name="date" value={editFormData.date} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-weight" style={{ padding: '4px' }}>
-                        <input type="number" step="0.01" name="weight" value={editFormData.weight} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
-                      </td>
                       <td className="col-van" style={{ padding: '4px' }}>
                         <input type="text" name="van" value={editFormData.van} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
+                      <td className="col-weight" style={{ padding: '4px' }}>
+                        <input type="number" step="0.01" name="weight" value={editFormData.weight} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
+                      </td>
                       <td className="col-rate" style={{ padding: '4px' }}>
                         <input type="number" step="0.01" name="rate" value={editFormData.rate} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
+                      </td>
+                      <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>
+                        ₹{((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(2)}
                       </td>
                       <td className="col-laggage" style={{ padding: '4px' }}>
                         <input type="number" step="0.01" name="laggage" value={editFormData.laggage} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
@@ -217,9 +221,10 @@ const MonthCard = ({ month, records, onUpdateRecord, onDeleteRecord, onRecordsUp
                   ) : (
                     <>
                       <td className="col-date" style={{ padding: '6px 4px' }}>{record.date || '-'}</td>
-                      <td className="col-weight" style={{ padding: '6px 4px' }}>{record.weight !== null && record.weight !== undefined ? parseFloat(record.weight).toFixed(3) : '-'}</td>
                       <td className="col-van" style={{ padding: '6px 4px' }}>{record.van || '-'}</td>
+                      <td className="col-weight" style={{ padding: '6px 4px' }}>{record.weight !== null && record.weight !== undefined ? parseFloat(record.weight).toFixed(3) : '-'}</td>
                       <td className="col-rate" style={{ padding: '6px 4px' }}>{record.rate || '-'}</td>
+                      <td className="col-total" style={{ padding: '6px 4px', fontWeight: 'bold' }}>₹{((parseFloat(record.weight) || 0) * (parseFloat(record.rate) || 0)).toFixed(2)}</td>
                       <td className="col-laggage" style={{ padding: '6px 4px' }}>{record.laggage || '0'}</td>
                       <td className="col-collie" style={{ padding: '6px 4px' }}>{record.collie || '0'}</td>
                       <td className="col-printed no-print" style={{ padding: '6px 4px', textAlign: 'center' }}>
@@ -278,12 +283,12 @@ const InlineAddForm = ({ flowerId, onSave, onCancel }) => {
           <input type="date" name="date" required value={formData.date} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
         </div>
         <div style={{ flex: '1 1 80px' }}>
-          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Weight</label>
-          <input type="number" step="0.01" name="weight" value={formData.weight} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
-        </div>
-        <div style={{ flex: '1 1 80px' }}>
           <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Van</label>
           <input type="text" name="van" value={formData.van} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
+        </div>
+        <div style={{ flex: '1 1 80px' }}>
+          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Weight</label>
+          <input type="number" step="0.01" name="weight" value={formData.weight} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
         </div>
         <div style={{ flex: '1 1 80px' }}>
           <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Rate</label>

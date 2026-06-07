@@ -106,20 +106,24 @@ const Home = () => {
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ padding: '0.75rem' }}>Date</th>
+                  <th style={{ padding: '0.75rem' }}>Van</th>
                   <th style={{ padding: '0.75rem' }}>Client</th>
                   <th style={{ padding: '0.75rem' }}>Flower</th>
                   <th style={{ padding: '0.75rem' }}>Weight</th>
                   <th style={{ padding: '0.75rem' }}>Rate</th>
+                  <th style={{ padding: '0.75rem' }}>Total</th>
                 </tr>
               </thead>
               <tbody>
                 {recentEntries.map(entry => (
                   <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)' }}>
                     <td style={{ padding: '0.75rem' }}>{entry.date}</td>
+                    <td style={{ padding: '0.75rem' }}>{entry.van}</td>
                     <td style={{ padding: '0.75rem', fontWeight: 500 }}>{entry.client_name}</td>
                     <td style={{ padding: '0.75rem', color: 'var(--primary)' }}>{entry.flower_name}</td>
                     <td style={{ padding: '0.75rem' }}>{entry.weight} kg</td>
                     <td style={{ padding: '0.75rem' }}>₹{entry.rate}</td>
+                    <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>₹{(entry.weight * entry.rate).toFixed(2)}</td>
                   </tr>
                 ))}
               </tbody>

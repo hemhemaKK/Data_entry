@@ -718,8 +718,10 @@ const PlaceDetails = () => {
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
                                         <th style={{ padding: '4px' }}>Date</th>
+                                        <th style={{ padding: '4px' }}>Van</th>
                                         <th style={{ padding: '4px' }}>Weight</th>
                                         <th style={{ padding: '4px' }}>Rate</th>
+                                        <th style={{ padding: '4px' }}>Total</th>
                                         <th style={{ padding: '4px' }}>Laggage</th>
                                         <th style={{ padding: '4px' }}>Collie</th>
                                     </tr>
@@ -728,8 +730,10 @@ const PlaceDetails = () => {
                                     {flower.records.map((r, idx) => (
                                         <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
                                             <td style={{ padding: '4px' }}>{r.date}</td>
+                                            <td style={{ padding: '4px' }}>{r.van || '-'}</td>
                                             <td style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>
                                             <td style={{ padding: '4px' }}>{r.rate || '-'}</td>
+                                            <td style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>
                                             <td style={{ padding: '4px' }}>{r.laggage || '0'}</td>
                                             <td style={{ padding: '4px' }}>{r.collie || '0'}</td>
                                         </tr>

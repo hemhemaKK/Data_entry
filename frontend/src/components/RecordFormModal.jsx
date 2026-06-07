@@ -58,12 +58,12 @@ const RecordFormModal = ({ isOpen, onClose, onSubmit, initialData, flowerId }) =
             <input type="date" name="date" className="form-control" value={formData.date} onChange={handleChange} required />
           </div>
           <div className="form-group">
-            <label>Weight (kg)</label>
-            <input type="number" step="0.01" name="weight" className="form-control" value={formData.weight} onChange={handleChange} />
-          </div>
-          <div className="form-group">
             <label>Van</label>
             <input type="text" name="van" className="form-control" value={formData.van} onChange={handleChange} />
+          </div>
+          <div className="form-group">
+            <label>Weight (kg)</label>
+            <input type="number" step="0.01" name="weight" className="form-control" value={formData.weight} onChange={handleChange} />
           </div>
           <div className="form-group">
             <label>Rate (₹)</label>
