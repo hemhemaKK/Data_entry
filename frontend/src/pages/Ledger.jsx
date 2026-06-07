@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardApi, yearsApi, placesApi, advancesApi } from '../services/api';
+import { dashboardApi, getPlaces, getUsers, advancesApi } from '../services/api';
 import { Wallet, Plus, Trash2 } from 'lucide-react';
 
 const Ledger = () => {
@@ -43,7 +43,7 @@ const Ledger = () => {
     setEntries([]);
     if (yId) {
       try {
-        const p = await yearsApi.getPlaces(yId);
+        const p = await getPlaces(yId);
         setPlaces(p || []);
       } catch (err) { console.error(err); }
     } else {
@@ -58,7 +58,7 @@ const Ledger = () => {
     setEntries([]);
     if (pId) {
       try {
-        const u = await placesApi.getUsers(pId);
+        const u = await getUsers(pId);
         setUsers(u || []);
       } catch (err) { console.error(err); }
     } else {

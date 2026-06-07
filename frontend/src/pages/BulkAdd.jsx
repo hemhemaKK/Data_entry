@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardApi, bulkApi, yearsApi } from '../services/api';
+import { dashboardApi, bulkApi, getPlaces } from '../services/api';
 import { Users, MapPin, Flower2 } from 'lucide-react';
 
 const BulkAdd = () => {
@@ -30,7 +30,7 @@ const BulkAdd = () => {
 
   const fetchPlaces = async (yearId) => {
     try {
-      const data = await yearsApi.getPlaces(yearId);
+      const data = await getPlaces(yearId);
       setPlaces(data || []);
     } catch (err) {
       console.error(err);
