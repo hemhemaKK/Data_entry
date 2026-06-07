@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getYears, createYear, updateYear, deleteYear } from "../services/api";
 import YearCard from "../components/YearCard";
+import QuickEntryForm from "../components/QuickEntryForm";
 
 const Home = () => {
   const [years, setYears] = useState([]);
@@ -75,7 +76,12 @@ const Home = () => {
 
   return (
     <div>
-      <h1 className="page-title">Year Dashboard</h1>
+      <h1 className="page-title">Dashboard</h1>
+      
+      {/* Quick Manual Entry */}
+      <QuickEntryForm />
+
+      <h2 className="page-title" style={{ marginTop: '2rem', fontSize: '1.5rem' }}>Year Management</h2>
       <form onSubmit={handleCreate} className="mb-4" style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
         <input
           type="number"
