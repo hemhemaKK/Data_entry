@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi } from '../services/api';
+import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi, createYear, updateYear, deleteYear } from '../services/api';
+import { Link } from 'react-router-dom';
 import { PlusCircle } from 'lucide-react';
 
 const QuickEntryForm = ({ onRecordAdded }) => {
@@ -23,6 +24,38 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   const [collie, setCollie] = useState('');
 
   const [loading, setLoading] = useState(false);
+  const [newYear, setNewYear] = useState('');
+
+  const handleCreateYear = async (e) => {
+    e.preventDefault();
+    if (!newYear) return;
+    try {
+      await createYear(parseInt(newYear, 10));
+      setNewYear('');
+      fetchInitialData();
+    } catch (err) { alert("Failed to add year"); }
+  };
+
+  const handleEditYear = async (id, currentYear) => {
+    const newVal = window.prompt("Enter new year value:", currentYear);
+    if (!newVal) return;
+    const parsed = parseInt(newVal, 10);
+    if (!isNaN(parsed)) {
+      try {
+        await updateYear(id, parsed);
+        fetchInitialData();
+      } catch (err) { alert("Failed to update year"); }
+    }
+  };
+
+  const handleDeleteYear = async (id) => {
+    if (window.confirm("Are you sure you want to delete this year?")) {
+      try {
+        await deleteYear(id);
+        fetchInitialData();
+      } catch (err) { alert("Failed to delete year"); }
+    }
+  };
 
   useEffect(() => {
     fetchInitialData();
@@ -131,10 +164,12 @@ const QuickEntryForm = ({ onRecordAdded }) => {
     <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--primary)' }}>
       <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
         <PlusCircle className="icon" style={{ color: 'var(--primary)' }} />
-        <h2 className="card-title">Quick Manual Entry</h2>
+        <h2 className="card-title">Quick Manual Entry & Years</h2>
       </div>
 
-      <form onSubmit={handleSubmit}>
+      <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem', alignItems: 'start' }}>
+        {/* Left Column: Form */}
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
         {/* Selection Row - Vertical / Compact Stack */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxWidth: '400px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
@@ -193,13 +228,42 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Collie (₹)</label>
             <input type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
-          <div style={{ flex: '0 0 auto' }}>
+          <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
             <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', height: '38px' }} disabled={loading || !selectedFlower}>
               {loading ? "..." : "Add Record"}
             </button>
           </div>
         </div>
       </form>
+
+      {/* Right Column: Year Management */}
+      <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '2rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+        <h3 style={{ fontSize: '1.1rem', margin: 0 }}>Year Management</h3>
+        <form onSubmit={handleCreateYear} style={{ display: 'flex', gap: '0.5rem' }}>
+          <input 
+            type="number" 
+            placeholder="e.g. 2026" 
+            value={newYear} 
+            onChange={e => setNewYear(e.target.value)} 
+            required 
+            style={{ width: '80px', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
+          />
+          <button type="submit" className="btn btn-primary" style={{ padding: '0.25rem 0.75rem', fontSize: '0.85rem' }}>Add</button>
+        </form>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+          {years.map(y => (
+            <div key={y.id} style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', gap: '0.5rem', fontSize: '0.9rem' }}>
+              <Link to={`/year/${y.id}`} style={{ fontWeight: 'bold', textDecoration: 'none', color: 'var(--text-primary)' }} title="View details">
+                {y.year}
+              </Link>
+              <div style={{ borderLeft: '1px solid var(--border)', height: '16px', margin: '0 2px' }}></div>
+              <button type="button" onClick={() => handleEditYear(y.id, y.year)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} title="Edit">✏️</button>
+              <button type="button" onClick={() => handleDeleteYear(y.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} title="Delete">❌</button>
+            </div>
+          ))}
+        </div>
+      </div>
+      </div>
     </div>
   );
 };
