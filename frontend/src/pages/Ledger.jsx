@@ -185,26 +185,28 @@ const Ledger = () => {
           {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
 
-        <input 
-          type="text" 
-          placeholder="Search by name or place..." 
-          value={searchQuery}
-          onChange={(e) => {
-            const query = e.target.value;
-            setSearchQuery(query);
-            if (query.trim() !== '') {
-                const filtered = users.filter(u => 
-                     (u.name || '').toLowerCase().includes(query.toLowerCase()) || 
-                     (u.placeName || '').toLowerCase().includes(query.toLowerCase())
-                );
-                if (filtered.length > 0) {
-                    setSelectedUser(filtered[0].id.toString());
-                }
-            }
-          }}
-          className="select-input"
-          style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-        />
+        <div style={{ marginLeft: 'auto' }}>
+          <input 
+            type="text" 
+            placeholder="Search by name or place..." 
+            value={searchQuery}
+            onChange={(e) => {
+              const query = e.target.value;
+              setSearchQuery(query);
+              if (query.trim() !== '') {
+                  const filtered = users.filter(u => 
+                       (u.name || '').toLowerCase().includes(query.toLowerCase()) || 
+                       (u.placeName || '').toLowerCase().includes(query.toLowerCase())
+                  );
+                  if (filtered.length > 0) {
+                      setSelectedUser(filtered[0].id.toString());
+                  }
+              }
+            }}
+            className="select-input"
+            style={{ padding: '0.5rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+          />
+        </div>
 
         <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear}>
           <option value="">-- Select User --</option>
@@ -245,7 +247,7 @@ const Ledger = () => {
 
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 className="card-title">History</h2>
+              <h2 className="card-title">History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : ''}</h2>
               <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
                 <span style={{ color: 'green' }}>Total Advances: ₹{totalAdvance.toFixed(2)}</span>
                 <span style={{ color: 'red' }}>Total Deductions: ₹{totalDeduction.toFixed(2)}</span>

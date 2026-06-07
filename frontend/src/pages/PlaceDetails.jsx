@@ -826,7 +826,7 @@ const PlaceDetails = () => {
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
                                         <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{group.finalBalance.toFixed(2)}</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{Math.abs(group.finalBalance).toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -884,15 +884,15 @@ const PlaceDetails = () => {
                             <span>Total Collie:</span>
                             <span>-₹{group.clientTotalCollie.toFixed(2)}</span>
                         </div>
-                        {commissionPercent > 0 && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
-                                <span>Commission ({commissionPercent}%):</span>
-                                <span>-₹{group.commissionDeduction.toFixed(2)}</span>
-                            </div>
-                        )}
+                            {commissionPercent > 0 && (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
+                                <span>Commission:</span>
+                                <span>₹{group.commissionDeduction.toFixed(2)}</span>
+                                </div>
+                            )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: '8px', color: 'green', fontSize: '1.1rem' }}>
                             <span>Grand Total:</span>
-                            <span>₹{group.grandTotal.toFixed(2)}</span>
+                            <span>₹{Math.abs(group.grandTotal).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
