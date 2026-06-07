@@ -27,7 +27,7 @@ const Navbar = () => (
         </li>
         <li>
           <NavLink to="/bulk-add" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
-            <Users size={20} /> Bulk Add
+            <Users size={20} /> Add Group & Party
           </NavLink>
         </li>
         <li>

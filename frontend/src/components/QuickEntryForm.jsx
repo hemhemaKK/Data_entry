@@ -73,6 +73,9 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         setSelectedYear(currentYearObj.id);
         fetchPlaces(currentYearObj.id);
       }
+      
+      const allFlowersData = await getFlowers();
+      setFlowers(allFlowersData || []);
     } catch (err) {
       console.error(err);
     }
@@ -90,9 +93,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
     setSelectedYear(yId);
     setSelectedPlace('');
     setSelectedUser('');
-    setSelectedFlower('');
     setUsers([]);
-    setFlowers([]);
     if (yId) fetchPlaces(yId);
     else setPlaces([]);
   };
@@ -101,8 +102,6 @@ const QuickEntryForm = ({ onRecordAdded }) => {
     const pId = e.target.value;
     setSelectedPlace(pId);
     setSelectedUser('');
-    setSelectedFlower('');
-    setFlowers([]);
     if (pId) {
       try {
         const data = await getUsers(pId);
@@ -114,13 +113,6 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   const handleUserChange = async (e) => {
     const uId = e.target.value;
     setSelectedUser(uId);
-    setSelectedFlower('');
-    if (uId) {
-      try {
-        const data = await getFlowers(null, { user_id: uId });
-        setFlowers(data || []);
-      } catch (err) { console.error(err); }
-    } else setFlowers([]);
   };
 
   const handleSubmit = async (e) => {
@@ -195,7 +187,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Flower:</label>
-            <select className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+            <select className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
               <option value="">-- Select Flower --</option>
               {flowers.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
             </select>

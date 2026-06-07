@@ -142,8 +142,8 @@ const Home = () => {
                 <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ padding: '0.75rem' }}>Date</th>
                   <th style={{ padding: '0.75rem' }}>Van</th>
-                  <th style={{ padding: '0.75rem' }}>Place</th>
-                  <th style={{ padding: '0.75rem' }}>Client</th>
+                  <th style={{ padding: '0.75rem' }}>Group</th>
+                  <th style={{ padding: '0.75rem' }}>Party</th>
                   <th style={{ padding: '0.75rem' }}>Flower</th>
                   <th style={{ padding: '0.75rem' }}>Weight</th>
                   <th style={{ padding: '0.75rem' }}>Rate</th>
