@@ -68,7 +68,7 @@ function Hierarchy() {
       <div className="tree-container">
         <TreeNode label="Years" selectedId={selectedYear?.id} onSelect={setSelectedYear} items={years} />
         {selectedYear && (
-          <TreeNode label="Places" selectedId={selectedPlace?.id} onSelect={setSelectedPlace} items={places} />
+          <TreeNode label="Groups" selectedId={selectedPlace?.id} onSelect={setSelectedPlace} items={places} />
         )}
         {selectedPlace && (
           <TreeNode label="Users" selectedId={selectedUser?.id} onSelect={setSelectedUser} items={users} />

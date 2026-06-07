@@ -168,7 +168,7 @@ const BulkAdd = () => {
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Place</label>
             <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Place --</option>
+              <option value="">-- Select Group --</option>
               {places.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
               ))}

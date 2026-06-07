@@ -729,7 +729,7 @@ tr:hover td {
   font-size: 1.6rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0;
+  margin-bottom: 20px;
 }
 
 .place-details-header .btn,

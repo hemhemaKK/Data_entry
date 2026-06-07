@@ -33,7 +33,7 @@ const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
     <div className="modal-bg fixed inset-0 flex items-center justify-center z-50">
       <div className="modal-content max-w-md w-full mx-4">
         <h2 className="text-xl font-semibold mb-4" style={{ color: "var(--text-primary)" }}>
-          {initialData?.name ? "Edit Client" : "Add New Client"}
+          {initialData?.name ? "Edit Party" : "Add New Client"}
         </h2>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

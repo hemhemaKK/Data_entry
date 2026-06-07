@@ -129,7 +129,7 @@ const Home = () => {
             </h2>
             <input 
               type="text" 
-              placeholder="Search by Place, User, or Flower..." 
+              placeholder="Search by Group, Party, or Flower..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input"

@@ -180,16 +180,16 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Place:</label>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Group:</label>
             <select ref={placeRef} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Place --</option>
+              <option value="">-- Select Group --</option>
               {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>User:</label>
+            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Party:</label>
             <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select User --</option>
+              <option value="">-- Select Party --</option>
               {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
             </select>
           </div>

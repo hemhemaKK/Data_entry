@@ -69,7 +69,7 @@ const YearDetails = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this place?")) return;
+    if (!window.confirm("Are you sure you want to delete this group?")) return;
     try {
       await deletePlace(id);
       setPlaces(places.filter((p) => p.id !== id));
@@ -114,7 +114,7 @@ const YearDetails = () => {
         <button type="submit" className="btn">Add Place</button>
       </form>
       {places.length === 0 ? (
-        <p>No places found.</p>
+        <p>No groups found.</p>
       ) : (
         <div className="metrics-grid">
           {places.map((pl) => (

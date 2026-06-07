@@ -236,7 +236,7 @@ const CustomPrint = () => {
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Place</label>
             <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%' }}>
-              <option value="">-- Select Place --</option>
+              <option value="">-- Select Group --</option>
               {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>

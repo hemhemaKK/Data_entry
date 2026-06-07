@@ -181,14 +181,14 @@ const Ledger = () => {
         </select>
         
         <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear}>
-          <option value="">-- All Places --</option>
+          <option value="">-- All Groups --</option>
           {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
 
         <div style={{ marginLeft: 'auto' }}>
           <input 
             type="text" 
-            placeholder="Search by name or place..." 
+            placeholder="Search by name or group..." 
             value={searchQuery}
             onChange={(e) => {
               const query = e.target.value;
@@ -209,7 +209,7 @@ const Ledger = () => {
         </div>
 
         <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear}>
-          <option value="">-- Select User --</option>
+          <option value="">-- Select Party --</option>
           {users.filter(u => 
              (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
              (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
@@ -255,7 +255,7 @@ const Ledger = () => {
             </div>
 
             {entries.length === 0 ? (
-              <p style={{ color: 'var(--text-secondary)' }}>No entries found for this user.</p>
+              <p style={{ color: 'var(--text-secondary)' }}>No entries found for this party.</p>
             ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
