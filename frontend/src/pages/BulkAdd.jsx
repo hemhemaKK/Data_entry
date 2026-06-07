@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardApi, bulkApi, getPlaces } from '../services/api';
+import { bulkApi, getYears, getPlaces } from '../services/api';
 import { Users, MapPin, Flower2 } from 'lucide-react';
 
 const BulkAdd = () => {
@@ -21,8 +21,8 @@ const BulkAdd = () => {
 
   const fetchYears = async () => {
     try {
-      const data = await dashboardApi.getStats();
-      setYears(data.years || []);
+      const data = await getYears();
+      setYears(data || []);
     } catch (err) {
       console.error(err);
     }

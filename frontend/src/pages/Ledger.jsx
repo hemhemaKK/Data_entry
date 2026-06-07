@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { dashboardApi, getPlaces, getUsers, advancesApi } from '../services/api';
+import { getYears, getPlaces, getUsers, advancesApi } from '../services/api';
 import { Wallet, Plus, Trash2 } from 'lucide-react';
 
 const Ledger = () => {
@@ -27,8 +27,8 @@ const Ledger = () => {
 
   const fetchYears = async () => {
     try {
-      const data = await dashboardApi.getStats();
-      setYears(data.years || []);
+      const data = await getYears();
+      setYears(data || []);
     } catch (err) {
       console.error(err);
     }
