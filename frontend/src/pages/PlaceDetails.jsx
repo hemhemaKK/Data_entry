@@ -47,7 +47,8 @@ const PlaceDetails = () => {
   const [bulkMonth, setBulkMonth] = useState("");
   const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
   const [clientAdvances, setClientAdvances] = useState([]);
-  const [printCols, setPrintCols] = useState({ date: true, weight: true, van: true, rate: true, laggage: true, collie: true });
+  const [printCols, setPrintCols] = useState({ date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true });
+  const [commissionPercent, setCommissionPercent] = useState(0);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
   // ----- Global Print State -----
@@ -542,6 +543,16 @@ const PlaceDetails = () => {
                {col.charAt(0).toUpperCase() + col.slice(1)}
              </label>
           ))}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Commission (%):</span>
+            <input 
+              type="number" 
+              step="0.1"
+              value={commissionPercent} 
+              onChange={e => setCommissionPercent(parseFloat(e.target.value) || 0)}
+              style={{ width: '60px', padding: '0.25rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+            />
+          </div>
         </div>
 
         {/* Flower list */}
@@ -556,6 +567,7 @@ const PlaceDetails = () => {
                 placeName={selectedPlace?.name || ''}
                 fromDate={fromDate}
                 toDate={toDate}
+                commissionPercent={commissionPercent}
                 onEdit={() => { setEditFlower(flower); setShowFlowerForm(true); }}
                 onDelete={() => setFlowerConfirm({ open: true, flowerId: flower.id })}
                 onRecordsUpdated={() => fetchFlowers(selectedClient.id)}
@@ -717,25 +729,25 @@ const PlaceDetails = () => {
                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
-                                        <th style={{ padding: '4px' }}>Date</th>
-                                        <th style={{ padding: '4px' }}>Van</th>
-                                        <th style={{ padding: '4px' }}>Weight</th>
-                                        <th style={{ padding: '4px' }}>Rate</th>
-                                        <th style={{ padding: '4px' }}>Total</th>
-                                        <th style={{ padding: '4px' }}>Laggage</th>
-                                        <th style={{ padding: '4px' }}>Collie</th>
+                                        <th className="col-date" style={{ padding: '4px' }}>Date</th>
+                                        <th className="col-van" style={{ padding: '4px' }}>Van</th>
+                                        <th className="col-weight" style={{ padding: '4px' }}>Weight</th>
+                                        <th className="col-rate" style={{ padding: '4px' }}>Rate</th>
+                                        <th className="col-total" style={{ padding: '4px' }}>Total</th>
+                                        <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>
+                                        <th className="col-collie" style={{ padding: '4px' }}>Collie</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {flower.records.map((r, idx) => (
                                         <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
-                                            <td style={{ padding: '4px' }}>{r.date}</td>
-                                            <td style={{ padding: '4px' }}>{r.van || '-'}</td>
-                                            <td style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>
-                                            <td style={{ padding: '4px' }}>{r.rate || '-'}</td>
-                                            <td style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>
-                                            <td style={{ padding: '4px' }}>{r.laggage || '0'}</td>
-                                            <td style={{ padding: '4px' }}>{r.collie || '0'}</td>
+                                            <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>
+                                            <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>
+                                            <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>
+                                            <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>
+                                            <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>
+                                            <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>
+                                            <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -745,6 +757,11 @@ const PlaceDetails = () => {
                                 <span>Laggage: ₹{flower.totals.laggage.toFixed(3)}</span>
                                 <span>Collie: ₹{flower.totals.collie.toFixed(3)}</span>
                                 <span>Monthly Total: ₹{flower.totals.price.toFixed(3)}</span>
+                                {commissionPercent > 0 && (
+                                    <span style={{ color: 'var(--primary)' }}>
+                                        Commission ({commissionPercent}%): ₹{(flower.totals.price * (commissionPercent / 100)).toFixed(2)}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     ))}

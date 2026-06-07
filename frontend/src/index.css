@@ -840,6 +840,7 @@ body.hide-col-date .col-date { display: none !important; }
 body.hide-col-weight .col-weight { display: none !important; }
 body.hide-col-van .col-van { display: none !important; }
 body.hide-col-rate .col-rate { display: none !important; }
+body.hide-col-total .col-total { display: none !important; }
 body.hide-col-laggage .col-laggage { display: none !important; }
 body.hide-col-collie .col-collie { display: none !important; }
 body.hide-col-actions .col-actions { display: none !important; }

@@ -10,7 +10,7 @@ const formatMonthLabel = (yyyyMm) => {
   return date.toLocaleString('default', { month: 'long', year: 'numeric' });
 };
 
-const MonthCard = ({ month, records, onUpdateRecord, onDeleteRecord, onRecordsUpdated, flowerName, clientName, clientPhone, placeName, printTargetMonth, flowerId }) => {
+const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDeleteRecord, onRecordsUpdated, flowerName, clientName, clientPhone, placeName, printTargetMonth, flowerId }) => {
   const [expanded, setExpanded] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
@@ -247,6 +247,11 @@ const MonthCard = ({ month, records, onUpdateRecord, onDeleteRecord, onRecordsUp
             <span><strong>Laggage:</strong> ₹{totals.laggage.toFixed(3)}</span>
             <span><strong>Collie:</strong> ₹{totals.collie.toFixed(3)}</span>
             <span><strong>Monthly Total:</strong> ₹{totals.price.toFixed(3)}</span>
+            {commissionPercent > 0 && (
+              <span style={{ color: 'var(--primary)' }}>
+                <strong>Commission ({commissionPercent}%):</strong> ₹{(totals.price * (commissionPercent / 100)).toFixed(2)}
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -311,7 +316,7 @@ const InlineAddForm = ({ flowerId, onSave, onCancel }) => {
   );
 };
 
-const FlowerCard = ({ flower, clientName, fromDate, toDate, onEdit, onDelete, onRecordsUpdated }) => {
+const FlowerCard = ({ flower, clientName, fromDate, toDate, commissionPercent, onEdit, onDelete, onRecordsUpdated }) => {
   const [expanded, setExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [printTargetMonth, setPrintTargetMonth] = useState(null);
@@ -449,6 +454,7 @@ const FlowerCard = ({ flower, clientName, fromDate, toDate, onEdit, onDelete, on
                 flowerName={flower.name}
                 clientName={clientName}
                 records={groupedRecords[month]} 
+                commissionPercent={commissionPercent}
                 onUpdateRecord={handleUpdateRecord}
                 onDeleteRecord={handleDeleteRecord}
                 onRecordsUpdated={onRecordsUpdated}
