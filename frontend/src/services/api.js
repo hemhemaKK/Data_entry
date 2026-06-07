@@ -166,31 +166,30 @@ export const billRecordsApi = {
 
 export const bulkApi = {
     createPlaces: async (payload) => {
-        const response = await axios.post(${API_BASE_URL}/bulk/places, payload);
+        const response = await axios.post(`${API_BASE_URL}/bulk/places`, payload);
         return response.data;
     },
     createUsers: async (payload) => {
-        const response = await axios.post(${API_BASE_URL}/bulk/users, payload);
+        const response = await axios.post(`${API_BASE_URL}/bulk/users`, payload);
         return response.data;
     },
     createFlowers: async (payload) => {
-        const response = await axios.post(${API_BASE_URL}/bulk/flowers, payload);
+        const response = await axios.post(`${API_BASE_URL}/bulk/flowers`, payload);
         return response.data;
     }
 };
 
 export const advancesApi = {
     getUserAdvances: async (userId) => {
-        const response = await axios.get(${API_BASE_URL}/advances/user/);
+        const response = await axios.get(`${API_BASE_URL}/advances/user/${userId}`);
         return response.data;
     },
     createAdvance: async (payload) => {
-        const response = await axios.post(${API_BASE_URL}/advances/, payload);
+        const response = await axios.post(`${API_BASE_URL}/advances/`, payload);
         return response.data;
     },
     deleteAdvance: async (id) => {
-        const response = await axios.delete(${API_BASE_URL}/advances/);
+        const response = await axios.delete(`${API_BASE_URL}/advances/${id}`);
         return response.data;
     }
 };
-
