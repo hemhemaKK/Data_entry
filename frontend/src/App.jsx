@@ -28,12 +28,11 @@ function App() {
         <div className="app-container">
           <Navbar />
           <main className="main-content">
-            <header className="header">
-              <div></div>
+            <div style={{ position: 'absolute', top: '1.5rem', right: '1.5rem', zIndex: 10 }}>
               <button className="theme-toggle" onClick={toggleTheme} title="Toggle Theme">
                 {theme === 'dark' ? <Sun size={24} /> : <Moon size={24} />}
               </button>
-            </header>
+            </div>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/upload" element={<UploadPage />} />

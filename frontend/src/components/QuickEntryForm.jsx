@@ -128,7 +128,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   };
 
   return (
-    <div className="card" style={{ marginBottom: '2rem', border: '1px solid var(--primary)' }}>
+    <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--primary)' }}>
       <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
         <PlusCircle className="icon" style={{ color: 'var(--primary)' }} />
         <h2 className="card-title">Quick Manual Entry</h2>

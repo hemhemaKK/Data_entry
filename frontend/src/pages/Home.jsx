@@ -168,7 +168,7 @@ const Home = () => {
 
       {/* Recent Entries */}
       {allTransactions.length > 0 && (
-        <div className="card" style={{ marginBottom: '2rem', border: '1px solid var(--border)' }}>
+        <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
             <h2 className="card-title" style={{ fontSize: '1.25rem', margin: 0 }}>
               {searchTerm ? "Search Results" : "Recent Entries (Last 24 Hrs)"}
