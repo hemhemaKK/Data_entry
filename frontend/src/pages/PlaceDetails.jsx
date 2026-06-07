@@ -45,6 +45,7 @@ const PlaceDetails = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [bulkMonth, setBulkMonth] = useState("");
+  const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
   const [clientAdvances, setClientAdvances] = useState([]);
   const [printCols, setPrintCols] = useState({ date: true, weight: true, van: true, rate: true, laggage: true, collie: true });
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -328,6 +329,8 @@ const PlaceDetails = () => {
       // Apply the same date filters as FlowerCard to calculate accurate summary
       const fRecords = (flower.bill_records || []).filter(r => {
         if (!r.date) return true;
+        if (summaryMonth && !r.date.startsWith(summaryMonth)) return false;
+        
         const recordDate = new Date(r.date);
         if (isNaN(recordDate.getTime())) return true;
         recordDate.setHours(0,0,0,0);
@@ -358,6 +361,8 @@ const PlaceDetails = () => {
 
   const filteredAdvances = clientAdvances.filter(a => {
       if (!a.date) return true;
+      if (summaryMonth && !a.date.startsWith(summaryMonth)) return false;
+
       const aDate = new Date(a.date);
       if (isNaN(aDate.getTime())) return true;
       aDate.setHours(0,0,0,0);
@@ -406,7 +411,20 @@ const PlaceDetails = () => {
         </div>
 
         {/* Client Balance Summary */}
-        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+        <div className="no-print" style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <h3 style={{ margin: 0, fontSize: '1rem' }}>Balance Summary</h3>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
+              <input 
+                type="month" 
+                value={summaryMonth} 
+                onChange={(e) => setSummaryMonth(e.target.value)}
+                style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
+              />
+            </div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Total Weight</span>
                 <span style={{ fontSize: '1.1rem', fontWeight: 'bold' }}>{summaryWeight.toFixed(3)} kg</span>
@@ -433,6 +451,7 @@ const PlaceDetails = () => {
                     ₹{finalBalance.toFixed(2)}
                 </span>
             </div>
+          </div>
         </div>
 
         <div className="no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>

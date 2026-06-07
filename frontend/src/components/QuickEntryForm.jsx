@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi } from '../services/api';
 import { PlusCircle } from 'lucide-react';
 
-const QuickEntryForm = () => {
+const QuickEntryForm = ({ onRecordAdded }) => {
   const [years, setYears] = useState([]);
   const [places, setPlaces] = useState([]);
   const [users, setUsers] = useState([]);
@@ -112,6 +112,9 @@ const QuickEntryForm = () => {
       setRate('');
       setLaggage('');
       setCollie('');
+      if (onRecordAdded) {
+        onRecordAdded();
+      }
     } catch (err) {
       alert("Failed to add record.");
       console.error(err);
