@@ -13,6 +13,12 @@ try:
 except Exception:
     pass
 
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE advance_entries ADD COLUMN place_id INTEGER REFERENCES places(id);"))
+except Exception:
+    pass
+
 
 app = FastAPI(title="Excel Validation API")
 
