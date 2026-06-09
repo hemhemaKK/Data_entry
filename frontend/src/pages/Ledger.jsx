@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, advancesApi } from '../services/api';
 import { Wallet, Plus, Trash2 } from 'lucide-react';
 
@@ -21,6 +21,21 @@ const Ledger = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [allUsersForYear, setAllUsersForYear] = useState([]);
+
+  const dateRef = useRef(null);
+  const advRef = useRef(null);
+  const dedRef = useRef(null);
+  const notesRef = useRef(null);
+  const saveBtnRef = useRef(null);
+
+  const handleEnterKey = (e, nextRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
 
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
@@ -145,6 +160,11 @@ const Ledger = () => {
       setDeductionAmount('');
       setNotes('');
       fetchEntries(selectedUser);
+      
+      // Auto-focus date field for rapid sequential entry
+      setTimeout(() => {
+        if (dateRef.current) dateRef.current.focus();
+      }, 50);
     } catch (err) {
       alert("Failed to add entry.");
       console.error(err);
@@ -224,21 +244,21 @@ const Ledger = () => {
             <form onSubmit={handleAddEntry} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Date</label>
-                <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                <input type="date" ref={dateRef} onKeyDown={(e) => handleEnterKey(e, advRef)} required value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'green' }}>Advance Amount ()</label>
-                <input type="number" step="0.01" value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                <input type="number" step="0.01" ref={advRef} onKeyDown={(e) => handleEnterKey(e, dedRef)} value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'red' }}>Deduction Amount ()</label>
-                <input type="number" step="0.01" value={deductionAmount} onChange={(e) => setDeductionAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                <input type="number" step="0.01" ref={dedRef} onKeyDown={(e) => handleEnterKey(e, notesRef)} value={deductionAmount} onChange={(e) => setDeductionAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Notes (Optional)</label>
-                <input type="text" value={notes} onChange={(e) => setNotes(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                <input type="text" ref={notesRef} onKeyDown={(e) => handleEnterKey(e, saveBtnRef)} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
+              <button type="submit" ref={saveBtnRef} className="btn btn-primary focus-ring" disabled={loading}>
                 <Plus size={16} style={{ marginRight: '8px' }} /> Add to Ledger
               </button>
             </form>
