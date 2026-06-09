@@ -27,6 +27,12 @@
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+button.focus-ring:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5) !important;
+}
+
 body {
   background-color: var(--bg-primary);
   color: var(--text-primary);
@@ -876,4 +882,12 @@ body.hide-col-actions .col-actions { display: none !important; }
 /* Right align columns except date */
 .col-van, .col-weight, .col-rate, .col-total, .col-laggage, .col-collie {
   text-align: right !important;
+}
+
+
+/* Custom Focus Ring for Modals */
+button.focus-ring:focus {
+  outline: 3px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5) !important;
 }
