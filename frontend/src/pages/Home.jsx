@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { getYears, billRecordsApi } from "../services/api";
 import QuickEntryForm from "../components/QuickEntryForm";
 import RecordFormModal from "../components/RecordFormModal";
@@ -13,6 +13,23 @@ const Home = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [inlineEditId, setInlineEditId] = useState(null);
   const [inlineForm, setInlineForm] = useState({ date: '', van: '', weight: '', rate: '', laggage: '', collie: '', flower_id: null });
+
+  const inlineDateRef = useRef(null);
+  const inlineVanRef = useRef(null);
+  const inlineWeightRef = useRef(null);
+  const inlineRateRef = useRef(null);
+  const inlineSaveRef = useRef(null);
+
+  const handleInlineEnterKey = (e, nextRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      } else if (nextRef === 'submit') {
+        handleUpdateRecord();
+      }
+    }
+  };
 
   const fetchYearsAndRecent = async () => {
     try {
@@ -47,6 +64,9 @@ const Home = () => {
       collie: record.collie || 0,
       flower_id: record.flower_id
     });
+    setTimeout(() => {
+      if (inlineDateRef.current) inlineDateRef.current.focus();
+    }, 50);
   };
 
   const handleUpdateRecord = async () => {
@@ -159,25 +179,25 @@ const Home = () => {
                       {isEditing ? (
                         <>
                           <td style={{ padding: '0.75rem', textAlign: 'left' }}>
-                            <input type="date" value={inlineForm.date} onChange={e => setInlineForm({...inlineForm, date: e.target.value})} style={{ width: '100%', padding: '0.25rem' }} />
+                            <input type="date" value={inlineForm.date} onChange={e => setInlineForm({...inlineForm, date: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineVanRef)} ref={inlineDateRef} style={{ width: '100%', padding: '0.25rem' }} />
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="text" value={inlineForm.van} onChange={e => setInlineForm({...inlineForm, van: e.target.value})} style={{ width: '100%', padding: '0.25rem', textAlign: 'right' }} />
+                            <input type="text" value={inlineForm.van} onChange={e => setInlineForm({...inlineForm, van: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineWeightRef)} ref={inlineVanRef} style={{ width: '100%', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>{entry.place_name}</td>
                           <td style={{ padding: '0.75rem', fontWeight: 500, textAlign: 'right' }}>{entry.client_name}</td>
                           <td style={{ padding: '0.75rem', color: 'var(--primary)', textAlign: 'right' }}>{entry.flower_name}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="number" step="0.001" value={inlineForm.weight} onChange={e => setInlineForm({...inlineForm, weight: e.target.value})} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} /> kg
+                            <input type="number" step="0.001" value={inlineForm.weight} onChange={e => setInlineForm({...inlineForm, weight: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineRateRef)} ref={inlineWeightRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} /> kg
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
+                            <input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineSaveRef)} ref={inlineRateRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>
                             {((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)).toFixed(2)}
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
-                            <button onClick={handleUpdateRecord} className="icon-btn icon-btn-sm" title="Save" style={{ marginRight: '4px', color: 'var(--success)' }}>
+                            <button onClick={handleUpdateRecord} ref={inlineSaveRef} onKeyDown={(e) => handleInlineEnterKey(e, 'submit')} className="icon-btn icon-btn-sm" title="Save" style={{ marginRight: '4px', color: 'var(--success)' }}>
                               <FaSave />
                             </button>
                             <button onClick={handleCancelEdit} className="icon-btn icon-btn-sm icon-btn-danger" title="Cancel">
