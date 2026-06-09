@@ -1,8 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Sun, Moon } from 'lucide-react';
 import Navbar from './components/Navbar';
 import ThemeProvider from './components/ThemeProvider';
+import AlertModal from './components/AlertModal';
 import Home from './pages/Home';
 import UploadPage from './pages/Upload';
 import Transactions from './pages/Transactions';
@@ -24,6 +25,7 @@ function App() {
 
   return (
     <ThemeProvider>
+      <AlertModal />
       <Router>
         <div className="app-container">
           <Navbar />
