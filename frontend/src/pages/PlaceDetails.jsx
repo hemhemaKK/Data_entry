@@ -410,7 +410,7 @@ const PlaceDetails = () => {
       try {
           setIsGlobalPrinting(true);
           setIsSingleUserPrint(false);
-          const allFlowers = await getFlowers(placeId);
+          const allFlowers = await getFlowers(null, { place_id: placeId });
           const printMap = {};
           
           allFlowers.forEach(flower => {
