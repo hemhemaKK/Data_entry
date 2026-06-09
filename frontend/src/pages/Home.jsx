@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { getYears, billRecordsApi } from "../services/api";
 import QuickEntryForm from "../components/QuickEntryForm";
 import RecordFormModal from "../components/RecordFormModal";
@@ -140,14 +140,14 @@ const Home = () => {
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)' }}>
-                  <th style={{ padding: '0.75rem' }}>Date</th>
-                  <th style={{ padding: '0.75rem' }}>Van</th>
-                  <th style={{ padding: '0.75rem' }}>Group</th>
-                  <th style={{ padding: '0.75rem' }}>Party</th>
-                  <th style={{ padding: '0.75rem' }}>Flower</th>
-                  <th style={{ padding: '0.75rem' }}>Weight</th>
-                  <th style={{ padding: '0.75rem' }}>Rate</th>
-                  <th style={{ padding: '0.75rem' }}>Total</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'left' }}>Date</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Van</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Group</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Party</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Flower</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Weight</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Rate</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                 </tr>
               </thead>
@@ -158,23 +158,23 @@ const Home = () => {
                     <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', background: isEditing ? 'var(--bg-secondary)' : 'transparent' }}>
                       {isEditing ? (
                         <>
-                          <td style={{ padding: '0.75rem' }}>
+                          <td style={{ padding: '0.75rem', textAlign: 'left' }}>
                             <input type="date" value={inlineForm.date} onChange={e => setInlineForm({...inlineForm, date: e.target.value})} style={{ width: '100%', padding: '0.25rem' }} />
                           </td>
-                          <td style={{ padding: '0.75rem' }}>
-                            <input type="text" value={inlineForm.van} onChange={e => setInlineForm({...inlineForm, van: e.target.value})} style={{ width: '100%', padding: '0.25rem' }} />
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                            <input type="text" value={inlineForm.van} onChange={e => setInlineForm({...inlineForm, van: e.target.value})} style={{ width: '100%', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
-                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>{entry.place_name}</td>
-                          <td style={{ padding: '0.75rem', fontWeight: 500 }}>{entry.client_name}</td>
-                          <td style={{ padding: '0.75rem', color: 'var(--primary)' }}>{entry.flower_name}</td>
-                          <td style={{ padding: '0.75rem' }}>
-                            <input type="number" step="0.001" value={inlineForm.weight} onChange={e => setInlineForm({...inlineForm, weight: e.target.value})} style={{ width: '60px', padding: '0.25rem' }} /> kg
+                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>{entry.place_name}</td>
+                          <td style={{ padding: '0.75rem', fontWeight: 500, textAlign: 'right' }}>{entry.client_name}</td>
+                          <td style={{ padding: '0.75rem', color: 'var(--primary)', textAlign: 'right' }}>{entry.flower_name}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                            <input type="number" step="0.001" value={inlineForm.weight} onChange={e => setInlineForm({...inlineForm, weight: e.target.value})} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} /> kg
                           </td>
-                          <td style={{ padding: '0.75rem' }}>
-                            ₹<input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} style={{ width: '60px', padding: '0.25rem' }} />
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>
+                            <input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
-                          <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>
-                            ₹{((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)).toFixed(2)}
+                          <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>
+                            {((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)).toFixed(2)}
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <button onClick={handleUpdateRecord} className="icon-btn icon-btn-sm" title="Save" style={{ marginRight: '4px', color: 'var(--success)' }}>
@@ -187,14 +187,14 @@ const Home = () => {
                         </>
                       ) : (
                         <>
-                          <td style={{ padding: '0.75rem' }}>{entry.date}</td>
-                          <td style={{ padding: '0.75rem' }}>{entry.van}</td>
-                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)' }}>{entry.place_name}</td>
-                          <td style={{ padding: '0.75rem', fontWeight: 500 }}>{entry.client_name}</td>
-                          <td style={{ padding: '0.75rem', color: 'var(--primary)' }}>{entry.flower_name}</td>
-                          <td style={{ padding: '0.75rem' }}>{entry.weight} kg</td>
-                          <td style={{ padding: '0.75rem' }}>₹{entry.rate}</td>
-                          <td style={{ padding: '0.75rem', fontWeight: 'bold' }}>₹{(entry.weight * entry.rate).toFixed(2)}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'left' }}>{entry.date}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.van}</td>
+                          <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>{entry.place_name}</td>
+                          <td style={{ padding: '0.75rem', fontWeight: 500, textAlign: 'right' }}>{entry.client_name}</td>
+                          <td style={{ padding: '0.75rem', color: 'var(--primary)', textAlign: 'right' }}>{entry.flower_name}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.weight !== null && entry.weight !== undefined ? parseFloat(entry.weight).toFixed(3) : '-'} kg</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.rate}</td>
+                          <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>{(entry.weight * entry.rate).toFixed(2)}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <button onClick={() => handleEditRecord(entry)} className="icon-btn icon-btn-sm" title="Edit" style={{ marginRight: '4px' }}>
                               <FaEdit />

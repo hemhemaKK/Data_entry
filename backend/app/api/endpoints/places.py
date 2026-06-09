@@ -10,11 +10,16 @@ router = APIRouter()
 
 @router.post("/", response_model=PlaceSchema)
 def create_place(place: PlaceCreate, db: Session = Depends(get_db)):
-    # Ensure the referenced year exists
-    year = db.query(Year).filter(Year.id == place.year_id).first()
-    if not year:
-        raise HTTPException(status_code=404, detail="Year not found")
-    db_place = Place(name=place.name, year_id=place.year_id)
+    place_name = place.name.strip()
+    req_lower = place_name.lower()
+    
+    # Python-level strict check
+    existing_places = db.query(Place).filter(Place.year_id == place.year_id).all()
+    for ep in existing_places:
+        if ep.name and ep.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
+            
+    db_place = Place(name=place_name, year_id=place.year_id)
     db.add(db_place)
     db.commit()
     db.refresh(db_place)
@@ -42,14 +47,24 @@ def get_place(place_id: int, db: Session = Depends(get_db)):
 
 @router.put("/{place_id}", response_model=PlaceSchema)
 def update_place(place_id: int, place: PlaceCreate, db: Session = Depends(get_db)):
-    pl = db.query(Place).filter(Place.id == place_id).first()
-    if not pl:
+    db_place = db.query(Place).filter(Place.id == place_id).first()
+    if not db_place:
         raise HTTPException(status_code=404, detail="Place not found")
-    pl.name = place.name
-    pl.year_id = place.year_id
+        
+    place_name = place.name.strip()
+    req_lower = place_name.lower()
+    
+    # Python-level strict check
+    existing_places = db.query(Place).filter(Place.year_id == place.year_id, Place.id != place_id).all()
+    for ep in existing_places:
+        if ep.name and ep.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
+            
+    db_place.name = place_name
+    db_place.year_id = place.year_id
     db.commit()
-    db.refresh(pl)
-    return pl
+    db.refresh(db_place)
+    return db_place
 
 @router.delete("/{place_id}")
 def delete_place(place_id: int, db: Session = Depends(get_db)):

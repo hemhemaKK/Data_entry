@@ -111,38 +111,30 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
 
   return (
     <div className={`month-card ${expanded ? 'expanded' : ''}`} style={{ border: '1px solid var(--border)', borderRadius: '6px', marginBottom: '8px' }}>
-      <div className="print-header" style={{ display: 'none', marginBottom: '1rem' }}>
+      <div className="print-header" style={{ display: 'none', marginBottom: '0.2rem' }}>
         <img 
             src="/header.jpeg" 
             alt="Header Image" 
-            style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
+            style={{ width: '100%', height: 'auto', display: 'block', marginTop: '5px', marginBottom: '0.25rem' }} 
         />
         <div style={{ marginTop: '10px' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
                 <tbody>
                     <tr>
                         <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
-                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{clientName}</td>
-                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
-                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
+                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{clientName}</td>
                     </tr>
                     <tr>
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{clientPhone || ''}</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{clientPhone || ''}</td>
                     </tr>
                     <tr>
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{placeName || ''}</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{(clientBalance !== undefined ? clientBalance : totals.price).toFixed(2)}</td>
+                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{placeName || ''}</td>
                     </tr>
                     <tr>
                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Flower:</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{flowerName}</td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}></td>
+                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{flowerName}</td>
                     </tr>
                 </tbody>
             </table>
@@ -153,9 +145,32 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
         style={{ padding: '12px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
       >
         <strong>{formatMonthLabel(month)}</strong>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <button onClick={handleIndividualPrint} className="btn btn-sm no-print" style={{ padding: '2px 6px', fontSize: '0.75rem', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
-            Print Month
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} className="no-print">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
+            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Printed:</span>
+            <button 
+                onClick={async (e) => {
+                    e.stopPropagation();
+                    const isMonthPrinted = records.every(r => r.print_taken);
+                    try {
+                        await billRecordsApi.markRecordsPrinted(records.map(r => r.id), !isMonthPrinted);
+                        if (onRecordsUpdated) onRecordsUpdated();
+                    } catch (err) {
+                        alert("Failed to update print status");
+                        console.error(err);
+                    }
+                }}
+                style={{ 
+                    padding: '2px 8px', borderRadius: '12px', fontSize: '0.75rem', cursor: 'pointer', border: 'none',
+                    background: records.every(r => r.print_taken) ? '#d4edda' : '#e2e3e5', 
+                    color: records.every(r => r.print_taken) ? '#155724' : '#383d41' 
+                }}
+            >
+                {records.every(r => r.print_taken) ? 'Yes' : 'No'}
+            </button>
+          </div>
+          <button onClick={handleIndividualPrint} className="btn btn-sm" style={{ padding: '2px 6px', fontSize: '0.75rem', background: 'transparent', color: 'var(--accent)', border: '1px solid var(--accent)' }}>
+            Print
           </button>
           {expanded ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
         </div>
@@ -166,15 +181,14 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
           <table style={{ width: '100%', fontSize: '0.85rem', textAlign: 'left', borderCollapse: 'collapse', minWidth: '600px' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th className="col-date" style={{ padding: '8px 4px' }}>Date</th>
-                <th className="col-van" style={{ padding: '8px 4px' }}>Van</th>
-                <th className="col-weight" style={{ padding: '8px 4px' }}>Weight (kg)</th>
-                <th className="col-rate" style={{ padding: '8px 4px' }}>Rate (₹)</th>
-                <th className="col-total" style={{ padding: '8px 4px' }}>Total (₹)</th>
-                <th className="col-laggage" style={{ padding: '8px 4px' }}>Laggage (₹)</th>
-                <th className="col-collie" style={{ padding: '8px 4px' }}>Collie (₹)</th>
-                <th className="col-printed no-print" style={{ padding: '8px 4px', textAlign: 'center' }}>Printed</th>
-                <th className="col-actions no-print" style={{ padding: '8px 4px', textAlign: 'right' }}>Actions</th>
+                <th className="col-date" style={{ padding: '8px 4px' }}><b>Date</b></th>
+                <th className="col-van" style={{ padding: '8px 4px' }}><b>Van</b></th>
+                <th className="col-weight" style={{ padding: '8px 4px' }}><b>Weight (kg)</b></th>
+                <th className="col-rate" style={{ padding: '8px 4px' }}><b>Rate ()</b></th>
+                <th className="col-total" style={{ padding: '8px 4px' }}><b>Total ()</b></th>
+                <th className="col-laggage" style={{ padding: '8px 4px' }}><b>Laggage ()</b></th>
+                <th className="col-collie" style={{ padding: '8px 4px' }}><b>Collie ()</b></th>
+                <th className="col-actions no-print" style={{ padding: '8px 4px', textAlign: 'right' }}><b>Actions</b></th>
               </tr>
             </thead>
             <tbody>
@@ -186,32 +200,26 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 <tr key={record.id} style={{ borderBottom: '1px solid var(--border)' }}>
                   {editingId === record.id ? (
                     <>
-                      <td className="col-date" style={{ padding: '4px' }}>
+                      <td className="col-date" style={{ padding: '2px' }}>
                         <input type="date" name="date" value={editFormData.date} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-van" style={{ padding: '4px' }}>
+                      <td className="col-van" style={{ padding: '2px' }}>
                         <input type="text" name="van" value={editFormData.van} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-weight" style={{ padding: '4px' }}>
+                      <td className="col-weight" style={{ padding: '2px' }}>
                         <input type="number" step="0.01" name="weight" value={editFormData.weight} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-rate" style={{ padding: '4px' }}>
+                      <td className="col-rate" style={{ padding: '2px' }}>
                         <input type="number" step="0.01" name="rate" value={editFormData.rate} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>
-                        ₹{((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(2)}
+                      <td className="col-total" style={{ padding: '2px', fontWeight: 'bold' }}>
+                        {((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(2)}
                       </td>
-                      <td className="col-laggage" style={{ padding: '4px' }}>
+                      <td className="col-laggage" style={{ padding: '2px' }}>
                         <input type="number" step="0.01" name="laggage" value={editFormData.laggage} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
-                      <td className="col-collie" style={{ padding: '4px' }}>
+                      <td className="col-collie" style={{ padding: '2px' }}>
                         <input type="number" step="0.01" name="collie" value={editFormData.collie} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
-                      </td>
-                      <td className="col-printed no-print" style={{ padding: '4px', textAlign: 'center' }}>
-                        <select name="print_taken" value={editFormData.print_taken ? "true" : "false"} onChange={(e) => setEditFormData({...editFormData, print_taken: e.target.value === "true"})} style={{ padding: '4px' }}>
-                            <option value="false">No</option>
-                            <option value="true">Yes</option>
-                        </select>
                       </td>
                       <td className="col-actions no-print" style={{ padding: '4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button onClick={() => handleSaveEdit(record.id)} className="icon-btn icon-btn-sm" style={{ marginRight: '4px', color: 'green' }} title="Save"><FaCheck /></button>
@@ -224,14 +232,9 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                       <td className="col-van" style={{ padding: '6px 4px' }}>{record.van || '-'}</td>
                       <td className="col-weight" style={{ padding: '6px 4px' }}>{record.weight !== null && record.weight !== undefined ? parseFloat(record.weight).toFixed(3) : '-'}</td>
                       <td className="col-rate" style={{ padding: '6px 4px' }}>{record.rate || '-'}</td>
-                      <td className="col-total" style={{ padding: '6px 4px', fontWeight: 'bold' }}>₹{((parseFloat(record.weight) || 0) * (parseFloat(record.rate) || 0)).toFixed(2)}</td>
+                      <td className="col-total" style={{ padding: '6px 4px', fontWeight: 'bold' }}>{((parseFloat(record.weight) || 0) * (parseFloat(record.rate) || 0)).toFixed(2)}</td>
                       <td className="col-laggage" style={{ padding: '6px 4px' }}>{record.laggage || '0'}</td>
                       <td className="col-collie" style={{ padding: '6px 4px' }}>{record.collie || '0'}</td>
-                      <td className="col-printed no-print" style={{ padding: '6px 4px', textAlign: 'center' }}>
-                          <span style={{ padding: '2px 6px', borderRadius: '4px', fontSize: '0.75rem', background: record.print_taken ? '#d4edda' : '#e2e3e5', color: record.print_taken ? '#155724' : '#383d41' }}>
-                              {record.print_taken ? 'Yes' : 'No'}
-                          </span>
-                      </td>
                       <td className="col-actions no-print" style={{ padding: '6px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
                         <button onClick={() => handleEditClick(record)} className="icon-btn icon-btn-sm" style={{ marginRight: '4px' }} title="Edit"><FaEdit /></button>
                         <button onClick={() => onDeleteRecord(record.id)} className="icon-btn icon-btn-sm icon-btn-danger" title="Delete"><FaTrashAlt /></button>
@@ -241,23 +244,30 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr style={{ background: '#f0f0f0', fontWeight: 'bold', borderTop: '1px solid black', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                <td className="col-date" colSpan="2" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
+                <td className="col-weight" style={{ padding: '8px 4px' }}>{totals.weight.toFixed(3)}</td>
+                <td className="col-rate" style={{ padding: '8px 4px' }}></td>
+                <td className="col-total" style={{ padding: '8px 4px' }}>{totals.price.toFixed(2)}</td>
+                <td className="col-laggage" style={{ padding: '8px 4px' }}>{totals.laggage.toFixed(2)}</td>
+                <td className="col-collie" style={{ padding: '8px 4px' }}>{totals.collie.toFixed(2)}</td>
+                <td className="col-actions no-print" style={{ padding: '8px 4px' }}></td>
+              </tr>
+              {commissionPercent > 0 && (
+                <>
+                  <tr className="no-print" style={{ background: 'var(--background)', fontWeight: 'bold', color: 'red' }}>
+                    <td colSpan="4" style={{ padding: '8px 4px', textAlign: 'right' }}>Commission:</td>
+                    <td colSpan="4" style={{ padding: '8px 4px' }}>-{(totals.price * (commissionPercent / 100)).toFixed(2)}</td>
+                  </tr>
+                  <tr className="no-print" style={{ background: 'var(--background)', fontWeight: 'bold', color: 'green', fontSize: '1.05rem' }}>
+                    <td colSpan="4" style={{ padding: '8px 4px', textAlign: 'right' }}>Grand Total:</td>
+                    <td colSpan="4" style={{ padding: '8px 4px' }}>{(totals.price - (totals.price * (commissionPercent / 100))).toFixed(2)}</td>
+                  </tr>
+                </>
+              )}
+            </tfoot>
           </table>
-          <div style={{ marginTop: '12px', padding: '8px', background: 'var(--background)', borderRadius: '4px', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
-            <span><strong>Total Weight:</strong> {totals.weight.toFixed(3)} kg</span>
-            <span><strong>Laggage:</strong> ₹{totals.laggage.toFixed(3)}</span>
-            <span><strong>Collie:</strong> ₹{totals.collie.toFixed(3)}</span>
-            <span><strong>Monthly Total:</strong> ₹{totals.price.toFixed(3)}</span>
-            {commissionPercent > 0 && (
-              <>
-                <span style={{ color: 'red' }}>
-                  <strong>Commission ({commissionPercent}%):</strong> -₹{(totals.price * (commissionPercent / 100)).toFixed(2)}
-                </span>
-                <span style={{ color: 'green', fontSize: '1rem' }}>
-                  <strong>Grand Total:</strong> ₹{(totals.price - (totals.price * (commissionPercent / 100))).toFixed(2)}
-                </span>
-              </>
-            )}
-          </div>
         </div>
       )}
     </div>
@@ -416,8 +426,8 @@ const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance,
 
   return (
     <div className={`flower-card ${expanded ? 'expanded' : ''}`} style={{ flexDirection: 'column', alignItems: 'stretch' }}>
-      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span className="flower-card-name" onClick={() => setExpanded(!expanded)} style={{cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px'}}>
+      <div className="no-print" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
+        <span className="flower-card-name" style={{display: 'flex', alignItems: 'center', gap: '8px'}}>
            {flower.name} 
           <span style={{fontSize: '0.8rem', color: 'var(--text-secondary)'}}>
             {records.length > 0 && `(${records.length} records)`}
@@ -426,14 +436,14 @@ const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance,
         </span>
         <div className="flower-card-actions no-print">
           {expanded && !showAddForm && (
-             <button onClick={() => setShowAddForm(true)} className="btn btn-sm" style={{ marginRight: '8px', padding: '4px 8px', fontSize: '0.8rem' }} title="Add Record">
+             <button onClick={(e) => { e.stopPropagation(); setShowAddForm(true); }} className="btn btn-sm" style={{ marginRight: '8px', padding: '4px 8px', fontSize: '0.8rem' }} title="Add Record">
                <FaPlus style={{ marginRight: '4px' }} /> Add Record
              </button>
           )}
-          <button onClick={onEdit} className="icon-btn icon-btn-sm" title="Edit">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="icon-btn icon-btn-sm" title="Edit">
             <FaEdit />
           </button>
-          <button onClick={onDelete} className="icon-btn icon-btn-sm icon-btn-danger" title="Delete">
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="icon-btn icon-btn-sm icon-btn-danger" title="Delete">
             <FaTrashAlt />
           </button>
         </div>

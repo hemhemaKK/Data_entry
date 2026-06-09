@@ -1,5 +1,6 @@
 from fastapi import APIRouter, UploadFile, File, Depends, HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 from app.db.database import get_db
 from app.db.models import Upload, ValidationError, Year, Place, User, Flower, BillRecord
 from app.schemas.schemas import UploadOut, UploadDetailOut
@@ -13,6 +14,7 @@ from fastapi.responses import FileResponse
 from datetime import datetime
 import pandas as pd
 import hashlib
+import re
 
 router = APIRouter()
 
@@ -26,7 +28,12 @@ def get_or_create_year(db: Session, year_val: int) -> Year:
     return year_obj
 
 def get_or_create_place(db: Session, name: str, year_obj: Year) -> Place:
-    place_obj = db.query(Place).filter(Place.name == name, Place.year_id == year_obj.id).first()
+    name = name.strip()
+    req_lower = name.lower()
+    
+    existing_places = db.query(Place).filter(Place.year_id == year_obj.id).all()
+    place_obj = next((p for p in existing_places if p.name and p.name.strip().lower() == req_lower), None)
+    
     if not place_obj:
         place_obj = Place(name=name, year_id=year_obj.id)
         db.add(place_obj)
@@ -35,7 +42,12 @@ def get_or_create_place(db: Session, name: str, year_obj: Year) -> Place:
     return place_obj
 
 def get_or_create_user(db: Session, name: str, place_obj: Place) -> User:
-    user_obj = db.query(User).filter(User.name == name, User.place_id == place_obj.id).first()
+    name = name.strip()
+    req_lower = name.lower()
+    
+    existing_users = db.query(User).filter(User.place_id == place_obj.id).all()
+    user_obj = next((u for u in existing_users if u.name and u.name.strip().lower() == req_lower), None)
+    
     if not user_obj:
         user_obj = User(name=name, place_id=place_obj.id)
         db.add(user_obj)
@@ -81,7 +93,8 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
     total_errors = 0
     current_year = datetime.utcnow().year
     year_obj = get_or_create_year(db, current_year)
-    place_name = os.path.splitext(file.filename)[0]
+    raw_place_name = os.path.splitext(file.filename)[0]
+    place_name = re.sub(r'\s*\(\d+\)$', '', raw_place_name).strip()
     default_place = get_or_create_place(db, place_name, year_obj)
 
     try:
@@ -110,9 +123,11 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
                 if errors_in_sheet == 0:
                     for idx, row in df.iterrows():
                         flower_name = str(row.get("flower")).strip() if pd.notna(row.get("flower")) else "Unknown"
+                        req_lower = flower_name.lower()
                         
-                        # Find or create flower
-                        flower = db.query(Flower).filter(Flower.name == flower_name, Flower.user_id == user_obj.id).first()
+                        existing_flowers = db.query(Flower).filter(Flower.user_id == user_obj.id).all()
+                        flower = next((f for f in existing_flowers if f.name and f.name.strip().lower() == req_lower), None)
+                        
                         if not flower:
                             flower = Flower(name=flower_name, user_id=user_obj.id)
                             db.add(flower)
@@ -133,6 +148,21 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
                         rate_val = float(row.get("rate")) if pd.notna(row.get("rate")) else None
                         laggage_val = float(row.get("laggage")) if "laggage" in df.columns and pd.notna(row.get("laggage")) else 0.0
                         collie_val = float(row.get("collie")) if "collie" in df.columns and pd.notna(row.get("collie")) else 0.0
+                        
+                        # Deduplicate
+                        existing_record = db.query(BillRecord).filter(
+                            BillRecord.flower_id == flower.id,
+                            BillRecord.date == date_val,
+                            BillRecord.weight == weight_val,
+                            BillRecord.van == van_val,
+                            BillRecord.rate == rate_val,
+                            BillRecord.laggage == laggage_val,
+                            BillRecord.collie == collie_val
+                        ).first()
+
+                        if existing_record:
+                            db.delete(existing_record)
+                            db.flush()
                         
                         bill_record = BillRecord(
                             flower_id=flower.id,

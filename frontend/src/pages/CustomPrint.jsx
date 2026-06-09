@@ -104,7 +104,7 @@ const CustomPrint = () => {
 
   const handlePrint = async () => {
     if (selectedUserIds.size === 0) {
-      alert("Please select at least one user.");
+      alert("Please select at least one party.");
       return;
     }
 
@@ -174,15 +174,49 @@ const CustomPrint = () => {
 
         if (processedFlowers.length === 0) continue;
 
-        const totalAdvance = advances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
-        const totalDeduction = advances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
-        
+        const historicalAdvancesList = advances.filter(a => {
+            if (!a.date) return true;
+            const aDate = new Date(a.date);
+            if (isNaN(aDate.getTime())) return true;
+            aDate.setHours(0,0,0,0);
+            if (toDate) {
+                const tD = new Date(toDate);
+                tD.setHours(0,0,0,0);
+                if (aDate > tD) return false;
+            }
+            return true;
+        });
+
+        const periodAdvancesList = advances.filter(a => {
+            if (!a.date) return true;
+            const aDate = new Date(a.date);
+            if (isNaN(aDate.getTime())) return true;
+            aDate.setHours(0,0,0,0);
+            if (fromDate) {
+                const fD = new Date(fromDate);
+                fD.setHours(0,0,0,0);
+                if (aDate < fD) return false;
+            }
+            if (toDate) {
+                const tD = new Date(toDate);
+                tD.setHours(0,0,0,0);
+                if (aDate > tD) return false;
+            }
+            return true;
+        });
+
+        const historicalAdvance = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+        const historicalDeduction = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+        const finalBalance = historicalAdvance - historicalDeduction;
+
+        const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+
         const clientTotalLaggage = processedFlowers.reduce((sum, f) => sum + f.totals.laggage, 0);
         const clientTotalCollie = processedFlowers.reduce((sum, f) => sum + f.totals.collie, 0);
         
         const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-        const grandTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
-        const finalBalance = grandTotal - totalAdvance + totalDeduction;
+        const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+        const grandTotal = baseTotal - periodDeduction;
 
         printGroups.push({
             client: user,
@@ -193,7 +227,9 @@ const CustomPrint = () => {
             clientTotalCollie,
             commissionDeduction,
             grandTotal,
-            finalBalance
+            finalBalance,
+            totalAdvance: historicalAdvance,
+            periodDeduction
         });
 
       } catch (err) {
@@ -202,7 +238,7 @@ const CustomPrint = () => {
     }
 
     if (printGroups.length === 0) {
-      alert("No records found for the selected users in the given date range.");
+      alert("No records found for the selected parties in the given date range.");
       return;
     }
 
@@ -220,40 +256,40 @@ const CustomPrint = () => {
   return (
     <div className="page-container fade-in">
       <div className="page-header no-print">
-        <h1 className="page-title"><Printer className="icon" /> Print Custom Users</h1>
+        <h1 className="page-title"><Printer className="icon" /> Print Custom Parties</h1>
       </div>
 
       <div className="card no-print" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'end' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Year</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%' }}>
-              <option value="">-- Select Year --</option>
-              {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
+            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Year --</option>
+              {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
             </select>
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Place</label>
-            <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%' }}>
-              <option value="">-- Select Group --</option>
-              {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Group</label>
+            <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Group --</option>
+              {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
             </select>
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/> From Date</label>
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input" style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/> To Date</label>
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input" style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Commission (%)</label>
-            <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} className="input" style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} className="input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
         </div>
 
@@ -277,10 +313,10 @@ const CustomPrint = () => {
       {users.length > 0 && (
         <div className="card no-print" style={{ marginBottom: '2rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h2 className="card-title">Select Users</h2>
+            <h2 className="card-title">Select Parties</h2>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
               <input type="checkbox" checked={selectAll} onChange={handleSelectAll} style={{ width: '18px', height: '18px' }} />
-              Select All Users
+              Select All Parties
             </label>
           </div>
           
@@ -319,7 +355,7 @@ const CustomPrint = () => {
                             style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
                         />
                         <div style={{ marginTop: '10px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white', color: 'black' }}>
                                 <tbody>
                                     <tr>
                                         <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
@@ -338,8 +374,8 @@ const CustomPrint = () => {
                                     <tr>
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>{group.placeName}</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{Math.abs(group.finalBalance).toFixed(2)}</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>பாக்கி:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>{Math.abs(group.finalBalance).toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -349,7 +385,7 @@ const CustomPrint = () => {
                     {group.flowers.map(flower => (
                         <div key={flower.id} style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>Flower: {flower.name}</h4>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left', color: 'black' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
                                         {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
@@ -368,44 +404,55 @@ const CustomPrint = () => {
                                             {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
                                             {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
                                             {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
-                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
+                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
                                             {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
                                             {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
                                         </tr>
                                     ))}
                                 </tbody>
+                                <tfoot>
+                                    <tr style={{ borderTop: '1px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                                        <td colSpan={(columns.date ? 1 : 0) + (columns.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
+                                        {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{flower.totals.weight.toFixed(3)}</td>}
+                                        {columns.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
+                                        {columns.total && <td className="col-total" style={{ padding: '4px' }}>{flower.totals.price.toFixed(2)}</td>}
+                                        {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{flower.totals.laggage.toFixed(2)}</td>}
+                                        {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{flower.totals.collie.toFixed(2)}</td>}
+                                    </tr>
+                                </tfoot>
                             </table>
-                            <div style={{ marginTop: '8px', padding: '4px', background: 'transparent', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap', fontWeight: 'bold' }}>
-                                <span>Total Weight: {flower.totals.weight.toFixed(3)} kg</span>
-                                <span>Laggage: ₹{flower.totals.laggage.toFixed(3)}</span>
-                                <span>Collie: ₹{flower.totals.collie.toFixed(3)}</span>
-                                <span>Flower Total: ₹{flower.totals.price.toFixed(3)}</span>
-                            </div>
                         </div>
                     ))}
                     
-                    <div style={{ marginTop: '16px', padding: '12px', background: 'transparent', border: '2px solid black', fontSize: '1rem', fontWeight: 'bold' }}>
+                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid black', fontSize: '0.9rem', fontWeight: 'bold', color: 'black', width: '50%', marginLeft: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <span>Total of All Flowers:</span>
-                            <span>₹{group.clientTotalPrice.toFixed(2)}</span>
+                            <span>{group.clientTotalPrice.toFixed(2)}</span>
                         </div>
+                        {commissionPercent > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
+                                <span>Commission:</span>
+                                <span>-{group.commissionDeduction.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
                             <span>Total Laggage:</span>
-                            <span>-₹{group.clientTotalLaggage.toFixed(2)}</span>
+                            <span>-{group.clientTotalLaggage.toFixed(2)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
                             <span>Total Collie:</span>
-                            <span>-₹{group.clientTotalCollie.toFixed(2)}</span>
+                            <span>-{group.clientTotalCollie.toFixed(2)}</span>
                         </div>
-                            {commissionPercent > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                                <span>Commission:</span>
-                                <span>₹{group.commissionDeduction.toFixed(2)}</span>
-                                </div>
-                            )}
+
+                        {group.periodDeduction > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
+                                <span>Advance Deduction:</span>
+                                <span>-{group.periodDeduction.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: '8px', color: 'green', fontSize: '1.1rem' }}>
                             <span>Grand Total:</span>
-                            <span>₹{group.grandTotal.toFixed(2)}</span>
+                            <span>{Math.abs(group.grandTotal).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>

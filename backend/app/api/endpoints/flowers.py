@@ -13,7 +13,16 @@ def create_flower(flower: FlowerCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == flower.user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    db_flower = Flower(name=flower.name, user_id=flower.user_id)
+        
+    flower_name = flower.name.strip()
+    req_lower = flower_name.lower()
+    
+    existing_flowers = db.query(Flower).filter(Flower.user_id == flower.user_id).all()
+    for ef in existing_flowers:
+        if ef.name and ef.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Flower '{flower_name}' is already created for party in this group.")
+        
+    db_flower = Flower(name=flower_name, user_id=flower.user_id)
     db.add(db_flower)
     db.commit()
     db.refresh(db_flower)
@@ -40,7 +49,16 @@ def update_flower(flower_id: int, flower: FlowerCreate, db: Session = Depends(ge
     fl = db.query(Flower).filter(Flower.id == flower_id).first()
     if not fl:
         raise HTTPException(status_code=404, detail="Flower not found")
-    fl.name = flower.name
+        
+    flower_name = flower.name.strip()
+    req_lower = flower_name.lower()
+    
+    existing_flowers = db.query(Flower).filter(Flower.user_id == flower.user_id, Flower.id != flower_id).all()
+    for ef in existing_flowers:
+        if ef.name and ef.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Flower '{flower_name}' is already created for party in this group.")
+        
+    fl.name = flower_name
     fl.user_id = flower.user_id
     db.commit()
     db.refresh(fl)

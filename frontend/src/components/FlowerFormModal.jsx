@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
  * FlowerFormModal – simple modal to add or edit a flower name.
  * Only field: Name.
  */
-const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, clientName = "" }) => {
+const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, clientName = "", globalFlowers = [] }) => {
   const [name, setName] = useState("");
 
   useEffect(() => {
@@ -23,7 +23,21 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
       alert("Flower name is required");
       return;
     }
-    onSubmit({ name: name.trim() });
+    
+    const names = name.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
+    if (names.length === 0) return;
+    
+    if (initialData?.id && names.length > 1) {
+      alert("You can only edit one flower name at a time.");
+      return;
+    }
+    
+    if (initialData?.id) {
+      onSubmit({ name: names[0] });
+    } else {
+      onSubmit({ names });
+    }
+    
     setName("");
     onClose();
   };
@@ -41,7 +55,7 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
         )}
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: "1rem" }}>
-            <label className="modal-label">Flower Name</label>
+            <label className="modal-label">Flower Name(s) - Comma Separated</label>
             <input
               type="text"
               value={name}
@@ -52,6 +66,27 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
               required
             />
           </div>
+          
+          {!initialData?.id && globalFlowers.length > 0 && (
+            <div style={{ marginBottom: "1.5rem" }}>
+              <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '0.5rem', color: 'var(--text-secondary)' }}>
+                Quick Add: Click to append
+              </label>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', maxHeight: '100px', overflowY: 'auto', padding: '0.25rem' }}>
+                {globalFlowers.map((gf, idx) => (
+                  <span 
+                    key={idx}
+                    onClick={() => setName(prev => prev ? prev + ', ' + gf : gf)}
+                    style={{ padding: '0.25rem 0.6rem', background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)', borderRadius: '16px', fontSize: '0.8rem', cursor: 'pointer', transition: 'background 0.2s' }}
+                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                    onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                  >
+                    {gf}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="modal-actions">
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel

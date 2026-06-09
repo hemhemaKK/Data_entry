@@ -4,11 +4,32 @@ import { Link } from 'react-router-dom';
 import { PlusCircle } from 'lucide-react';
 
 const QuickEntryForm = ({ onRecordAdded }) => {
+  const yearRef = useRef(null);
   const placeRef = useRef(null);
+  const userRef = useRef(null);
+  const flowerRef = useRef(null);
+  const dateRef = useRef(null);
+  const vanRef = useRef(null);
+  const weightRef = useRef(null);
+  const rateRef = useRef(null);
+  const laggageRef = useRef(null);
+  const collieRef = useRef(null);
+  const submitBtnRef = useRef(null);
+
+  const handleEnterKey = (e, nextRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
+
   const [years, setYears] = useState([]);
   const [places, setPlaces] = useState([]);
   const [users, setUsers] = useState([]);
-  const [flowers, setFlowers] = useState([]);
+  const [globalFlowers, setGlobalFlowers] = useState([]);
+  const [partyFlowers, setPartyFlowers] = useState([]);
 
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedPlace, setSelectedPlace] = useState('');
@@ -75,7 +96,10 @@ const QuickEntryForm = ({ onRecordAdded }) => {
       }
       
       const allFlowersData = await getFlowers();
-      setFlowers(allFlowersData || []);
+      const uniqueNames = [...new Set((allFlowersData || []).map(f => f.name.toLowerCase()))].map(n => 
+         allFlowersData.find(f => f.name.toLowerCase() === n).name
+      );
+      setGlobalFlowers(uniqueNames);
     } catch (err) {
       console.error(err);
     }
@@ -113,26 +137,46 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   const handleUserChange = async (e) => {
     const uId = e.target.value;
     setSelectedUser(uId);
+    setSelectedFlower('');
+    if (uId) {
+      try {
+        const data = await getFlowers(uId);
+        setPartyFlowers(data || []);
+      } catch (err) { console.error(err); }
+    } else {
+      setPartyFlowers([]);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedFlower) return alert("Please select a flower.");
 
-    const payload = {
-      flower_id: parseInt(selectedFlower),
-      date: date || null,
-      weight: parseFloat(weight) || 0,
-      van: van || null,
-      rate: parseFloat(rate) || 0,
-      laggage: parseFloat(laggage) || 0,
-      collie: parseFloat(collie) || 0,
-    };
-
     setLoading(true);
+    let finalFlowerId = null;
+
     try {
+      const existingFlower = partyFlowers.find(f => f.name.toLowerCase() === selectedFlower.toLowerCase());
+      if (existingFlower) {
+        finalFlowerId = existingFlower.id;
+      } else {
+        const { createFlower } = await import('../services/api');
+        const newFlower = await createFlower({ name: selectedFlower, user_id: selectedUser });
+        finalFlowerId = newFlower.id;
+        setPartyFlowers([...partyFlowers, newFlower]);
+      }
+
+      const payload = {
+        flower_id: finalFlowerId,
+        date: date || null,
+        weight: parseFloat(weight) || 0,
+        van: van || null,
+        rate: parseFloat(rate) || 0,
+        laggage: parseFloat(laggage) || 0,
+        collie: parseFloat(collie) || 0,
+      };
+
       await billRecordsApi.createRecord(payload);
-      alert("Record added successfully!");
       // Clear numeric fields but keep date, van, and selections
       setWeight('');
       setRate('');
@@ -142,7 +186,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         onRecordAdded();
       }
       if (placeRef.current) {
-        placeRef.current.focus();
+        setTimeout(() => placeRef.current.focus(), 10);
       }
     } catch (err) {
       alert("Failed to add record.");
@@ -166,30 +210,30 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxWidth: '400px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Year:</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Year --</option>
-              {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
+            <select ref={yearRef} onKeyDown={(e) => handleEnterKey(e, placeRef)} className="select-input" value={selectedYear} onChange={handleYearChange} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Year --</option>
+              {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Group:</label>
-            <select ref={placeRef} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Group --</option>
-              {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            <select ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Group --</option>
+              {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Party:</label>
-            <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Party --</option>
-              {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+            <select ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Party --</option>
+              {users.map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Flower:</label>
-            <select className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
-              <option value="">-- Select Flower --</option>
-              {flowers.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+            <select ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Flower --</option>
+              {globalFlowers.map(fname => <option key={fname} value={fname} style={{ color: 'black' }}>{fname}</option>)}
             </select>
           </div>
         </div>
@@ -198,30 +242,30 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
           <div style={{ flex: '1 1 120px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Date</label>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input ref={dateRef} onKeyDown={(e) => handleEnterKey(e, vanRef)} type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Van</label>
-            <input type="text" value={van} onChange={e => setVan(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input ref={vanRef} onKeyDown={(e) => handleEnterKey(e, weightRef)} type="text" value={van} onChange={e => setVan(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
             <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Weight (kg)</label>
-            <input type="number" step="0.001" value={weight} onChange={e => setWeight(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input ref={weightRef} onKeyDown={(e) => handleEnterKey(e, rateRef)} type="number" step="0.001" value={weight} onChange={e => setWeight(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Rate (₹)</label>
-            <input type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Rate ()</label>
+            <input ref={rateRef} onKeyDown={(e) => handleEnterKey(e, laggageRef)} type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Laggage (₹)</label>
-            <input type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Laggage ()</label>
+            <input ref={laggageRef} onKeyDown={(e) => handleEnterKey(e, collieRef)} type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Collie (₹)</label>
-            <input type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Collie ()</label>
+            <input ref={collieRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
-            <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', height: '38px' }} disabled={loading || !selectedFlower}>
+            <button ref={submitBtnRef} type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', height: '38px' }} disabled={loading || !selectedFlower}>
               {loading ? "..." : "Add Record"}
             </button>
           </div>
@@ -250,7 +294,6 @@ const QuickEntryForm = ({ onRecordAdded }) => {
               </Link>
               <div style={{ borderLeft: '1px solid var(--border)', height: '18px', margin: '0 2px' }}></div>
               <button type="button" onClick={() => handleEditYear(y.id, y.year)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title="Edit">✏️</button>
-              <button type="button" onClick={() => handleDeleteYear(y.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1rem' }} title="Delete">❌</button>
             </div>
           ))}
         </div>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { FaEdit, FaTrashAlt, FaEye } from "react-icons/fa";
 
 /**
@@ -10,7 +10,7 @@ import { FaEdit, FaTrashAlt, FaEye } from "react-icons/fa";
  */
 const ClientCard = ({ client, onEdit, onDelete, onViewDetails }) => {
   return (
-    <div className="client-card">
+    <div className="client-card" style={{ cursor: 'pointer' }} onClick={onViewDetails}>
       <div className="client-card-header">
         <div className="client-card-title">
           <h3 className="client-card-name">{client.name}</h3>
@@ -19,19 +19,14 @@ const ClientCard = ({ client, onEdit, onDelete, onViewDetails }) => {
           )}
         </div>
         <div className="client-card-actions">
-          <button onClick={onEdit} className="icon-btn" title="Edit">
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="icon-btn" title="Edit">
             <FaEdit />
           </button>
-          <button onClick={onDelete} className="icon-btn icon-btn-danger" title="Delete">
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }} className="icon-btn icon-btn-danger" title="Delete">
             <FaTrashAlt />
           </button>
         </div>
       </div>
-
-      <button className="view-details-btn" onClick={onViewDetails}>
-        <FaEye size={14} />
-        View Details
-      </button>
     </div>
   );
 };

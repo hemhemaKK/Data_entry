@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+﻿import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { getPlaces, createPlace, updatePlace, deletePlace } from "../services/api";
@@ -14,7 +14,7 @@ const YearDetails = () => {
 
   const fetchPlaces = async () => {
     try {
-      const data = await getPlaces(parseInt(yearId, 10), search);
+      const data = await getPlaces(parseInt(yearId, 10));
       setPlaces(data);
     } catch (err) {
       console.error(err);
@@ -26,7 +26,9 @@ const YearDetails = () => {
 
   useEffect(() => {
     fetchPlaces();
-  }, [yearId, search]);
+  }, [yearId]);
+
+  const filteredPlaces = places.filter(pl => pl.name.toLowerCase().includes(search.toLowerCase()));
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -99,25 +101,13 @@ const YearDetails = () => {
           className="input"
           style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}
         />
-        <button className="btn" onClick={fetchPlaces}>Search</button>
       </div>
-      <form onSubmit={handleCreate} style={{ marginBottom: "1rem", display: "flex", gap: "0.5rem" }}>
-        <input
-          type="text"
-          placeholder="New place name"
-          value={newPlace}
-          onChange={(e) => setNewPlace(e.target.value)}
-          className="input"
-          required
-          style={{ padding: "0.5rem", borderRadius: "var(--radius)", border: "1px solid var(--border)" }}
-        />
-        <button type="submit" className="btn">Add Place</button>
-      </form>
-      {places.length === 0 ? (
+
+      {filteredPlaces.length === 0 ? (
         <p>No groups found.</p>
       ) : (
         <div className="metrics-grid">
-          {places.map((pl) => (
+          {filteredPlaces.map((pl) => (
             <PlaceCard
               key={pl.id}
               name={pl.name}

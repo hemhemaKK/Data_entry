@@ -175,22 +175,22 @@ const Ledger = () => {
 
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
 
-        <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '120px' }}>
-          <option value="">-- Select Year --</option>
-          {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
+        <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '120px' }}>
+          <option value="" style={{ color: 'black' }}>-- Select Year --</option>
+          {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
         </select>
         
-        <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '150px' }}>
-          <option value="">-- All Groups --</option>
-          {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+        <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
+          <option value="" style={{ color: 'black' }}>-- All Groups --</option>
+          {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
         </select>
 
-        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '150px' }}>
-          <option value="">-- Select Party --</option>
+        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
+          <option value="" style={{ color: 'black' }}>-- Select Party --</option>
           {users.filter(u => 
              (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
              (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
-          ).map(u => <option key={u.id} value={u.id}>{u.name} ({u.placeName})</option>)}
+          ).map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name} ({u.placeName})</option>)}
         </select>
 
         <div style={{ marginLeft: 'auto' }}>
@@ -227,11 +227,11 @@ const Ledger = () => {
                 <input type="date" required value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'green' }}>Advance Amount (₹)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'green' }}>Advance Amount ()</label>
                 <input type="number" step="0.01" value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'red' }}>Deduction Amount (₹)</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'red' }}>Deduction Amount ()</label>
                 <input type="number" step="0.01" value={deductionAmount} onChange={(e) => setDeductionAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
               <div>
@@ -248,8 +248,8 @@ const Ledger = () => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h2 className="card-title">History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : ''}</h2>
               <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                <span style={{ color: 'green' }}>Total Advances: ₹{totalAdvance.toFixed(2)}</span>
-                <span style={{ color: 'red' }}>Total Deductions: ₹{totalDeduction.toFixed(2)}</span>
+                <span style={{ color: 'green' }}>Total Advances: {totalAdvance.toFixed(2)}</span>
+                <span style={{ color: 'red' }}>Total Deductions: {totalDeduction.toFixed(2)}</span>
               </div>
             </div>
 
@@ -272,7 +272,14 @@ const Ledger = () => {
                 <tbody>
                   {(() => {
                     let runningBalance = 0;
-                    const entriesWithBalance = [...entries].reverse().map(e => {
+                    const sortedEntries = [...entries].sort((a, b) => {
+                        const d1 = new Date(a.date);
+                        const d2 = new Date(b.date);
+                        if (d1.getTime() !== d2.getTime()) return d1 - d2;
+                        return a.id - b.id;
+                    });
+                    
+                    const entriesWithBalance = sortedEntries.map(e => {
                         const prev = runningBalance;
                         runningBalance += (e.advance_amount || 0) - (e.deduction_amount || 0);
                         return { ...e, previousBalance: prev, newBalance: runningBalance };
@@ -281,10 +288,10 @@ const Ledger = () => {
                     return entriesWithBalance.map(e => (
                       <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td style={{ padding: '8px' }}>{e.date}</td>
-                        <td style={{ padding: '8px', fontWeight: 'bold' }}>₹{e.previousBalance.toFixed(2)}</td>
-                        <td style={{ padding: '8px', color: 'green' }}>{e.advance_amount > 0 ? `₹${e.advance_amount.toFixed(2)}` : '-'}</td>
-                        <td style={{ padding: '8px', color: 'red' }}>{e.deduction_amount > 0 ? `₹${e.deduction_amount.toFixed(2)}` : '-'}</td>
-                        <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>₹{e.newBalance.toFixed(2)}</td>
+                        <td style={{ padding: '8px', fontWeight: 'bold' }}>{e.previousBalance.toFixed(2)}</td>
+                        <td style={{ padding: '8px', color: 'green' }}>{e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-'}</td>
+                        <td style={{ padding: '8px', color: 'red' }}>{e.deduction_amount > 0 ? `${e.deduction_amount.toFixed(2)}` : '-'}</td>
+                        <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{e.newBalance.toFixed(2)}</td>
                         <td style={{ padding: '8px' }}>{e.notes || '-'}</td>
                         <td style={{ padding: '8px', textAlign: 'right' }}>
                           <button onClick={() => handleDelete(e.id)} className="icon-btn icon-btn-sm icon-btn-danger">

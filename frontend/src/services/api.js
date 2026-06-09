@@ -70,9 +70,9 @@ export const deleteUser = async (id) => {
   return response.data;
 };
 
-export const getFlowers = async (placeId, params = {}) => {
+export const getFlowers = async (userId, params = {}) => {
     const queryParams = { ...params };
-    if (placeId) queryParams.place_id = placeId;
+    if (userId) queryParams.user_id = userId;
     const response = await axios.get(`${API_BASE_URL}/flowers`, { params: queryParams });
     return response.data;
 };
@@ -175,6 +175,10 @@ export const bulkApi = {
     },
     createFlowers: async (payload) => {
         const response = await axios.post(`${API_BASE_URL}/bulk/flowers`, payload);
+        return response.data;
+    },
+    deleteGlobalFlower: async (flowerName) => {
+        const response = await axios.delete(`${API_BASE_URL}/bulk/flowers/${encodeURIComponent(flowerName)}`);
         return response.data;
     }
 };

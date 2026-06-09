@@ -225,7 +225,7 @@ tr:hover td {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .theme-toggle {
@@ -751,6 +751,11 @@ tr:hover td {
   display: none;
 }
 
+/* Ensure table footers are bold globally */
+tfoot td {
+  font-weight: bold !important;
+}
+
 @media print {
   @page {
     margin: 0; /* Forces browser to remove default URL and Title headers */
@@ -798,8 +803,8 @@ tr:hover td {
   .print-header {
     display: block !important;
     text-align: left; /* Image handles alignment, text is centered inside */
-    padding-bottom: 1rem;
-    margin-bottom: 1rem;
+    padding-bottom: 0;
+    margin-bottom: 0.5rem;
   }
   .print-header h2 { margin: 0; font-size: 1.5rem; }
   .print-header h3 { margin: 0.25rem 0; font-size: 1.2rem; }
@@ -822,16 +827,31 @@ tr:hover td {
   /* Format tables */
   table {
     border-collapse: collapse !important;
-    width: 100% !important;
+    width: 85% !important;
+    margin: 0 auto !important;
+    font-size: 11pt !important; 
+    line-height: 1 !important;
   }
   th, td {
     border: 1px solid #ccc !important;
-    padding: 8px !important;
+    padding: 1px 6px !important; 
     color: black !important;
+  }
+  tfoot td {
+    font-weight: bold !important;
   }
   th {
     background-color: #f8f8f8 !important;
     -webkit-print-color-adjust: exact;
+  }
+  
+  /* Page sizing for A4 */
+  @page {
+    size: A4 portrait;
+    margin-top: 0mm; 
+    margin-bottom: 5mm;
+    margin-left: 5mm;
+    margin-right: 5mm;
   }
 
   /* Month grouping headers */
@@ -852,3 +872,8 @@ body.hide-col-total .col-total { display: none !important; }
 body.hide-col-laggage .col-laggage { display: none !important; }
 body.hide-col-collie .col-collie { display: none !important; }
 body.hide-col-actions .col-actions { display: none !important; }
+
+/* Right align columns except date */
+.col-van, .col-weight, .col-rate, .col-total, .col-laggage, .col-collie {
+  text-align: right !important;
+}

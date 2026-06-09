@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 
 // Modal form for creating or editing a client (user) under a place
 const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {

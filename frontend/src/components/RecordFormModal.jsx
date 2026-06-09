@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+﻿import React, { useState, useEffect } from "react";
 import { FaTimes } from "react-icons/fa";
 
 const RecordFormModal = ({ isOpen, onClose, onSubmit, initialData, flowerId }) => {
@@ -66,15 +66,15 @@ const RecordFormModal = ({ isOpen, onClose, onSubmit, initialData, flowerId }) =
             <input type="number" step="0.01" name="weight" className="form-control" value={formData.weight} onChange={handleChange} />
           </div>
           <div className="form-group">
-            <label>Rate (₹)</label>
+            <label>Rate ()</label>
             <input type="number" step="0.01" name="rate" className="form-control" value={formData.rate} onChange={handleChange} />
           </div>
           <div className="form-group">
-            <label>Laggage (₹)</label>
+            <label>Laggage ()</label>
             <input type="number" step="0.01" name="laggage" className="form-control" value={formData.laggage} onChange={handleChange} />
           </div>
           <div className="form-group">
-            <label>Collie (₹)</label>
+            <label>Collie ()</label>
             <input type="number" step="0.01" name="collie" className="form-control" value={formData.collie} onChange={handleChange} />
           </div>
           <div className="modal-actions">

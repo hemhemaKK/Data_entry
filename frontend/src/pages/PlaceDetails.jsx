@@ -46,10 +46,14 @@ const PlaceDetails = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [bulkMonth, setBulkMonth] = useState("");
-  const [summaryMonth, setSummaryMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [summaryMonth, setSummaryMonth] = useState('');
+  
+  const [globalFlowers, setGlobalFlowers] = useState([]);
+  
   const [clientAdvances, setClientAdvances] = useState([]);
   const [printCols, setPrintCols] = useState({ date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true });
-  const [commissionPercent, setCommissionPercent] = useState(0);
+  const [isSingleUserPrint, setIsSingleUserPrint] = useState(false);
+  const [commissionPercent, setCommissionPercent] = useState(10);
   const [selectedPlace, setSelectedPlace] = useState(null);
 
   // ----- Global Print State -----
@@ -66,6 +70,18 @@ const PlaceDetails = () => {
   const fetchClients = async () => {
     const data = await getUsers(placeId);
     setClients(data);
+  };
+
+  const fetchGlobalFlowers = async () => {
+    try {
+      const allFlowers = await getFlowers();
+      const uniqueNames = [...new Set(allFlowers.map(f => f.name.toLowerCase()))].map(n => 
+         allFlowers.find(f => f.name.toLowerCase() === n).name
+      );
+      setGlobalFlowers(uniqueNames);
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const fetchPlaceDetails = async () => {
@@ -85,6 +101,7 @@ const PlaceDetails = () => {
   useEffect(() => {
     fetchClients();
     fetchPlaceDetails();
+    fetchGlobalFlowers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [placeId]);
 
@@ -166,16 +183,26 @@ const PlaceDetails = () => {
 
   // ---------- Flower Handlers ----------
   const handleFlowerCreate = async (payload) => {
-    if (flowers.some((f) => f.name.toLowerCase() === payload.name.toLowerCase())) {
-      alert("This flower name already exists for this client.");
-      return;
+    const newNames = payload.names || [payload.name];
+    let createdAny = false;
+    
+    for (const n of newNames) {
+      if (flowers.some((f) => f.name.toLowerCase() === n.toLowerCase())) {
+        alert(`Flower name "${n}" already exists for this client. Skipping.`);
+        continue;
+      }
+      try {
+        await createFlower({ name: n, user_id: selectedClient.id });
+        createdAny = true;
+      } catch (err) {
+        console.error(err);
+        alert(err.response?.data?.detail || `Failed to add flower: ${n}`);
+      }
     }
-    try {
-      await createFlower({ name: payload.name, user_id: selectedClient.id });
+    
+    if (createdAny) {
       fetchFlowers(selectedClient.id);
-    } catch (err) {
-      console.error(err);
-      alert(err.response?.data?.detail || "Failed to add flower");
+      fetchGlobalFlowers(); // Refresh global list too
     }
   };
 
@@ -187,6 +214,7 @@ const PlaceDetails = () => {
     try {
       await updateFlower(id, { name: payload.name, user_id: selectedClient.id });
       fetchFlowers(selectedClient.id);
+      fetchGlobalFlowers();
     } catch (err) {
       console.error(err);
       alert(err.response?.data?.detail || "Failed to update flower");
@@ -197,6 +225,7 @@ const PlaceDetails = () => {
     try {
       await deleteFlower(id);
       fetchFlowers(selectedClient.id);
+      fetchGlobalFlowers();
     } catch (err) {
       console.error(err);
       alert("Failed to delete flower");
@@ -210,6 +239,7 @@ const PlaceDetails = () => {
       
       try {
           setIsGlobalPrinting(true);
+          setIsSingleUserPrint(true);
           const printMap = {};
           
           filteredFlowers.forEach(flower => {
@@ -271,22 +301,68 @@ const PlaceDetails = () => {
           
           const group = printMap[selectedClient.id];
           const advances = await advancesApi.getUserAdvances(selectedClient.id);
-          const totalAdvance = advances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
-          const totalDeduction = advances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
-          
-          const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
-          const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
-          const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
-          
-          const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-          const grandTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
-          
-          group.finalBalance = grandTotal - totalAdvance + totalDeduction;
-          group.clientTotalPrice = clientTotalPrice;
-          group.clientTotalLaggage = clientTotalLaggage;
-          group.clientTotalCollie = clientTotalCollie;
-          group.commissionDeduction = commissionDeduction;
-          group.grandTotal = grandTotal;
+
+           
+           const historicalAdvancesList = advances.filter(a => {
+               if (!a.date) return true;
+               const aDate = new Date(a.date);
+               if (isNaN(aDate.getTime())) return true;
+               aDate.setHours(0,0,0,0);
+               
+               if (bulkMonth) {
+                   const [year, month] = bulkMonth.split('-');
+                   const endOfMonth = new Date(year, month, 0);
+                   endOfMonth.setHours(0,0,0,0);
+                   if (aDate > endOfMonth) return false;
+               } else if (toDate) {
+                   const tD = new Date(toDate);
+                   tD.setHours(0,0,0,0);
+                   if (aDate > tD) return false;
+               }
+               return true;
+           });
+
+           const periodAdvancesList = advances.filter(a => {
+               if (!a.date) return true;
+               if (bulkMonth && !a.date.startsWith(bulkMonth)) return false;
+               const aDate = new Date(a.date);
+               if (isNaN(aDate.getTime())) return true;
+               aDate.setHours(0,0,0,0);
+               if (fromDate) {
+                   const fD = new Date(fromDate);
+                   fD.setHours(0,0,0,0);
+                   if (aDate < fD) return false;
+               }
+               if (toDate) {
+                   const tD = new Date(toDate);
+                   tD.setHours(0,0,0,0);
+                   if (aDate > tD) return false;
+               }
+               return true;
+           });
+
+           const historicalAdvance = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+           const historicalDeduction = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+           const finalBalance = historicalAdvance - historicalDeduction;
+
+           const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+           
+           const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
+           const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+           const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
+           
+           const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
+           const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+           const grandTotal = baseTotal - periodDeduction;
+           
+           group.finalBalance = finalBalance;
+           group.clientTotalPrice = clientTotalPrice;
+           group.clientTotalLaggage = clientTotalLaggage;
+           group.clientTotalCollie = clientTotalCollie;
+           group.commissionDeduction = commissionDeduction;
+           group.grandTotal = grandTotal;
+           group.totalAdvance = historicalAdvance;
+           group.periodDeduction = periodDeduction;
           
           setGlobalPrintData([group]);
           
@@ -333,6 +409,7 @@ const PlaceDetails = () => {
       
       try {
           setIsGlobalPrinting(true);
+          setIsSingleUserPrint(false);
           const allFlowers = await getFlowers(placeId);
           const printMap = {};
           
@@ -394,22 +471,67 @@ const PlaceDetails = () => {
           
           for (let group of printArray) {
               const advances = await advancesApi.getUserAdvances(group.client.id);
-              const totalAdvance = advances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
-              const totalDeduction = advances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+
+              const historicalAdvancesList = advances.filter(a => {
+                  if (!a.date) return true;
+                  const aDate = new Date(a.date);
+                  if (isNaN(aDate.getTime())) return true;
+                  aDate.setHours(0,0,0,0);
+                  
+                  if (globalMonth) {
+                      const [year, month] = globalMonth.split('-');
+                      const endOfMonth = new Date(year, month, 0);
+                      endOfMonth.setHours(0,0,0,0);
+                      if (aDate > endOfMonth) return false;
+                  } else if (globalToDate) {
+                      const tD = new Date(globalToDate);
+                      tD.setHours(0,0,0,0);
+                      if (aDate > tD) return false;
+                  }
+                  return true;
+              });
+
+              const periodAdvancesList = advances.filter(a => {
+                  if (!a.date) return true;
+                  if (globalMonth && !a.date.startsWith(globalMonth)) return false;
+                  const aDate = new Date(a.date);
+                  if (isNaN(aDate.getTime())) return true;
+                  aDate.setHours(0,0,0,0);
+                  if (globalFromDate) {
+                      const fD = new Date(globalFromDate);
+                      fD.setHours(0,0,0,0);
+                      if (aDate < fD) return false;
+                  }
+                  if (globalToDate) {
+                      const tD = new Date(globalToDate);
+                      tD.setHours(0,0,0,0);
+                      if (aDate > tD) return false;
+                  }
+                  return true;
+              });
+
+              const historicalAdvance = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+              const historicalDeduction = historicalAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+              const finalBalance = historicalAdvance - historicalDeduction;
+
+              const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
               
               const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
               const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
               const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
               
               const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-              const grandTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+              const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+              const grandTotal = baseTotal - periodDeduction;
               
-              group.finalBalance = grandTotal - totalAdvance + totalDeduction;
+              group.finalBalance = finalBalance;
               group.clientTotalPrice = clientTotalPrice;
               group.clientTotalLaggage = clientTotalLaggage;
               group.clientTotalCollie = clientTotalCollie;
               group.commissionDeduction = commissionDeduction;
               group.grandTotal = grandTotal;
+              group.totalAdvance = historicalAdvance;
+              group.periodDeduction = periodDeduction;
           }
           
           if (printArray.length === 0) {
@@ -508,45 +630,26 @@ const PlaceDetails = () => {
       });
   });
 
-  const filteredAdvances = clientAdvances.filter(a => {
-      if (!a.date) return true;
-      if (summaryMonth && !a.date.startsWith(summaryMonth)) return false;
 
-      const aDate = new Date(a.date);
-      if (isNaN(aDate.getTime())) return true;
-      aDate.setHours(0,0,0,0);
-      if (fromDate) {
-          const fD = new Date(fromDate);
-          fD.setHours(0,0,0,0);
-          if (aDate < fD) return false;
-      }
-      if (toDate) {
-          const tD = new Date(toDate);
-          tD.setHours(0,0,0,0);
-          if (aDate > tD) return false;
-      }
-      return true;
-  });
-
-  const totalAdvance = filteredAdvances.reduce((sum, a) => sum + (a.advance_amount || 0), 0);
-  const totalDeduction = filteredAdvances.reduce((sum, a) => sum + (a.deduction_amount || 0), 0);
-  const commissionDeduction = summaryFlowerPrice * (commissionPercent / 100);
-  const finalBalance = summaryFlowerPrice - commissionDeduction - totalAdvance - totalDeduction;
+  const totalAdvance = clientAdvances.reduce((sum, a) => sum + (parseFloat(a.advance_amount) || 0), 0);
+  const totalDeduction = clientAdvances.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
+  const finalBalance = totalAdvance - totalDeduction;
 
   const renderGlobalPrintView = () => {
     if (!isGlobalPrinting) return null;
     return (
         <div className="print-only">
+
             {globalPrintData.map(group => (
                 <div key={group.client.id} style={{ pageBreakAfter: 'always', paddingBottom: '2rem' }}>
                     <div className="print-header" style={{ marginBottom: '1rem' }}>
                         <img 
                             src="/header.jpeg" 
                             alt="Header Image" 
-                            style={{ width: '100%', height: 'auto', display: 'block', marginBottom: '1rem' }} 
+                            style={{ width: '100%', height: 'auto', display: 'block', marginTop: '10px', marginBottom: '0.25rem' }} 
                         />
                         <div style={{ marginTop: '10px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white', color: 'black' }}>
                                 <tbody>
                                     <tr>
                                         <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
@@ -565,8 +668,8 @@ const PlaceDetails = () => {
                                     <tr>
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
                                         <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', textAlign: 'right' }}>பாக்கி:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>₹{Math.abs(group.finalBalance).toFixed(2)}</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>பாக்கி:</td>
+                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>{Math.abs(group.finalBalance).toFixed(2)}</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -576,7 +679,7 @@ const PlaceDetails = () => {
                     {group.flowers.map(flower => (
                         <div key={flower.id} style={{ marginBottom: '1.5rem' }}>
                             <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>Flower: {flower.name}</h4>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left' }}>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left', color: 'black' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '1px solid black' }}>
                                         {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
@@ -595,44 +698,55 @@ const PlaceDetails = () => {
                                             {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
                                             {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
                                             {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
-                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>₹{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
+                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
                                             {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
                                             {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
                                         </tr>
                                     ))}
                                 </tbody>
+                                <tfoot>
+                                    <tr style={{ borderTop: '1px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                                        <td colSpan={(columns.date ? 1 : 0) + (columns.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
+                                        {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{flower.totals.weight.toFixed(3)}</td>}
+                                        {columns.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
+                                        {columns.total && <td className="col-total" style={{ padding: '4px' }}>{flower.totals.price.toFixed(2)}</td>}
+                                        {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{flower.totals.laggage.toFixed(2)}</td>}
+                                        {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{flower.totals.collie.toFixed(2)}</td>}
+                                    </tr>
+                                </tfoot>
                             </table>
-                            <div style={{ marginTop: '8px', padding: '4px', background: 'transparent', fontSize: '0.85rem', display: 'flex', gap: '16px', flexWrap: 'wrap', fontWeight: 'bold' }}>
-                                <span>Total Weight: {flower.totals.weight.toFixed(3)} kg</span>
-                                <span>Laggage: ₹{flower.totals.laggage.toFixed(3)}</span>
-                                <span>Collie: ₹{flower.totals.collie.toFixed(3)}</span>
-                                <span>Flower Total: ₹{flower.totals.price.toFixed(3)}</span>
-                            </div>
                         </div>
                     ))}
                     
-                    <div style={{ marginTop: '16px', padding: '12px', background: 'transparent', border: '2px solid black', fontSize: '1rem', fontWeight: 'bold' }}>
+                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid black', fontSize: '0.9rem', fontWeight: 'bold', color: 'black', width: '50%', marginLeft: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                             <span>Total of All Flowers:</span>
-                            <span>₹{group.clientTotalPrice.toFixed(2)}</span>
+                            <span>{group.clientTotalPrice.toFixed(2)}</span>
                         </div>
+                        {commissionPercent > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
+                                <span>Commission:</span>
+                                <span>-{group.commissionDeduction.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
                             <span>Total Laggage:</span>
-                            <span>-₹{group.clientTotalLaggage.toFixed(2)}</span>
+                            <span>-{group.clientTotalLaggage.toFixed(2)}</span>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
                             <span>Total Collie:</span>
-                            <span>-₹{group.clientTotalCollie.toFixed(2)}</span>
+                            <span>-{group.clientTotalCollie.toFixed(2)}</span>
                         </div>
-                            {commissionPercent > 0 && (
-                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0' }}>
-                                <span>Commission:</span>
-                                <span>₹{group.commissionDeduction.toFixed(2)}</span>
-                                </div>
-                            )}
+
+                        {group.periodDeduction > 0 && (
+                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
+                                <span>Advance Deduction:</span>
+                                <span>-{group.periodDeduction.toFixed(2)}</span>
+                            </div>
+                        )}
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: '8px', color: 'green', fontSize: '1.1rem' }}>
                             <span>Grand Total:</span>
-                            <span>₹{Math.abs(group.grandTotal).toFixed(2)}</span>
+                            <span>{Math.abs(group.grandTotal).toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -662,31 +776,17 @@ const PlaceDetails = () => {
               <p style={{ color: "var(--text-secondary)", fontSize: "0.9rem" }}>{selectedClient.contact_number}</p>
             )}
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button className="btn" onClick={() => { setEditFlower(null); setShowFlowerForm(true); }}>
-              <FaPlus size={12} /> Add Flower
-            </button>
-          </div>
         </div>
 
         {/* Party Balance Summary */}
         <div className="no-print" style={{ background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1rem' }}>Balance Summary</h3>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
-              <input 
-                type="month" 
-                value={summaryMonth} 
-                onChange={(e) => setSummaryMonth(e.target.value)}
-                style={{ padding: '0.25rem 0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
-              />
-            </div>
+            <h3 style={{ margin: 0, fontSize: '1rem' }}>Ledger Balance Summary</h3>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Final Balance (After advances & commission)</span>
-                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: finalBalance >= 0 ? 'var(--success)' : 'red' }}>₹{finalBalance.toFixed(2)}</span>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Updated Balance (Total Advance - Total Deduction)</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: finalBalance >= 0 ? 'var(--success)' : 'red' }}>{finalBalance.toFixed(2)}</span>
             </div>
           </div>
         </div>
@@ -694,6 +794,7 @@ const PlaceDetails = () => {
           <div style={{ flex: 1, minWidth: '250px' }}>
             <SearchBar value={flowerFilter} onChange={setFlowerFilter} placeholder="Search flowers..." />
           </div>
+          <button className="btn btn-primary" onClick={() => setShowFlowerForm(true)}>+ Add Flower</button>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>From:</label>
             <input 
@@ -788,6 +889,7 @@ const PlaceDetails = () => {
             clientName={selectedClient.name}
             onClose={() => setShowFlowerForm(false)}
             onSubmit={editFlower ? (p) => handleFlowerUpdate(editFlower.id, p) : handleFlowerCreate}
+            globalFlowers={globalFlowers}
           />
         )}
 
@@ -809,6 +911,8 @@ const PlaceDetails = () => {
   // =============================================
   // VIEW: Clients List (main view)
   // =============================================
+
+
   return (
     <div className="place-details-page">
       <div style={{display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem'}}>
@@ -817,36 +921,46 @@ const PlaceDetails = () => {
           </button>
       </div>
       <div className="place-details-header">
-        <h1 className="page-title">Clients {selectedPlace ? `- ${selectedPlace.name}` : ''}</h1>
-        <button className="btn" onClick={() => { setEditClient(null); setShowClientForm(true); }}>
-          + Add Client
-        </button>
+        <h1 className="page-title">Parties {selectedPlace ? `- ${selectedPlace.name}` : ''}</h1>
       </div>
 
-      <div className="no-print" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
-          <div style={{ fontWeight: 600, color: 'var(--primary)' }}>Print All Clients:</div>
-          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>From:</label>
-            <input type="date" value={globalFromDate} onChange={(e) => setGlobalFromDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
-            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>To:</label>
-            <input type="date" value={globalToDate} onChange={(e) => setGlobalToDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
-            {(globalFromDate || globalToDate) && (
-                <button className="btn btn-secondary" onClick={() => { setGlobalFromDate(''); setGlobalToDate(''); }}>Clear</button>
-            )}
-          </div>
-          <div style={{ borderLeft: '1px solid var(--border)', paddingLeft: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-            <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
-            <input type="month" value={globalMonth} onChange={(e) => setGlobalMonth(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-              <div>
-                <label style={{ fontSize: '0.8rem', display: 'block', marginBottom: '4px' }}>Commission (%)</label>
-                <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} style={{ width: '100px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+      <div className="no-print" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem', background: 'var(--surface)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+          <div style={{ fontWeight: 600, color: 'var(--primary)', fontSize: '1.1rem' }}>Print All Parties</div>
+          
+          <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
+            
+            <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>From:</label>
+                <input type="date" value={globalFromDate} onChange={(e) => setGlobalFromDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>To:</label>
+                <input type="date" value={globalToDate} onChange={(e) => setGlobalToDate(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+                
+                {(globalFromDate || globalToDate) && (
+                    <button className="btn btn-secondary" style={{ padding: '0.5rem' }} onClick={() => { setGlobalFromDate(''); setGlobalToDate(''); }}>Clear</button>
+                )}
+              </div>
+
+              <div style={{ width: '1px', height: '24px', background: 'var(--border)', display: 'none' }} className="desktop-separator"></div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Month:</label>
+                <input type="month" value={globalMonth} onChange={(e) => setGlobalMonth(e.target.value)} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Commission (%):</label>
+                <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} style={{ width: '80px', padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} />
               </div>
               <button className="btn btn-primary" onClick={handleGlobalPrint} style={{ padding: '0.5rem 1rem' }} disabled={isGlobalPrinting}>
                 <Printer size={18} style={{ marginRight: '8px' }} />
                 {isGlobalPrinting ? 'Generating...' : 'Bulk Print'}
               </button>
             </div>
+
           </div>
           
           <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--border)' }}>

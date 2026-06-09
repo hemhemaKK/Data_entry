@@ -10,15 +10,15 @@ router = APIRouter()
 
 @router.post("/", response_model=UserSchema)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
-    # Ensure the referenced place exists
-    place = db.query(Place).filter(Place.id == user.place_id).first()
-    if not place:
-        raise HTTPException(status_code=404, detail="Place not found")
-    # Enforce unique name per place
-    dup = db.query(User).filter(User.name == user.name, User.place_id == user.place_id).first()
-    if dup:
-        raise HTTPException(status_code=400, detail="User name already exists in this place")
-    db_user = User(name=user.name, place_id=user.place_id, contact_number=getattr(user, "contact_number", None))
+    user_name = user.name.strip()
+    req_lower = user_name.lower()
+    
+    existing_users = db.query(User).filter(User.place_id == user.place_id).all()
+    for eu in existing_users:
+        if eu.name and eu.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
+            
+    db_user = User(name=user_name, place_id=user.place_id)
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
@@ -48,14 +48,14 @@ def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
     # Check for duplicate name in the target place (excluding self)
-    dup = (
-        db.query(User)
-        .filter(User.name == user.name, User.place_id == user.place_id, User.id != user_id)
-        .first()
-    )
-    if dup:
-        raise HTTPException(status_code=400, detail="User name already exists in this place")
-    usr.name = user.name
+    user_name = user.name.strip()
+    req_lower = user_name.lower()
+    
+    existing_users = db.query(User).filter(User.place_id == user.place_id, User.id != user_id).all()
+    for eu in existing_users:
+        if eu.name and eu.name.strip().lower() == req_lower:
+            raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
+    usr.name = user_name
     usr.place_id = user.place_id
     usr.contact_number = getattr(user, "contact_number", usr.contact_number)
     db.commit()
