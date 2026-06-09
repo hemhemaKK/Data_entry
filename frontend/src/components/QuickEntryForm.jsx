@@ -70,7 +70,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   };
 
   const handleDeleteYear = async (id) => {
-    if (window.confirm("Are you sure you want to delete this year?")) {
+    if (await window.confirmAsync("Are you sure you want to delete this year?")) {
       try {
         await deleteYear(id);
         fetchInitialData();

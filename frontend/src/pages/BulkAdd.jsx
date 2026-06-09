@@ -59,7 +59,7 @@ const BulkAdd = () => {
 
   const handleDeletePlace = async (e, placeId, placeName) => {
     e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete the group "${placeName}" and ALL its parties?`)) return;
+    if (!await window.confirmAsync(`Are you sure you want to delete the group "${placeName}" and ALL its parties?`)) return;
     try {
       await deletePlace(placeId);
       fetchPlaces(selectedYear);
@@ -69,7 +69,7 @@ const BulkAdd = () => {
 
   const handleDeleteUser = async (e, placeId, userId, userName) => {
     e.stopPropagation();
-    if (!window.confirm(`Are you sure you want to delete the party "${userName}" and ALL its flowers?`)) return;
+    if (!await window.confirmAsync(`Are you sure you want to delete the party "${userName}" and ALL its flowers?`)) return;
     try {
       await deleteUser(userId);
       const { getUsers } = await import('../services/api');
@@ -80,7 +80,7 @@ const BulkAdd = () => {
   };
 
   const handleDeleteGlobalFlower = async (flowerName) => {
-    if (!window.confirm(`Are you sure you want to delete ALL flowers named "${flowerName}" across the entire system?`)) return;
+    if (!await window.confirmAsync(`Are you sure you want to delete ALL flowers named "${flowerName}" across the entire system?`)) return;
     try {
       await bulkApi.deleteGlobalFlower(flowerName);
       fetchViewerData();

@@ -370,7 +370,7 @@ const PlaceDetails = () => {
               const afterPrint = async () => {
                   window.removeEventListener('afterprint', afterPrint);
                   setTimeout(async () => {
-                      const success = window.confirm("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
+                      const success = await window.confirmAsync("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
                       
                       const recordIds = [];
                       group.flowers.forEach(f => {
@@ -546,7 +546,7 @@ const PlaceDetails = () => {
               const afterPrint = async () => {
                   window.removeEventListener('afterprint', afterPrint);
                   setTimeout(async () => {
-                      const success = window.confirm("Did the global document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
+                      const success = await window.confirmAsync("Did the global document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
                       
                       const recordIds = [];
                       printArray.forEach(group => {

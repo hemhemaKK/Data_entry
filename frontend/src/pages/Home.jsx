@@ -83,7 +83,7 @@ const Home = () => {
   };
 
   const handleDeleteRecord = async (recordId) => {
-    if (!window.confirm("Are you sure you want to delete this record?")) return;
+    if (!await window.confirmAsync("Are you sure you want to delete this record?")) return;
     try {
       await billRecordsApi.deleteRecord(recordId);
       fetchYearsAndRecent();

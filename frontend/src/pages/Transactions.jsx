@@ -24,7 +24,7 @@ export default function Transactions() {
     }, []);
 
     const handleDelete = async (id) => {
-        if (window.confirm("Are you sure you want to delete this file?")) {
+        if (await window.confirmAsync("Are you sure you want to delete this file?")) {
             try {
                 await uploadsApi.deleteUpload(id);
                 fetchFiles();

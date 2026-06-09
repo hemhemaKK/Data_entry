@@ -45,7 +45,7 @@ export default function AlertModal() {
           }}
           onClick={() => setMessages(prev => prev.slice(1))}
         >
-          Acknowledge
+          Okay
         </button>
       </div>
     </div>

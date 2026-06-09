@@ -59,7 +59,7 @@ const YearDetails = () => {
       alert("A place with this name already exists.");
       return;
     }
-    if (!window.confirm(`Update place "${currentName}" to "${trimmed}"?`)) return;
+    if (!await window.confirmAsync(`Update place "${currentName}" to "${trimmed}"?`)) return;
     try {
       const updated = await updatePlace(id, { name: trimmed, year_id: parseInt(yearId, 10) });
       setPlaces(places.map(p => (p.id === id ? updated : p)));
@@ -71,7 +71,7 @@ const YearDetails = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this group?")) return;
+    if (!await window.confirmAsync("Are you sure you want to delete this group?")) return;
     try {
       await deletePlace(id);
       setPlaces(places.filter((p) => p.id !== id));

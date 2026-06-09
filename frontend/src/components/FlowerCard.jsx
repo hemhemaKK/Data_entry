@@ -48,7 +48,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
         window.removeEventListener('afterprint', afterPrint);
         // Add a tiny delay so the browser can close the print dialog cleanly
         setTimeout(async () => {
-            const success = window.confirm("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
+            const success = await window.confirmAsync("Did the document print successfully?\n\nClick 'OK' for Yes, or 'Cancel' if it failed.");
             const recordIds = records.map(r => r.id);
             if (recordIds.length > 0) {
                 try {
@@ -402,7 +402,7 @@ const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance,
   };
 
   const handleDeleteRecord = async (recordId) => {
-    if (window.confirm("Are you sure you want to delete this record?")) {
+    if (await window.confirmAsync("Are you sure you want to delete this record?")) {
       try {
         await billRecordsApi.deleteRecord(recordId);
         if (onRecordsUpdated) onRecordsUpdated();

@@ -154,7 +154,7 @@ const Ledger = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this entry?")) return;
+    if (!await window.confirmAsync("Are you sure you want to delete this entry?")) return;
     try {
       await advancesApi.deleteAdvance(id);
       fetchEntries(selectedUser);
