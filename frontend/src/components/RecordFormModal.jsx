@@ -43,6 +43,14 @@ const RecordFormModal = ({ isOpen, onClose, onSubmit, initialData, flowerId }) =
     }
   }, [initialData, isOpen]);
 
+  useEffect(() => {
+    if (isOpen && dateRef.current) {
+      setTimeout(() => {
+        if (dateRef.current) dateRef.current.focus();
+      }, 50);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
