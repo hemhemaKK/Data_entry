@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function GlobalConfirmModal() {
   const [confirmState, setConfirmState] = useState({
@@ -18,7 +18,25 @@ export default function GlobalConfirmModal() {
         });
       });
     };
-  }, []);
+  const cancelBtnRef = useRef(null);
+  const confirmBtnRef = useRef(null);
+
+  const handleKeyDown = (e, targetRef) => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (targetRef && targetRef.current) {
+        targetRef.current.focus();
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (confirmState.isOpen && cancelBtnRef.current) {
+      setTimeout(() => {
+        if (cancelBtnRef.current) cancelBtnRef.current.focus();
+      }, 50);
+    }
+  }, [confirmState.isOpen]);
 
   if (!confirmState.isOpen) return null;
 
@@ -53,6 +71,8 @@ export default function GlobalConfirmModal() {
         </p>
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
           <button 
+            ref={cancelBtnRef}
+            onKeyDown={(e) => handleKeyDown(e, confirmBtnRef)}
             style={{ 
               flex: 1, backgroundColor: '#e2e8f0', color: '#0f172a', 
               border: 'none', padding: '10px', borderRadius: '6px', 
@@ -63,6 +83,8 @@ export default function GlobalConfirmModal() {
             Cancel
           </button>
           <button 
+            ref={confirmBtnRef}
+            onKeyDown={(e) => handleKeyDown(e, cancelBtnRef)}
             style={{ 
               flex: 1, backgroundColor: '#ef4444', color: '#ffffff', 
               border: 'none', padding: '10px', borderRadius: '6px', 
