@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 export default function AlertModal() {
   const [messages, setMessages] = useState([]);
@@ -14,6 +14,16 @@ export default function AlertModal() {
       window.alert = originalAlert;
     };
   }, []);
+
+  const ackBtnRef = useRef(null);
+
+  useEffect(() => {
+    if (messages.length > 0 && ackBtnRef.current) {
+      setTimeout(() => {
+        if (ackBtnRef.current) ackBtnRef.current.focus();
+      }, 50);
+    }
+  }, [messages]);
 
   if (messages.length === 0) return null;
 
@@ -38,14 +48,16 @@ export default function AlertModal() {
         </h3>
         <p style={{ margin: '20px 0', fontSize: '16px', color: '#000000' }}>{messages[0]}</p>
         <button 
+          ref={ackBtnRef}
+          className="focus-ring"
           style={{ 
             width: '100%', backgroundColor: '#ff4444', color: '#ffffff', 
-            border: 'none', padding: '10px', borderRadius: '6px', 
+            border: '2px solid transparent', padding: '10px', borderRadius: '6px', 
             fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' 
           }}
           onClick={() => setMessages(prev => prev.slice(1))}
         >
-          Okay
+          Acknowledge
         </button>
       </div>
     </div>

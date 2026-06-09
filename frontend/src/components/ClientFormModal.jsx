@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 // Modal form for creating or editing a client (user) under a place
 const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
@@ -14,6 +14,27 @@ const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
       setContactNumber("");
     }
   }, [initialData, isOpen]);
+
+  const nameRef = useRef(null);
+  const contactRef = useRef(null);
+  const saveBtnRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && nameRef.current) {
+      setTimeout(() => {
+        if (nameRef.current) nameRef.current.focus();
+      }, 50);
+    }
+  }, [isOpen]);
+
+  const handleEnterKey = (e, nextRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -42,8 +63,10 @@ const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             </label>
             <input
               type="text"
+              ref={nameRef}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => handleEnterKey(e, contactRef)}
               className="modal-input"
               placeholder="Client name"
               required
@@ -55,8 +78,10 @@ const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             </label>
             <input
               type="text"
+              ref={contactRef}
               value={contactNumber}
               onChange={(e) => setContactNumber(e.target.value)}
+              onKeyDown={(e) => handleEnterKey(e, saveBtnRef)}
               className="modal-input"
               placeholder="Contact number (optional)"
             />
@@ -65,7 +90,7 @@ const ClientFormModal = ({ isOpen, onClose, onSubmit, initialData = null }) => {
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>
-            <button type="submit" className="btn">
+            <button type="submit" ref={saveBtnRef} className="btn focus-ring">
               {initialData?.name ? "Update" : "Create"}
             </button>
           </div>

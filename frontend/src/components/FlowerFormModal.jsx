@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 
 /**
  * FlowerFormModal – simple modal to add or edit a flower name.
@@ -14,6 +14,26 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
       setName("");
     }
   }, [initialData, isOpen]);
+
+  const nameRef = useRef(null);
+  const saveBtnRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && nameRef.current) {
+      setTimeout(() => {
+        if (nameRef.current) nameRef.current.focus();
+      }, 50);
+    }
+  }, [isOpen]);
+
+  const handleEnterKey = (e, nextRef) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (nextRef && nextRef.current) {
+        nextRef.current.focus();
+      }
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -58,11 +78,12 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
             <label className="modal-label">Flower Name(s) - Comma Separated</label>
             <input
               type="text"
+              ref={nameRef}
               value={name}
               onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => handleEnterKey(e, saveBtnRef)}
               className="modal-input"
               placeholder="e.g., Rose, Jasmine, Lily"
-              autoFocus
               required
             />
           </div>
@@ -91,7 +112,7 @@ const FlowerFormModal = ({ isOpen, onClose, onSubmit, initialData = null, client
             <button type="button" onClick={onClose} className="btn btn-secondary">
               Cancel
             </button>
-            <button type="submit" className="btn">
+            <button type="submit" ref={saveBtnRef} className="btn focus-ring">
               {initialData?.id ? "Update" : "Add"}
             </button>
           </div>
