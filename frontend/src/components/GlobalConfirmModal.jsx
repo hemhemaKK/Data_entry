@@ -18,17 +18,10 @@ export default function GlobalConfirmModal() {
         });
       });
     };
+  }, []);
+
   const cancelBtnRef = useRef(null);
   const confirmBtnRef = useRef(null);
-
-  const handleKeyDown = (e, targetRef) => {
-    if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-      e.preventDefault();
-      if (targetRef && targetRef.current) {
-        targetRef.current.focus();
-      }
-    }
-  };
 
   useEffect(() => {
     if (confirmState.isOpen && cancelBtnRef.current) {
@@ -36,6 +29,22 @@ export default function GlobalConfirmModal() {
         if (cancelBtnRef.current) cancelBtnRef.current.focus();
       }, 50);
     }
+  }, [confirmState.isOpen]);
+
+  useEffect(() => {
+    if (!confirmState.isOpen) return;
+    const handleGlobalKeyDown = (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        e.preventDefault();
+        if (document.activeElement === cancelBtnRef.current) {
+          if (confirmBtnRef.current) confirmBtnRef.current.focus();
+        } else {
+          if (cancelBtnRef.current) cancelBtnRef.current.focus();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
   }, [confirmState.isOpen]);
 
   if (!confirmState.isOpen) return null;
@@ -72,10 +81,10 @@ export default function GlobalConfirmModal() {
         <div style={{ display: 'flex', justifyContent: 'center', gap: '10px' }}>
           <button 
             ref={cancelBtnRef}
-            onKeyDown={(e) => handleKeyDown(e, confirmBtnRef)}
+            className="focus-ring"
             style={{ 
               flex: 1, backgroundColor: '#e2e8f0', color: '#0f172a', 
-              border: 'none', padding: '10px', borderRadius: '6px', 
+              border: '2px solid transparent', padding: '10px', borderRadius: '6px', 
               fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' 
             }} 
             onClick={() => handleAction(false)}
@@ -84,10 +93,10 @@ export default function GlobalConfirmModal() {
           </button>
           <button 
             ref={confirmBtnRef}
-            onKeyDown={(e) => handleKeyDown(e, cancelBtnRef)}
+            className="focus-ring"
             style={{ 
               flex: 1, backgroundColor: '#ef4444', color: '#ffffff', 
-              border: 'none', padding: '10px', borderRadius: '6px', 
+              border: '2px solid transparent', padding: '10px', borderRadius: '6px', 
               fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' 
             }} 
             onClick={() => handleAction(true)}
