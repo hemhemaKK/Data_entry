@@ -676,47 +676,58 @@ const PlaceDetails = () => {
                         </div>
                     </div>
 
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left', color: 'black', marginBottom: '1.5rem' }}>
-                        <thead>
-                            <tr style={{ borderBottom: '1px solid black' }}>
-                                {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
-                                {columns.van && <th className="col-van" style={{ padding: '4px' }}>Van</th>}
-                                {columns.weight && <th className="col-weight" style={{ padding: '4px' }}>Weight</th>}
-                                {columns.rate && <th className="col-rate" style={{ padding: '4px' }}>Rate</th>}
-                                {columns.total && <th className="col-total" style={{ padding: '4px' }}>Total</th>}
-                                {columns.laggage && <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>}
-                                {columns.collie && <th className="col-collie" style={{ padding: '4px' }}>Collie</th>}
-                            </tr>
-                        </thead>
-                        {group.flowers.map(flower => (
-                            <tbody key={flower.id}>
-                                <tr style={{ border: 'none' }}>
-                                    <td colSpan="7" style={{ padding: '24px 0 8px 0', border: 'none' }}>
-                                        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Flower: {flower.name}</h4>
-                                    </td>
-                                </tr>
-                                {flower.records.map((r, idx) => (
-                                    <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
-                                        {columns.date && <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>}
-                                        {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
-                                        {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
-                                        {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
-                                        {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
-                                        {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
-                                        {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
+                    {group.flowers.map((flower, index) => (
+                        <div key={flower.id} style={{ marginBottom: '1.5rem' }}>
+                            <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>Flower: {flower.name}</h4>
+                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left', color: 'black', tableLayout: 'fixed' }}>
+                                <colgroup>
+                                    {columns.date && <col style={{ width: '18%' }} />}
+                                    {columns.van && <col style={{ width: '10%' }} />}
+                                    {columns.weight && <col style={{ width: '15%' }} />}
+                                    {columns.rate && <col style={{ width: '15%' }} />}
+                                    {columns.total && <col style={{ width: '18%' }} />}
+                                    {columns.laggage && <col style={{ width: '12%' }} />}
+                                    {columns.collie && <col style={{ width: '12%' }} />}
+                                </colgroup>
+                                {index === 0 && (
+                                    <thead>
+                                        <tr style={{ borderBottom: '1px solid black' }}>
+                                            {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
+                                            {columns.van && <th className="col-van" style={{ padding: '4px' }}>Van</th>}
+                                            {columns.weight && <th className="col-weight" style={{ padding: '4px' }}>Weight</th>}
+                                            {columns.rate && <th className="col-rate" style={{ padding: '4px' }}>Rate</th>}
+                                            {columns.total && <th className="col-total" style={{ padding: '4px' }}>Total</th>}
+                                            {columns.laggage && <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>}
+                                            {columns.collie && <th className="col-collie" style={{ padding: '4px' }}>Collie</th>}
+                                        </tr>
+                                    </thead>
+                                )}
+                                <tbody>
+                                    {flower.records.map((r, idx) => (
+                                        <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
+                                            {columns.date && <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>}
+                                            {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
+                                            {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
+                                            {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
+                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
+                                            {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
+                                            {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
+                                        </tr>
+                                    ))}
+                                </tbody>
+                                <tfoot>
+                                    <tr style={{ borderTop: '1px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+                                        <td colSpan={(columns.date ? 1 : 0) + (columns.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
+                                        {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{flower.totals.weight.toFixed(3)}</td>}
+                                        {columns.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
+                                        {columns.total && <td className="col-total" style={{ padding: '4px' }}>{flower.totals.price.toFixed(2)}</td>}
+                                        {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{flower.totals.laggage.toFixed(2)}</td>}
+                                        {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{flower.totals.collie.toFixed(2)}</td>}
                                     </tr>
-                                ))}
-                                <tr style={{ borderTop: '1px solid black', borderBottom: '2px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-                                    <td colSpan={(columns.date ? 1 : 0) + (columns.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
-                                    {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{flower.totals.weight.toFixed(3)}</td>}
-                                    {columns.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
-                                    {columns.total && <td className="col-total" style={{ padding: '4px' }}>{flower.totals.price.toFixed(2)}</td>}
-                                    {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{flower.totals.laggage.toFixed(2)}</td>}
-                                    {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{flower.totals.collie.toFixed(2)}</td>}
-                                </tr>
-                            </tbody>
-                        ))}
-                    </table>
+                                </tfoot>
+                            </table>
+                        </div>
+                    ))}
                     
                     <div style={{ marginTop: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid black', fontSize: '0.9rem', fontWeight: 'bold', color: 'black', width: '50%', marginLeft: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
