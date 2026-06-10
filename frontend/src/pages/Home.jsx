@@ -204,7 +204,7 @@ const Home = () => {
                             <input type="number" step="0.01" value={inlineForm.collie} onChange={e => setInlineForm({...inlineForm, collie: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineSaveRef)} ref={inlineCollieRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>
-                            {(((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)) + (parseFloat(inlineForm.laggage) || 0) + (parseFloat(inlineForm.collie) || 0)).toFixed(2)}
+                            {((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)).toFixed(2)}
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <button onClick={handleUpdateRecord} ref={inlineSaveRef} onKeyDown={(e) => handleInlineEnterKey(e, 'submit')} className="icon-btn icon-btn-sm" title="Save" style={{ marginRight: '4px', color: 'var(--success)' }}>
@@ -226,7 +226,7 @@ const Home = () => {
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.rate}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.laggage}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.collie}</td>
-                          <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>{((entry.weight * entry.rate) + (entry.laggage || 0) + (entry.collie || 0)).toFixed(2)}</td>
+                          <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>{(entry.weight * entry.rate).toFixed(2)}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right', whiteSpace: 'nowrap' }}>
                             <button onClick={() => handleEditRecord(entry)} className="icon-btn icon-btn-sm" title="Edit" style={{ marginRight: '4px' }}>
                               <FaEdit />
