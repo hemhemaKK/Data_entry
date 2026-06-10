@@ -142,9 +142,14 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
       </div>
       <div 
         onClick={() => setExpanded(!expanded)}
-        style={{ padding: '12px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+        style={{ padding: '12px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}
       >
-        <strong>{formatMonthLabel(month)}</strong>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <strong>{formatMonthLabel(month)}</strong>
+            <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--background)', padding: '2px 8px', borderRadius: '12px', border: '1px solid var(--border)' }}>
+                Laggage: <b>{totals.laggage.toFixed(2)}</b> &nbsp;|&nbsp; Collie: <b>{totals.collie.toFixed(2)}</b>
+            </span>
+        </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} className="no-print">
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }} onClick={(e) => e.stopPropagation()}>
             <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Printed:</span>
