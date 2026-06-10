@@ -690,9 +690,9 @@ const PlaceDetails = () => {
                         </thead>
                         {group.flowers.map(flower => (
                             <tbody key={flower.id}>
-                                <tr>
-                                    <td colSpan="7" style={{ padding: '8px 4px 4px 4px', fontWeight: 'bold', fontSize: '0.9rem', borderBottom: '1px dashed #ccc' }}>
-                                        Flower: {flower.name}
+                                <tr style={{ border: 'none' }}>
+                                    <td colSpan="7" style={{ padding: '24px 0 8px 0', border: 'none' }}>
+                                        <h4 style={{ margin: 0, fontSize: '1.1rem' }}>Flower: {flower.name}</h4>
                                     </td>
                                 </tr>
                                 {flower.records.map((r, idx) => (
