@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { uploadsApi } from '../services/api';
 import { Link } from 'react-router-dom';
 import { Trash2, Download } from 'lucide-react';
@@ -63,10 +63,13 @@ export default function FilesList() {
                                 <td>{new Date(file.upload_date).toLocaleString()}</td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                        <Link to={`/results/${file.id}`} className="btn" style={{padding: '0.25rem 0.5rem'}}>View</Link>
+                                        <Link to={`/results/${file.id}`} className="btn" style={{padding: '0.25rem 0.5rem'}} title="View Results">View</Link>
+                                        <a href={uploadsApi.downloadExcelUrl(file.id)} className="btn btn-secondary" style={{padding: '0.25rem 0.5rem'}} download title="Download Original File">
+                                            <Download size={16} /> Original
+                                        </a>
                                         {file.error_count > 0 && (
-                                            <a href={uploadsApi.downloadReportUrl(file.id)} className="btn" style={{padding: '0.25rem 0.5rem'}} download>
-                                                <Download size={16} />
+                                            <a href={uploadsApi.downloadReportUrl(file.id)} className="btn" style={{padding: '0.25rem 0.5rem', background: '#dc3545'}} download title="Download Error Report">
+                                                <Download size={16} /> Errors
                                             </a>
                                         )}
                                         <button className="btn btn-danger" style={{padding: '0.25rem 0.5rem'}} onClick={() => handleDelete(file.id)}>

@@ -187,6 +187,20 @@ async def upload_file(file: UploadFile = File(...), db: Session = Depends(get_db
     db_upload.status = "FAILED" if total_errors > 0 else "SUCCESS"
     if total_errors > 0:
         db_upload.report_path = report_path
+        # Generate the actual Error Report Excel file
+        all_errors = db.query(ValidationError).filter(ValidationError.upload_id == db_upload.id).all()
+        err_data = []
+        for err in all_errors:
+            err_data.append({
+                "Sheet": err.sheet_name or "N/A",
+                "Row": err.row_number or "N/A",
+                "Column": err.column_name or "N/A",
+                "Error Message": err.error_message
+            })
+        if err_data:
+            df_err = pd.DataFrame(err_data)
+            df_err.to_excel(report_path, index=False)
+            
     db.commit()
     db.refresh(db_upload)
     return db_upload

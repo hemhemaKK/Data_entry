@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { uploadsApi } from '../services/api';
 import { Download, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
@@ -69,13 +69,16 @@ export default function ValidationResults() {
                             {upload.error_count}
                         </div>
                     </div>
-                    {upload.error_count > 0 && (
-                        <div style={{ marginLeft: 'auto' }}>
-                            <a href={uploadsApi.downloadReportUrl(upload.id)} className="btn" download>
+                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
+                        <a href={uploadsApi.downloadExcelUrl(upload.id)} className="btn btn-secondary" download title="Download Original File">
+                            <Download size={20} /> Download Original
+                        </a>
+                        {upload.error_count > 0 && (
+                            <a href={uploadsApi.downloadReportUrl(upload.id)} className="btn" style={{background: '#dc3545'}} download title="Download Error Report">
                                 <Download size={20} /> Download Error Report
                             </a>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
