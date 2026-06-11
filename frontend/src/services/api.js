@@ -71,7 +71,7 @@ export const deleteUser = async (id) => {
 };
 
 export const getFlowers = async (userId, params = {}) => {
-    const queryParams = { ...params };
+    const queryParams = { ...params, _t: new Date().getTime() };
     if (userId) queryParams.user_id = userId;
     const response = await axios.get(`${API_BASE_URL}/flowers`, { params: queryParams });
     return response.data;
