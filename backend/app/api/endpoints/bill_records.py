@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 from typing import List, Optional
 
 from app.db.database import get_db
@@ -9,15 +10,30 @@ from app.schemas.hierarchy import BillRecordCreate, BillRecord as BillRecordSche
 router = APIRouter()
 
 @router.get("/transactions", response_model=List[TransactionOut])
-def get_all_transactions(db: Session = Depends(get_db)):
-    records = (
+def get_all_transactions(
+    search: Optional[str] = Query(None),
+    limit: int = Query(500),
+    db: Session = Depends(get_db)
+):
+    query = (
         db.query(BillRecord, Flower, User, Place)
         .join(Flower, BillRecord.flower_id == Flower.id)
         .join(User, Flower.user_id == User.id)
         .join(Place, User.place_id == Place.id)
-        .order_by(BillRecord.date.desc())
-        .all()
     )
+
+    if search:
+        search_term = f"%{search.lower()}%"
+        query = query.filter(
+            or_(
+                Flower.name.ilike(search_term),
+                User.name.ilike(search_term),
+                Place.name.ilike(search_term),
+                BillRecord.van.ilike(search_term)
+            )
+        )
+
+    records = query.order_by(BillRecord.date.desc(), BillRecord.id.desc()).limit(limit).all()
     
     result = []
     for br, f, u, p in records:

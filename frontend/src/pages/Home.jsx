@@ -33,14 +33,20 @@ const Home = () => {
     }
   };
 
-  const fetchYearsAndRecent = async () => {
+  const fetchYears = async () => {
     try {
       const data = await getYears();
       setYears(data);
-      
-      const transactions = await billRecordsApi.getTransactions();
-      setAllTransactions(transactions);
+    } catch (err) {
+      console.error(err);
+      setError("Failed to load years");
+    }
+  };
 
+  const fetchTransactions = async (query = "") => {
+    try {
+      const transactions = await billRecordsApi.getTransactions(query);
+      setAllTransactions(transactions);
     } catch (err) {
       console.error(err);
       setError("Failed to load dashboard data");
@@ -50,8 +56,19 @@ const Home = () => {
   };
 
   useEffect(() => {
-    fetchYearsAndRecent();
+    fetchYears();
   }, []);
+
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      fetchTransactions(searchTerm);
+    }, 400);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchTerm]);
+
+  const refreshTransactions = () => fetchTransactions(searchTerm);
+
 
 
 
@@ -93,7 +110,7 @@ const Home = () => {
     try {
       await billRecordsApi.updateRecord(inlineEditId, payload);
       setInlineEditId(null);
-      fetchYearsAndRecent();
+      refreshTransactions();
     } catch (err) {
       alert("Failed to update record");
       console.error(err);
@@ -108,7 +125,7 @@ const Home = () => {
     if (!await window.confirmAsync("Are you sure you want to delete this record?")) return;
     try {
       await billRecordsApi.deleteRecord(recordId);
-      fetchYearsAndRecent();
+      refreshTransactions();
     } catch (err) {
       alert("Failed to delete record");
       console.error(err);
@@ -126,10 +143,8 @@ const Home = () => {
       const tDate = new Date(t.date);
       return tDate >= yesterday;
     }
-    const term = searchTerm.toLowerCase();
-    return (t.client_name || "").toLowerCase().includes(term) ||
-           (t.place_name || "").toLowerCase().includes(term) ||
-           (t.flower_name || "").toLowerCase().includes(term);
+    // If there is a search term, the backend has already filtered the results
+    return true;
   });
 
   if (loading) return <div className="page-title">Loading years...</div>;
@@ -140,7 +155,7 @@ const Home = () => {
       <h1 className="page-title">Dashboard</h1>
       
       {/* Quick Manual Entry */}
-      <QuickEntryForm onRecordAdded={fetchYearsAndRecent} />
+      <QuickEntryForm onRecordAdded={refreshTransactions} />
 
       {/* Recent Entries */}
       {allTransactions.length > 0 && (
