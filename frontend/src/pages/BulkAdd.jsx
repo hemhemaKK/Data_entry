@@ -271,8 +271,17 @@ const BulkAdd = () => {
             <h2 className="card-title">3. Add Flowers</h2>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Assigns these flowers to ALL parties inside the selected group above.
+            Assigns these flowers to ALL parties inside the selected group.
           </p>
+          <div style={{ marginBottom: '1rem' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Group</label>
+            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Group --</option>
+              {places.map(p => (
+                <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>
+              ))}
+            </select>
+          </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Flowers List (comma or line separated)</label>
             <textarea 
