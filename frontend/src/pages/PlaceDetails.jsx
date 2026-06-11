@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getUsers,
@@ -17,6 +17,7 @@ import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { Printer } from "lucide-react";
 import ClientCard from "../components/ClientCard.jsx";
 import FlowerCard from "../components/FlowerCard.jsx";
+import PrintTemplate from "../components/PrintTemplate";
 import axios from 'axios';
 import SearchBar from "../components/SearchBar.jsx";
 import ConfirmationModal from "../components/ConfirmationModal.jsx";
@@ -641,126 +642,23 @@ const PlaceDetails = () => {
         <div className="print-only">
 
             {globalPrintData.map(group => (
-                <div key={group.client.id} style={{ pageBreakAfter: 'always', paddingBottom: '2rem' }}>
-                    <div className="print-header" style={{ marginBottom: '1rem' }}>
-                        <img 
-                            src="/header.jpeg" 
-                            alt="Header Image" 
-                            style={{ width: '100%', height: 'auto', display: 'block', marginTop: '10px', marginBottom: '0.25rem' }} 
-                        />
-                        <div style={{ marginTop: '10px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white', color: 'black' }}>
-                                <tbody>
-                                    <tr>
-                                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
-                                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{group.client.name}</td>
-                                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
-                                        <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{group.client.contact_number || ''}</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Dates:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', fontSize: '0.85rem' }}>
-                                          {fromDate || toDate ? `${fromDate ? fromDate : '...'} to ${toDate ? toDate : '...'}` : 'All Dates'}
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>{selectedPlace ? selectedPlace.name : ''}</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>பாக்கி:</td>
-                                        <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>{Math.abs(group.finalBalance).toFixed(2)}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    {group.flowers.map((flower, index) => (
-                        <div key={flower.id} style={{ marginBottom: '1.5rem' }}>
-                            <h4 style={{ margin: '0 0 8px 0', fontSize: '1rem' }}>Flower: {flower.name}</h4>
-                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem', textAlign: 'left', color: 'black', tableLayout: 'fixed' }}>
-                                <colgroup>
-                                    {columns.date && <col style={{ width: '18%' }} />}
-                                    {columns.van && <col style={{ width: '10%' }} />}
-                                    {columns.weight && <col style={{ width: '15%' }} />}
-                                    {columns.rate && <col style={{ width: '15%' }} />}
-                                    {columns.total && <col style={{ width: '18%' }} />}
-                                    {columns.laggage && <col style={{ width: '12%' }} />}
-                                    {columns.collie && <col style={{ width: '12%' }} />}
-                                </colgroup>
-                                {index === 0 && (
-                                    <thead>
-                                        <tr style={{ borderBottom: '1px solid black' }}>
-                                            {columns.date && <th className="col-date" style={{ padding: '4px' }}>Date</th>}
-                                            {columns.van && <th className="col-van" style={{ padding: '4px' }}>Van</th>}
-                                            {columns.weight && <th className="col-weight" style={{ padding: '4px' }}>Weight</th>}
-                                            {columns.rate && <th className="col-rate" style={{ padding: '4px' }}>Rate</th>}
-                                            {columns.total && <th className="col-total" style={{ padding: '4px' }}>Total</th>}
-                                            {columns.laggage && <th className="col-laggage" style={{ padding: '4px' }}>Laggage</th>}
-                                            {columns.collie && <th className="col-collie" style={{ padding: '4px' }}>Collie</th>}
-                                        </tr>
-                                    </thead>
-                                )}
-                                <tbody>
-                                    {flower.records.map((r, idx) => (
-                                        <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
-                                            {columns.date && <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>}
-                                            {columns.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
-                                            {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
-                                            {columns.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate || '-'}</td>}
-                                            {columns.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(2)}</td>}
-                                            {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
-                                            {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
-                                        </tr>
-                                    ))}
-                                </tbody>
-                                <tfoot>
-                                    <tr style={{ borderTop: '1px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-                                        <td colSpan={(columns.date ? 1 : 0) + (columns.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
-                                        {columns.weight && <td className="col-weight" style={{ padding: '4px' }}>{flower.totals.weight.toFixed(3)}</td>}
-                                        {columns.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
-                                        {columns.total && <td className="col-total" style={{ padding: '4px' }}>{flower.totals.price.toFixed(2)}</td>}
-                                        {columns.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{flower.totals.laggage.toFixed(2)}</td>}
-                                        {columns.collie && <td className="col-collie" style={{ padding: '4px' }}>{flower.totals.collie.toFixed(2)}</td>}
-                                    </tr>
-                                </tfoot>
-                            </table>
-                        </div>
-                    ))}
-                    
-                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'transparent', border: '1px solid black', fontSize: '0.9rem', fontWeight: 'bold', color: 'black', width: '50%', marginLeft: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                            <span>Total of All Flowers:</span>
-                            <span>{group.clientTotalPrice.toFixed(2)}</span>
-                        </div>
-                        {commissionPercent > 0 && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
-                                <span>Commission:</span>
-                                <span>-{group.commissionDeduction.toFixed(2)}</span>
-                            </div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
-                            <span>Total Laggage:</span>
-                            <span>-{group.clientTotalLaggage.toFixed(2)}</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', color: 'red' }}>
-                            <span>Total Collie:</span>
-                            <span>-{group.clientTotalCollie.toFixed(2)}</span>
-                        </div>
-
-                        {group.periodDeduction > 0 && (
-                            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 0', color: 'red' }}>
-                                <span>Advance Deduction:</span>
-                                <span>-{group.periodDeduction.toFixed(2)}</span>
-                            </div>
-                        )}
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #ccc', paddingTop: '8px', color: 'green', fontSize: '1.1rem' }}>
-                            <span>Grand Total:</span>
-                            <span>{Math.abs(group.grandTotal).toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>
+                <PrintTemplate 
+                    key={group.client.id}
+                    clientName={group.client.name}
+                    clientPhone={group.client.contact_number}
+                    placeName={selectedPlace ? selectedPlace.name : ''}
+                    dateRangeString={fromDate || toDate ? `${fromDate ? fromDate : '...'} to ${toDate ? toDate : '...'}` : 'All Dates'}
+                    finalBalance={group.finalBalance}
+                    flowers={group.flowers}
+                    commissionPercent={commissionPercent}
+                    commissionDeduction={group.commissionDeduction}
+                    clientTotalLaggage={group.clientTotalLaggage}
+                    clientTotalCollie={group.clientTotalCollie}
+                    clientTotalPrice={group.clientTotalPrice}
+                    periodDeduction={group.periodDeduction}
+                    grandTotal={group.grandTotal}
+                    columns={columns}
+                />
             ))}
         </div>
     );
@@ -805,7 +703,6 @@ const PlaceDetails = () => {
           <div style={{ flex: 1, minWidth: '250px' }}>
             <SearchBar value={flowerFilter} onChange={setFlowerFilter} placeholder="Search flowers..." />
           </div>
-          <button className="btn btn-primary" onClick={() => setShowFlowerForm(true)}>+ Add Flower</button>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>From:</label>
             <input 
@@ -866,7 +763,7 @@ const PlaceDetails = () => {
         </div>
 
         {/* Flower list */}
-        <div className="flower-list print-area">
+        <div className={`flower-list print-area ${isGlobalPrinting ? 'no-print' : ''}`}>
           {filteredFlowers.length > 0 ? (
             filteredFlowers.map((flower) => (
               <FlowerCard

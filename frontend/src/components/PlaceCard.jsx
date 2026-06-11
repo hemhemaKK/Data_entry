@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const PlaceCard = ({ name, id, yearId, onEdit, onDelete }) => {
@@ -6,11 +6,21 @@ const PlaceCard = ({ name, id, yearId, onEdit, onDelete }) => {
   return (
     <div 
       className="card" 
-      style={{ background: 'linear-gradient(135deg, var(--accent), var(--bg-secondary))', cursor: 'pointer' }}
+      style={{ 
+        background: 'var(--bg-secondary)', 
+        borderLeft: '4px solid var(--accent)',
+        cursor: 'pointer',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
+        padding: '1.25rem'
+      }}
       onClick={() => navigate(`/place/${id}`)}
     >
-      <h2 className="metric-value">{name}</h2>
-      <p className="metric-label">Group</p>
+      <div>
+        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0', wordBreak: 'break-word', lineHeight: '1.3' }}>{name}</h2>
+        <p className="metric-label" style={{ marginTop: '0.25rem' }}>Group</p>
+      </div>
       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
         <button className="btn" onClick={(e) => { e.stopPropagation(); onEdit(id, name); }}>
           Edit

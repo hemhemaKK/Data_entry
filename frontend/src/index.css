@@ -763,6 +763,74 @@ tfoot td {
 }
 
 @media print {
+  /* Tables Base - Reduced to 80% */
+  table.print-table, .print-only table, .print-header table {
+    font-size: 1.1rem !important;
+    color: black !important;
+    border-collapse: collapse !important;
+    width: 80% !important;
+    margin: 0 auto !important;
+    table-layout: fixed !important;
+  }
+
+  /* Data Table & Generic TH: Normal font-weight, except headers */
+  table.print-table th, .print-only table th {
+    font-size: 1.1rem !important;
+    font-weight: bold !important;
+    color: black !important;
+    border: 0.5px solid black !important;
+  }
+
+  /* Data Table TD: Normal weight, remove horizontal borders */
+  table.print-table tbody td, .print-only table tbody td {
+    font-size: 1.1rem !important;
+    color: black !important;
+    font-weight: normal !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: 0.5px solid black !important;
+    border-right: 0.5px solid black !important;
+  }
+
+  /* Remove horizontal borders from TR inside data table */
+  table.print-table tbody tr, .print-only table tbody tr {
+    border-top: none !important;
+    border-bottom: none !important;
+  }
+
+  /* Keep total column bold */
+  table.print-table tbody td.col-total, .print-only table tbody td.col-total {
+    font-weight: bold !important;
+  }
+
+  /* Total Row (tfoot) */
+  table.print-table tfoot td, .print-only table tfoot td {
+    font-size: 1.1rem !important;
+    color: black !important;
+    font-weight: bold !important;
+    border: 0.5px solid black !important;
+  }
+
+  /* 
+   * STRONGEST OVERRIDES FOR FIRST TABLE (HEADER TABLE) 
+   * Placed at the bottom to guarantee no generic .print-only rules override it.
+   */
+  .print-header table {
+    border: 1px solid black !important;
+  }
+  .print-header table th, 
+  .print-header table td, 
+  .print-header table tbody td {
+    font-size: 1.1rem !important;
+    color: black !important;
+    font-weight: bold !important;
+    border: 0.5px solid black !important;
+  }
+  .print-header table tbody tr {
+    border: 0.5px solid black !important;
+  }
+
+  
   @page {
     margin: 0; /* Forces browser to remove default URL and Title headers */
   }
@@ -890,4 +958,14 @@ button.focus-ring:focus {
   outline: 3px solid #3b82f6 !important;
   outline-offset: 2px !important;
   box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5) !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+}
+
+[data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
+[data-theme="light"] input[type="month"]::-webkit-calendar-picker-indicator {
+    filter: none;
 }

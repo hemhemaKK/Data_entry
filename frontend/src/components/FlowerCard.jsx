@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { FaEdit, FaTrashAlt, FaChevronDown, FaChevronUp, FaPlus, FaCheck, FaTimes } from "react-icons/fa";
 import { billRecordsApi } from "../services/api";
+import PrintTemplate from "../components/PrintTemplate";
 
 // Helper to format month (YYYY-MM to "October 2023")
 const formatMonthLabel = (yyyyMm) => {
@@ -111,37 +112,10 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
 
   return (
     <div className={`month-card ${expanded ? 'expanded' : ''}`} style={{ border: '1px solid var(--border)', borderRadius: '6px', marginBottom: '8px' }}>
-      <div className="print-header" style={{ display: 'none', marginBottom: '0.2rem' }}>
-        <img 
-            src="/header.jpeg" 
-            alt="Header Image" 
-            style={{ width: '100%', height: 'auto', display: 'block', marginTop: '5px', marginBottom: '0.25rem' }} 
-        />
-        <div style={{ marginTop: '10px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white' }}>
-                <tbody>
-                    <tr>
-                        <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
-                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{clientName}</td>
-                    </tr>
-                    <tr>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
-                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{clientPhone || ''}</td>
-                    </tr>
-                    <tr>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
-                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{placeName || ''}</td>
-                    </tr>
-                    <tr>
-                        <td style={{ padding: '4px', border: '1px solid #ccc' }}>Flower:</td>
-                        <td colSpan="3" style={{ padding: '4px', border: '1px solid #ccc' }}>{flowerName}</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-      </div>
+      {/* Removed old print-header */}
       <div 
         onClick={() => setExpanded(!expanded)}
+        className="no-print"
         style={{ padding: '12px', background: 'var(--surface)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
@@ -182,18 +156,29 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
       </div>
       
       {expanded && (
-        <div style={{ padding: '12px', borderTop: '1px solid var(--border)', overflowX: 'auto' }}>
+        <>
+        <div className="no-print" style={{ padding: '12px', borderTop: '1px solid var(--border)', overflowX: 'auto' }}>
           <table style={{ width: '100%', fontSize: '0.85rem', textAlign: 'left', borderCollapse: 'collapse', minWidth: '600px' }}>
+            <colgroup>
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '10%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '15%' }} />
+                <col style={{ width: '18%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '12%' }} />
+                <col style={{ width: '0%' }} />
+            </colgroup>
             <thead>
-              <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                <th className="col-date" style={{ padding: '8px 4px' }}><b>Date</b></th>
-                <th className="col-van" style={{ padding: '8px 4px' }}><b>Van</b></th>
-                <th className="col-weight" style={{ padding: '8px 4px' }}><b>Weight (kg)</b></th>
-                <th className="col-rate" style={{ padding: '8px 4px' }}><b>Rate ()</b></th>
-                <th className="col-total" style={{ padding: '8px 4px' }}><b>Total ()</b></th>
-                <th className="col-laggage" style={{ padding: '8px 4px' }}><b>Laggage ()</b></th>
-                <th className="col-collie" style={{ padding: '8px 4px' }}><b>Collie ()</b></th>
-                <th className="col-actions no-print" style={{ padding: '8px 4px', textAlign: 'right' }}><b>Actions</b></th>
+              <tr style={{ borderBottom: '1px solid black' }}>
+                <th className="col-date" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Date</th>
+                <th className="col-van" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Van</th>
+                <th className="col-weight" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Weight (kg)</th>
+                <th className="col-rate" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Rate ()</th>
+                <th className="col-total" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Total ()</th>
+                <th className="col-laggage" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Laggage ()</th>
+                <th className="col-collie" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Collie ()</th>
+                <th className="col-actions no-print" style={{ padding: '8px 4px', textAlign: 'right', fontWeight: 'bold' }}>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -250,7 +235,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ background: '#f0f0f0', fontWeight: 'bold', borderTop: '1px solid black', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
+              <tr style={{ background: '#f0f0f0', fontWeight: 'bold', color: 'black', borderTop: '1px solid black', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 <td className="col-date" colSpan="2" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
                 <td className="col-weight" style={{ padding: '8px 4px' }}>{totals.weight.toFixed(3)}</td>
                 <td className="col-rate" style={{ padding: '8px 4px' }}></td>
@@ -259,21 +244,39 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 <td className="col-collie" style={{ padding: '8px 4px' }}>{totals.collie.toFixed(2)}</td>
                 <td className="col-actions no-print" style={{ padding: '8px 4px' }}></td>
               </tr>
-              {commissionPercent > 0 && (
-                <>
-                  <tr className="no-print" style={{ background: 'var(--background)', fontWeight: 'bold', color: 'red' }}>
-                    <td colSpan="4" style={{ padding: '8px 4px', textAlign: 'right' }}>Commission:</td>
-                    <td colSpan="4" style={{ padding: '8px 4px' }}>-{(totals.price * (commissionPercent / 100)).toFixed(2)}</td>
-                  </tr>
-                  <tr className="no-print" style={{ background: 'var(--background)', fontWeight: 'bold', color: 'green', fontSize: '1.05rem' }}>
-                    <td colSpan="4" style={{ padding: '8px 4px', textAlign: 'right' }}>Grand Total:</td>
-                    <td colSpan="4" style={{ padding: '8px 4px' }}>{(totals.price - (totals.price * (commissionPercent / 100))).toFixed(2)}</td>
-                  </tr>
-                </>
-              )}
             </tfoot>
           </table>
         </div>
+        
+        {/* The Print Template that is only visible when printing */}
+        <div className="print-only">
+            <PrintTemplate
+                clientName={clientName}
+                clientPhone={clientPhone}
+                placeName={placeName}
+                dateRangeString={formatMonthLabel(month)}
+                finalBalance={clientBalance}
+                flowers={[{
+                    id: flowerId || 'single_flower',
+                    name: flowerName,
+                    records: [...records].sort((a, b) => {
+                        if (!a.date) return 1;
+                        if (!b.date) return -1;
+                        return new Date(a.date) - new Date(b.date);
+                    }),
+                    totals: totals
+                }]}
+                commissionPercent={commissionPercent}
+                commissionDeduction={totals.price * (commissionPercent / 100)}
+                clientTotalLaggage={totals.laggage}
+                clientTotalCollie={totals.collie}
+                clientTotalPrice={totals.price}
+                periodDeduction={null}
+                grandTotal={totals.price - ((totals.price * (commissionPercent / 100)) + totals.laggage + totals.collie)}
+                columns={{ date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true }}
+            />
+        </div>
+        </>
       )}
     </div>
   );
