@@ -18,12 +18,12 @@ def create_bulk_places(bulk_data: BulkPlacesCreate, db: Session = Depends(get_db
             
         lower_name = name.lower()
         if lower_name in added_in_batch:
-            raise HTTPException(status_code=400, detail=f"Duplicate group name '{name}' found in your list.")
+            continue
             
         existing_places = db.query(Place).filter(Place.year_id == bulk_data.year_id).all()
         existing = next((p for p in existing_places if p.name and p.name.strip().lower() == lower_name), None)
         if existing:
-            raise HTTPException(status_code=400, detail=f"Group '{name}' is already created.")
+            continue
             
         new_place = Place(name=name, year_id=bulk_data.year_id)
         db.add(new_place)
@@ -45,12 +45,12 @@ def create_bulk_users(bulk_data: BulkUsersCreate, db: Session = Depends(get_db))
             
         lower_name = name.lower()
         if lower_name in added_in_batch:
-            raise HTTPException(status_code=400, detail=f"Duplicate party name '{name}' found in your list.")
+            continue
             
         existing_users = db.query(User).filter(User.place_id == bulk_data.place_id).all()
         existing = next((u for u in existing_users if u.name and u.name.strip().lower() == lower_name), None)
         if existing:
-            raise HTTPException(status_code=400, detail=f"Party '{name}' is already created in this group.")
+            continue
             
         new_user = User(name=name, place_id=bulk_data.place_id)
         db.add(new_user)
@@ -79,12 +79,12 @@ def create_bulk_flowers(bulk_data: BulkFlowersCreate, db: Session = Depends(get_
                 
             lower_fname = fname.lower()
             if lower_fname in added_in_batch:
-                raise HTTPException(status_code=400, detail=f"Duplicate flower name '{fname}' found in your list.")
+                continue
                 
             existing_flowers = db.query(Flower).filter(Flower.user_id == user.id).all()
             existing = next((f for f in existing_flowers if f.name and f.name.strip().lower() == lower_fname), None)
             if existing:
-                raise HTTPException(status_code=400, detail=f"Flower '{fname}' is already created for party in this group.")
+                continue
                 
             new_flower = Flower(name=fname, user_id=user.id)
             db.add(new_flower)

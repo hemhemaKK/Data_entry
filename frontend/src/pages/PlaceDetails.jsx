@@ -703,6 +703,7 @@ const PlaceDetails = () => {
           <div style={{ flex: 1, minWidth: '250px' }}>
             <SearchBar value={flowerFilter} onChange={setFlowerFilter} placeholder="Search flowers..." />
           </div>
+          <button className="btn btn-primary" onClick={() => setShowFlowerForm(true)}>+ Add Flower</button>
           <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <label style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', whiteSpace: 'nowrap' }}>From:</label>
             <input 

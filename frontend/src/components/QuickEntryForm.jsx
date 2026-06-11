@@ -177,11 +177,9 @@ const QuickEntryForm = ({ onRecordAdded }) => {
       };
 
       await billRecordsApi.createRecord(payload);
-      // Clear numeric fields but keep date, van, and selections
+      // Clear numeric fields but keep date, van, laggage, collie, and selections
       setWeight('');
       setRate('');
-      setLaggage('');
-      setCollie('');
       if (onRecordAdded) {
         onRecordAdded();
       }
