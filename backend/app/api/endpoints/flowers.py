@@ -10,17 +10,24 @@ router = APIRouter()
 
 @router.post("/", response_model=FlowerSchema)
 def create_flower(flower: FlowerCreate, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == flower.user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-        
+    if flower.user_id is not None:
+        user = db.query(User).filter(User.id == flower.user_id).first()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+            
     flower_name = flower.name.strip()
     req_lower = flower_name.lower()
+    from sqlalchemy import func
     
-    existing_flowers = db.query(Flower).filter(Flower.user_id == flower.user_id).all()
-    for ef in existing_flowers:
-        if ef.name and ef.name.strip().lower() == req_lower:
-            raise HTTPException(status_code=400, detail=f"Flower '{flower_name}' is already created for party in this group.")
+    if flower.user_id is not None:
+        existing_flowers = db.query(Flower).filter(Flower.user_id == flower.user_id).all()
+        for ef in existing_flowers:
+            if ef.name and ef.name.strip().lower() == req_lower:
+                raise HTTPException(status_code=400, detail=f"Flower '{flower_name}' is already created for this party.")
+    else:
+        existing = db.query(Flower).filter(Flower.user_id.is_(None), func.lower(Flower.name) == req_lower).first()
+        if existing:
+            raise HTTPException(status_code=400, detail=f"Flower '{flower_name}' is already created globally.")
         
     db_flower = Flower(name=flower_name, user_id=flower.user_id)
     db.add(db_flower)

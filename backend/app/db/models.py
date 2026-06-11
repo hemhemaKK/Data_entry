@@ -81,7 +81,7 @@ class Flower(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"))
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
     user = relationship("User", back_populates="flowers")
     bill_records = relationship("BillRecord", back_populates="flower", cascade="all, delete-orphan")
 

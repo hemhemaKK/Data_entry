@@ -79,7 +79,7 @@ class BillRecord(BillRecordBase):
 
 class FlowerBase(BaseModel):
     name: str
-    user_id: int
+    user_id: Optional[int] = None
 
 class FlowerCreate(FlowerBase):
     pass
@@ -118,6 +118,6 @@ class BulkUsersCreate(BaseModel):
     names: List[str]
 
 class BulkFlowersCreate(BaseModel):
-    place_id: int
+    place_id: Optional[int] = None
     flower_names: List[str]
 

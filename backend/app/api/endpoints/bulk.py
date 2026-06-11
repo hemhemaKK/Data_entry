@@ -63,36 +63,30 @@ def create_bulk_users(bulk_data: BulkUsersCreate, db: Session = Depends(get_db))
 
 @router.post("/flowers")
 def create_bulk_flowers(bulk_data: BulkFlowersCreate, db: Session = Depends(get_db)):
-    # First get all users in this place
-    users = db.query(User).filter(User.place_id == bulk_data.place_id).all()
-    if not users:
-        raise HTTPException(status_code=404, detail="No users found in this place.")
-        
+    from sqlalchemy import func
     created_count = 0
+    added_in_batch = set()
     
-    for user in users:
-        added_in_batch = set()
-        for fname in bulk_data.flower_names:
-            fname = fname.strip()
-            if not fname:
-                continue
-                
-            lower_fname = fname.lower()
-            if lower_fname in added_in_batch:
-                continue
-                
-            existing_flowers = db.query(Flower).filter(Flower.user_id == user.id).all()
-            existing = next((f for f in existing_flowers if f.name and f.name.strip().lower() == lower_fname), None)
-            if existing:
-                continue
-                
-            new_flower = Flower(name=fname, user_id=user.id)
-            db.add(new_flower)
-            added_in_batch.add(lower_fname)
-            created_count += 1
-                
+    for fname in bulk_data.flower_names:
+        fname = fname.strip()
+        if not fname:
+            continue
+            
+        lower_fname = fname.lower()
+        if lower_fname in added_in_batch:
+            continue
+            
+        existing = db.query(Flower).filter(Flower.user_id.is_(None), func.lower(Flower.name) == lower_fname).first()
+        if existing:
+            continue
+            
+        new_flower = Flower(name=fname, user_id=None)
+        db.add(new_flower)
+        added_in_batch.add(lower_fname)
+        created_count += 1
+            
     db.commit()
-    msg = f"Added {created_count} flowers." if created_count > 0 else "These flowers are already assigned to all users in this place."
+    msg = f"Added {created_count} global flowers." if created_count > 0 else "These flowers are already created globally."
     return {"detail": msg}
 
 @router.delete("/flowers/{flower_name}")

@@ -172,7 +172,6 @@ const BulkAdd = () => {
   };
 
   const handleAddFlowers = async () => {
-    if (!selectedPlace) return alert("Please select a Group.");
     if (!bulkFlowersText.trim()) return alert("Please enter flowers.");
     
     const flower_names = bulkFlowersText.split(/[\n,]+/).map(s => s.trim()).filter(s => s);
@@ -180,14 +179,12 @@ const BulkAdd = () => {
 
     setLoading(true);
     try {
-      const res = await bulkApi.createFlowers({ place_id: parseInt(selectedPlace), flower_names });
+      const res = await bulkApi.createFlowers({ flower_names });
       alert(res.detail);
       setBulkFlowersText('');
       
       // Refresh flowers view
-      if (selectedYear) {
-         fetchPlaces(selectedYear);
-      }
+      fetchViewerData();
     } catch (err) {
       const msg = err.response?.data?.detail || "Failed to add flowers.";
       alert(msg);
@@ -268,32 +265,24 @@ const BulkAdd = () => {
         <div className="card">
           <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Flower2 className="icon" />
-            <h2 className="card-title">3. Add Flowers</h2>
+            <h2 className="card-title">3. Add Global Flowers</h2>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
-            Assigns these flowers to ALL parties inside the selected group.
+            Creates common flowers that are available to ALL parties instantly.
           </p>
-          <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Group</label>
-            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
-              <option value="" style={{ color: 'black' }}>-- Select Group --</option>
-              {places.map(p => (
-                <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>
-              ))}
-            </select>
-          </div>
           <div style={{ marginBottom: '1rem' }}>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Flowers List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
-              placeholder="Rose&#10;Jasmine&#10;Lily"
+              className="input" 
+              placeholder="e.g. Rose, Lily, Jasmine"
               value={bulkFlowersText}
               onChange={(e) => setBulkFlowersText(e.target.value)}
+              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', resize: 'vertical' }}
             />
           </div>
-          <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleAddFlowers} disabled={loading || !selectedPlace || !bulkFlowersText}>
-            Add Flowers to All
+          <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleAddFlowers} disabled={loading || !bulkFlowersText}>
+            Add Global Flowers
           </button>
         </div>
 
