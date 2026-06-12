@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { getPlaces, createPlace, updatePlace, deletePlace } from "../services/api";
@@ -106,7 +106,7 @@ const YearDetails = () => {
       {filteredPlaces.length === 0 ? (
         <p>No groups found.</p>
       ) : (
-        <div className="metrics-grid">
+        <div className="client-grid">
           {filteredPlaces.map((pl) => (
             <PlaceCard
               key={pl.id}

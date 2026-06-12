@@ -11,6 +11,10 @@ const Home = () => {
   const [error, setError] = useState(null);
   const [allTransactions, setAllTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [filterFlower, setFilterFlower] = useState("");
+  const [filterDateFrom, setFilterDateFrom] = useState("");
+  const [filterDateTo, setFilterDateTo] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
   const [inlineEditId, setInlineEditId] = useState(null);
   const [inlineForm, setInlineForm] = useState({ date: '', van: '', weight: '', rate: '', laggage: '', collie: '', flower_id: null });
 
@@ -134,17 +138,41 @@ const Home = () => {
 
   // Filter logic
   const filteredTransactions = allTransactions.filter(t => {
-    if (!searchTerm) {
-      // If no search, show last 24 hrs
+    let matches = true;
+
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      const matchSearch = 
+        (t.place_name && t.place_name.toLowerCase().includes(searchLower)) ||
+        (t.client_name && t.client_name.toLowerCase().includes(searchLower)) ||
+        (t.flower_name && t.flower_name.toLowerCase().includes(searchLower));
+      if (!matchSearch) matches = false;
+    } else if (!filterDateFrom && !filterDateTo && !filterMonth && !filterFlower) {
+      // If no search and no filters, show last 24 hrs
       const now = new Date();
       now.setHours(0,0,0,0);
       const yesterday = new Date(now);
       yesterday.setDate(yesterday.getDate() - 1);
       const tDate = new Date(t.date);
-      return tDate >= yesterday;
+      if (tDate < yesterday) matches = false;
     }
-    // If there is a search term, the backend has already filtered the results
-    return true;
+
+    if (filterFlower && t.flower_name !== filterFlower) {
+      matches = false;
+    }
+    if (filterDateFrom && (!t.date || t.date < filterDateFrom)) {
+      matches = false;
+    }
+    if (filterDateTo && (!t.date || t.date > filterDateTo)) {
+      matches = false;
+    }
+    if (filterMonth) {
+      if (!t.date || !t.date.startsWith(filterMonth)) {
+        matches = false;
+      }
+    }
+
+    return matches;
   });
 
   if (loading) return <div className="page-title">Loading years...</div>;
@@ -160,18 +188,80 @@ const Home = () => {
       {/* Recent Entries */}
       {allTransactions.length > 0 && (
         <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--border)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
             <h2 className="card-title" style={{ fontSize: '1.25rem', margin: 0 }}>
-              {searchTerm ? "Search Results" : "Recent Entries (Last 24 Hrs)"}
+              {(searchTerm || filterFlower || filterDateFrom || filterDateTo || filterMonth) ? "Search/Filter Results" : "Recent Entries (Last 24 Hrs)"}
             </h2>
-            <input 
-              type="text" 
-              placeholder="Search by Group, Party, or Flower..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="input"
-              style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', minWidth: '250px' }}
-            />
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input 
+                type="text" 
+                placeholder="Search..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input"
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', minWidth: '150px' }}
+              />
+              <select 
+                value={filterFlower} 
+                onChange={(e) => setFilterFlower(e.target.value)}
+                className="select-input"
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+              >
+                <option value="">All Flowers</option>
+                {[...new Set(allTransactions.map(t => t.flower_name).filter(Boolean))].sort().map(f => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+              <input 
+                type="month" 
+                value={filterMonth}
+                onChange={(e) => {
+                   setFilterMonth(e.target.value);
+                   if (e.target.value) {
+                     setFilterDateFrom('');
+                     setFilterDateTo('');
+                   }
+                }}
+                className="input"
+                title="Filter by Month"
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+              />
+              <input 
+                type="date" 
+                value={filterDateFrom}
+                onChange={(e) => {
+                   setFilterDateFrom(e.target.value);
+                   if (e.target.value) setFilterMonth('');
+                }}
+                className="input"
+                title="From Date"
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+              />
+              <input 
+                type="date" 
+                value={filterDateTo}
+                onChange={(e) => {
+                   setFilterDateTo(e.target.value);
+                   if (e.target.value) setFilterMonth('');
+                }}
+                className="input"
+                title="To Date"
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+              />
+              <button
+                className="btn btn-secondary"
+                onClick={() => {
+                  setSearchTerm('');
+                  setFilterFlower('');
+                  setFilterDateFrom('');
+                  setFilterDateTo('');
+                  setFilterMonth('');
+                }}
+                style={{ padding: '0.5rem 1rem' }}
+              >
+                Clear
+              </button>
+            </div>
           </div>
           <div className="table-responsive">
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>

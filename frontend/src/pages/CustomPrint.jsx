@@ -150,7 +150,11 @@ const CustomPrint = () => {
 
             if (records.length === 0) continue;
 
-            records.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+            records.sort((a, b) => {
+                if (!a.date) return 1;
+                if (!b.date) return -1;
+                return new Date(a.date) - new Date(b.date);
+            });
 
             const totals = records.reduce((acc, r) => {
                 const w = parseFloat(r.weight) || 0;

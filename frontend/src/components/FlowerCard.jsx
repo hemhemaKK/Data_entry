@@ -203,7 +203,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                         <input type="number" step="0.01" name="rate" value={editFormData.rate} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
                       </td>
                       <td className="col-total" style={{ padding: '2px', fontWeight: 'bold' }}>
-                        {((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(2)}
+                        {((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(0)}
                       </td>
                       <td className="col-laggage" style={{ padding: '2px' }}>
                         <input type="number" step="0.01" name="laggage" value={editFormData.laggage} onChange={handleEditChange} style={{ width: '100%', padding: '4px' }} />
@@ -222,7 +222,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                       <td className="col-van" style={{ padding: '6px 4px' }}>{record.van || '-'}</td>
                       <td className="col-weight" style={{ padding: '6px 4px' }}>{record.weight !== null && record.weight !== undefined ? parseFloat(record.weight).toFixed(3) : '-'}</td>
                       <td className="col-rate" style={{ padding: '6px 4px' }}>{record.rate || '-'}</td>
-                      <td className="col-total" style={{ padding: '6px 4px', fontWeight: 'bold' }}>{((parseFloat(record.weight) || 0) * (parseFloat(record.rate) || 0)).toFixed(2)}</td>
+                      <td className="col-total" style={{ padding: '6px 4px', fontWeight: 'bold' }}>{((parseFloat(record.weight) || 0) * (parseFloat(record.rate) || 0)).toFixed(0)}</td>
                       <td className="col-laggage" style={{ padding: '6px 4px' }}>{record.laggage || '0'}</td>
                       <td className="col-collie" style={{ padding: '6px 4px' }}>{record.collie || '0'}</td>
                       <td className="col-actions no-print" style={{ padding: '6px 4px', textAlign: 'right', whiteSpace: 'nowrap' }}>
@@ -239,7 +239,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 <td className="col-date" colSpan="2" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
                 <td className="col-weight" style={{ padding: '8px 4px' }}>{totals.weight.toFixed(3)}</td>
                 <td className="col-rate" style={{ padding: '8px 4px' }}></td>
-                <td className="col-total" style={{ padding: '8px 4px' }}>{totals.price.toFixed(2)}</td>
+                <td className="col-total" style={{ padding: '8px 4px' }}>{totals.price.toFixed(0)}</td>
                 <td className="col-laggage" style={{ padding: '8px 4px' }}>{totals.laggage.toFixed(2)}</td>
                 <td className="col-collie" style={{ padding: '8px 4px' }}>{totals.collie.toFixed(2)}</td>
                 <td className="col-actions no-print" style={{ padding: '8px 4px' }}></td>

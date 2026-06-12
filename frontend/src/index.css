@@ -338,7 +338,7 @@ tr:hover td {
 
 .client-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.5rem;
   margin-top: 1.5rem;
 }
@@ -796,6 +796,7 @@ tfoot td {
   table.print-table tbody tr, .print-only table tbody tr {
     border-top: none !important;
     border-bottom: none !important;
+    page-break-inside: avoid !important;
   }
 
   /* Keep total column bold */
