@@ -222,9 +222,9 @@ const Home = () => {
                      setFilterDateTo('');
                    }
                 }}
-                className="input"
+                className="input black-icon"
                 title="Filter by Month"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <input 
                 type="date" 
@@ -233,9 +233,9 @@ const Home = () => {
                    setFilterDateFrom(e.target.value);
                    if (e.target.value) setFilterMonth('');
                 }}
-                className="input"
+                className="input black-icon"
                 title="From Date"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <input 
                 type="date" 
@@ -244,9 +244,9 @@ const Home = () => {
                    setFilterDateTo(e.target.value);
                    if (e.target.value) setFilterMonth('');
                 }}
-                className="input"
+                className="input black-icon"
                 title="To Date"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <button
                 className="btn btn-secondary"

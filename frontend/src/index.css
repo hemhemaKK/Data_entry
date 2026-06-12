@@ -832,9 +832,7 @@ tfoot td {
   }
 
   
-  @page {
-    margin: 0; /* Forces browser to remove default URL and Title headers */
-  }
+  /* Removed overriding margin: 0 to allow standard page margins */
 
   /* Hide UI elements that shouldn't be printed */
   .sidebar, .header, .theme-toggle, .no-print, button, input, .search-bar, .place-details-header, .back-btn, .client-grid, .dropzone {
@@ -867,6 +865,7 @@ tfoot td {
   /* Reset main content layout to take full width */
   .app-container { display: block !important; }
   .main-content { padding: 0 !important; width: 100% !important; overflow: visible !important; }
+  .page-container { padding: 0 !important; margin: 0 !important; }
   
   /* Reset colors to black and white for crisp printing */
   body {
@@ -923,7 +922,7 @@ tfoot td {
   /* Page sizing for A4 */
   @page {
     size: A4 portrait;
-    margin-top: 0mm; 
+    margin-top: 5mm;
     margin-bottom: 5mm;
     margin-left: 5mm;
     margin-right: 5mm;
@@ -964,6 +963,11 @@ button.focus-ring:focus {
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="month"]::-webkit-calendar-picker-indicator {
     filter: invert(1);
+}
+
+input[type="date"].black-icon::-webkit-calendar-picker-indicator,
+input[type="month"].black-icon::-webkit-calendar-picker-indicator {
+    filter: none !important;
 }
 
 [data-theme="light"] input[type="date"]::-webkit-calendar-picker-indicator,
