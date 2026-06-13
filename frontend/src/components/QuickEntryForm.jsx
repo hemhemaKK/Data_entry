@@ -161,7 +161,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         finalFlowerId = existingFlower.id;
       } else {
         const { createFlower } = await import('../services/api');
-        const newFlower = await createFlower({ name: selectedFlower, user_id: null });
+        const newFlower = await createFlower({ name: selectedFlower, user_id: parseInt(selectedUser, 10) });
         finalFlowerId = newFlower.id;
         setPartyFlowers([...partyFlowers, newFlower]);
       }

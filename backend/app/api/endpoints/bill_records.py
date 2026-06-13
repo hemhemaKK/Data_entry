@@ -33,7 +33,7 @@ def get_all_transactions(
             )
         )
 
-    records = query.order_by(BillRecord.date.desc(), BillRecord.id.desc()).limit(limit).all()
+    records = query.order_by(BillRecord.id.desc()).limit(limit).all()
     
     result = []
     for br, f, u, p in records:
