@@ -106,9 +106,10 @@ export const dashboardApi = {
 };
 
 export const uploadsApi = {
-    uploadFile: async (file) => {
+    uploadFile: async (file, templateType = "template1") => {
         const formData = new FormData();
         formData.append('file', file);
+        formData.append('template_type', templateType);
         const response = await axios.post(`${API_BASE_URL}/uploads`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',

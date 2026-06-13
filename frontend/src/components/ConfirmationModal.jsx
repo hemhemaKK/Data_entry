@@ -31,12 +31,12 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title = "Confirm", mess
 
   if (!isOpen) return null;
   return (
-    <div className="modal-bg fixed inset-0 flex items-center justify-center z-50">
-      <div className="modal-content bg-glass backdrop-blur-md p-6 rounded-xl shadow-lg max-w-sm w-full">
-        <h2 className="text-xl font-semibold mb-4 text-white">{title}</h2>
-        <p className="mb-6 text-gray-200">{message}</p>
-        <div className="flex justify-end space-x-3">
-          <button onClick={onClose} ref={cancelBtnRef} className="btn btn-secondary focus-ring">
+    <div className="modal-bg">
+      <div className="modal-content" style={{ maxWidth: '400px' }}>
+        <h2 style={{ fontSize: '1.25rem', fontWeight: 'bold', marginBottom: '1rem', color: 'var(--text-primary)' }}>{title}</h2>
+        <p style={{ marginBottom: '1.5rem', color: 'var(--text-secondary)' }}>{message}</p>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+          <button onClick={onClose} ref={cancelBtnRef} className="btn btn-secondary">
             Cancel
           </button>
           <button
@@ -45,7 +45,7 @@ const ConfirmationModal = ({ isOpen, onClose, onConfirm, title = "Confirm", mess
               onConfirm();
               onClose();
             }}
-            className="btn btn-danger focus-ring"
+            className="btn btn-danger"
           >
             Confirm
           </button>

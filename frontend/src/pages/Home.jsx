@@ -137,7 +137,7 @@ const Home = () => {
   };
 
   // Filter logic
-  const filteredTransactions = allTransactions.filter(t => {
+  let filteredTransactions = allTransactions.filter(t => {
     let matches = true;
 
     if (searchTerm) {
@@ -147,14 +147,6 @@ const Home = () => {
         (t.client_name && t.client_name.toLowerCase().includes(searchLower)) ||
         (t.flower_name && t.flower_name.toLowerCase().includes(searchLower));
       if (!matchSearch) matches = false;
-    } else if (!filterDateFrom && !filterDateTo && !filterMonth && !filterFlower) {
-      // If no search and no filters, show last 24 hrs
-      const now = new Date();
-      now.setHours(0,0,0,0);
-      const yesterday = new Date(now);
-      yesterday.setDate(yesterday.getDate() - 1);
-      const tDate = new Date(t.date);
-      if (tDate < yesterday) matches = false;
     }
 
     if (filterFlower && t.flower_name !== filterFlower) {
@@ -175,6 +167,11 @@ const Home = () => {
     return matches;
   });
 
+  const isDefaultView = !searchTerm && !filterDateFrom && !filterDateTo && !filterMonth && !filterFlower;
+  if (isDefaultView) {
+    filteredTransactions = filteredTransactions.slice(0, 20);
+  }
+
   if (loading) return <div className="page-title">Loading years...</div>;
   if (error) return <div className="page-title error">{error}</div>;
 
@@ -190,7 +187,7 @@ const Home = () => {
         <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
             <h2 className="card-title" style={{ fontSize: '1.25rem', margin: 0 }}>
-              {(searchTerm || filterFlower || filterDateFrom || filterDateTo || filterMonth) ? "Search/Filter Results" : "Recent Entries (Last 24 Hrs)"}
+              {(searchTerm || filterFlower || filterDateFrom || filterDateTo || filterMonth) ? "Search/Filter Results" : "Recent Entries (Latest 20)"}
             </h2>
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
               <input 

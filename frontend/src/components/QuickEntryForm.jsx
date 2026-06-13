@@ -137,7 +137,6 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   const handleUserChange = async (e) => {
     const uId = e.target.value;
     setSelectedUser(uId);
-    setSelectedFlower('');
     if (uId) {
       try {
         const data = await getFlowers(uId);
@@ -166,11 +165,15 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         setPartyFlowers([...partyFlowers, newFlower]);
       }
 
+      let processedVan = (van || "").trim();
+      if (!processedVan) processedVan = 'v1';
+      else if (!isNaN(processedVan)) processedVan = 'v' + processedVan;
+
       const payload = {
         flower_id: finalFlowerId,
         date: date || null,
         weight: parseFloat(weight) || 0,
-        van: van || null,
+        van: processedVan,
         rate: parseFloat(rate) || 0,
         laggage: parseFloat(laggage) || 0,
         collie: parseFloat(collie) || 0,

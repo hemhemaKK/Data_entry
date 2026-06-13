@@ -15,6 +15,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
   const [expanded, setExpanded] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [selectedRecords, setSelectedRecords] = useState([]);
 
   useEffect(() => {
     const handlePrint = (e) => {
@@ -157,20 +158,67 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
       
       {expanded && (
         <>
-        <div className="no-print" style={{ padding: '12px', borderTop: '1px solid var(--border)', overflowX: 'auto' }}>
+        <div className="no-print" style={{ padding: '12px', borderTop: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <div>
+              {selectedRecords.length > 0 && (
+                <button 
+                  className="btn btn-sm btn-danger" 
+                  onClick={async () => {
+                    if (await window.confirmAsync(`Are you sure you want to delete ${selectedRecords.length} selected record(s)?`)) {
+                      try {
+                        await Promise.all(selectedRecords.map(id => billRecordsApi.deleteRecord(id)));
+                        setSelectedRecords([]);
+                        if (onRecordsUpdated) onRecordsUpdated();
+                      } catch (err) {
+                        alert("Failed to delete some records");
+                      }
+                    }
+                  }}
+                  style={{ padding: '4px 8px', fontSize: '0.75rem' }}
+                >
+                  Delete Selected
+                </button>
+              )}
+            </div>
+            <button 
+              className="btn btn-sm btn-danger" 
+              onClick={async () => {
+                if (await window.confirmAsync(`Are you sure you want to delete ALL records for ${formatMonthLabel(month)}?`)) {
+                  try {
+                    await Promise.all(records.map(r => billRecordsApi.deleteRecord(r.id)));
+                    if (onRecordsUpdated) onRecordsUpdated();
+                  } catch (err) {
+                    alert("Failed to delete month");
+                  }
+                }
+              }}
+              style={{ padding: '4px 8px', fontSize: '0.75rem', background: 'transparent', color: 'red', border: '1px solid red' }}
+            >
+              Delete Month
+            </button>
+          </div>
+          <div style={{ overflowX: 'auto' }}>
           <table style={{ width: '100%', fontSize: '0.85rem', textAlign: 'left', borderCollapse: 'collapse', minWidth: '600px' }}>
             <colgroup>
-                <col style={{ width: '18%' }} />
+                <col style={{ width: '4%' }} />
+                <col style={{ width: '16%' }} />
                 <col style={{ width: '10%' }} />
                 <col style={{ width: '15%' }} />
+                <col style={{ width: '13%' }} />
                 <col style={{ width: '15%' }} />
-                <col style={{ width: '18%' }} />
                 <col style={{ width: '12%' }} />
                 <col style={{ width: '12%' }} />
                 <col style={{ width: '0%' }} />
             </colgroup>
             <thead>
               <tr style={{ borderBottom: '1px solid black' }}>
+                <th className="no-print" style={{ padding: '8px 4px' }}>
+                  <input type="checkbox" checked={selectedRecords.length === records.length && records.length > 0} onChange={() => {
+                    if (selectedRecords.length === records.length) setSelectedRecords([]);
+                    else setSelectedRecords(records.map(r => r.id));
+                  }} />
+                </th>
                 <th className="col-date" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Date</th>
                 <th className="col-van" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Van</th>
                 <th className="col-weight" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Weight (kg)</th>
@@ -187,7 +235,13 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                   if (!b.date) return -1;
                   return new Date(a.date) - new Date(b.date);
               }).map(record => (
-                <tr key={record.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                <tr key={record.id} style={{ borderBottom: '1px solid var(--border)', background: selectedRecords.includes(record.id) ? 'var(--bg-secondary)' : 'transparent' }}>
+                  <td className="no-print" style={{ padding: '6px 4px' }}>
+                    <input type="checkbox" checked={selectedRecords.includes(record.id)} onChange={() => {
+                      if (selectedRecords.includes(record.id)) setSelectedRecords(selectedRecords.filter(id => id !== record.id));
+                      else setSelectedRecords([...selectedRecords, record.id]);
+                    }} />
+                  </td>
                   {editingId === record.id ? (
                     <>
                       <td className="col-date" style={{ padding: '2px' }}>
@@ -236,7 +290,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
             </tbody>
             <tfoot>
               <tr style={{ background: '#f0f0f0', fontWeight: 'bold', color: 'black', borderTop: '1px solid black', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
-                <td className="col-date" colSpan="2" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
+                <td className="col-date" colSpan="3" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
                 <td className="col-weight" style={{ padding: '8px 4px' }}>{totals.weight.toFixed(3)}</td>
                 <td className="col-rate" style={{ padding: '8px 4px' }}></td>
                 <td className="col-total" style={{ padding: '8px 4px' }}>{totals.price.toFixed(0)}</td>
@@ -246,6 +300,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
         
         {/* The Print Template that is only visible when printing */}
