@@ -283,9 +283,21 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
           setPartyFlowers(currentFlowers);
         }
         
+        let formattedDate = row.date || null;
+        if (formattedDate) {
+           formattedDate = formattedDate.trim();
+           const d = new Date(formattedDate);
+           if (!isNaN(d.getTime())) {
+               const yyyy = d.getFullYear();
+               const mm = String(d.getMonth() + 1).padStart(2, '0');
+               const dd = String(d.getDate()).padStart(2, '0');
+               formattedDate = `${yyyy}-${mm}-${dd}`;
+           }
+        }
+
         const payload = {
           flower_id: finalFlowerId,
-          date: row.date || null,
+          date: formattedDate,
           weight: parseFloat(row.weight) || 0,
           van: processVan(row.van),
           rate: parseFloat(row.rate) || 0,
