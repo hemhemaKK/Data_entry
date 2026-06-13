@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { getYears, billRecordsApi } from "../services/api";
 import QuickEntryForm from "../components/QuickEntryForm";
+import ExcelEntryGrid from "../components/ExcelEntryGrid";
 import RecordFormModal from "../components/RecordFormModal";
 import { FaEdit, FaTrashAlt, FaSave, FaTimes } from "react-icons/fa";
 
@@ -17,6 +18,13 @@ const Home = () => {
   const [filterMonth, setFilterMonth] = useState("");
   const [inlineEditId, setInlineEditId] = useState(null);
   const [inlineForm, setInlineForm] = useState({ date: '', van: '', weight: '', rate: '', laggage: '', collie: '', flower_id: null });
+
+  const [entryMode, setEntryMode] = useState('quick'); // 'quick' or 'excel'
+
+  const [selectedRecords, setSelectedRecords] = useState([]);
+  const [bulkLaggage, setBulkLaggage] = useState('');
+  const [bulkCollie, setBulkCollie] = useState('');
+  const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const inlineDateRef = useRef(null);
   const inlineVanRef = useRef(null);
@@ -136,6 +144,63 @@ const Home = () => {
     }
   };
 
+  const handleBulkUpdate = async () => {
+    if (selectedRecords.length === 0) return;
+    if (bulkLaggage === '' && bulkCollie === '') {
+      alert("Please enter a value for Laggage or Collie to update.");
+      return;
+    }
+    
+    if (!await window.confirmAsync(`Update ${selectedRecords.length} selected record(s)?`)) return;
+    
+    setIsBulkUpdating(true);
+    try {
+      const updates = selectedRecords.map(id => {
+        const record = allTransactions.find(t => t.id === id);
+        if (!record) return null;
+        
+        const payload = {
+          date: record.date || null,
+          van: record.van || null,
+          weight: record.weight || 0,
+          rate: record.rate || 0,
+          flower_id: record.flower_id,
+          laggage: bulkLaggage !== '' ? parseFloat(bulkLaggage) : record.laggage,
+          collie: bulkCollie !== '' ? parseFloat(bulkCollie) : record.collie,
+        };
+        return billRecordsApi.updateRecord(id, payload);
+      }).filter(Boolean);
+      
+      await Promise.all(updates);
+      setSelectedRecords([]);
+      setBulkLaggage('');
+      setBulkCollie('');
+      refreshTransactions();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update some records.");
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRecords.length === 0) return;
+    if (!await window.confirmAsync(`Are you sure you want to delete ${selectedRecords.length} selected record(s)?`)) return;
+    
+    setIsBulkUpdating(true);
+    try {
+      await Promise.all(selectedRecords.map(id => billRecordsApi.deleteRecord(id)));
+      setSelectedRecords([]);
+      refreshTransactions();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to delete some records.");
+    } finally {
+      setIsBulkUpdating(false);
+    }
+  };
+
   // Filter logic
   let filteredTransactions = allTransactions.filter(t => {
     let matches = true;
@@ -179,8 +244,26 @@ const Home = () => {
     <div>
       <h1 className="page-title">Dashboard</h1>
       
-      {/* Quick Manual Entry */}
-      <QuickEntryForm onRecordAdded={refreshTransactions} />
+      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+        <button 
+          className={`btn ${entryMode === 'quick' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setEntryMode('quick')}
+        >
+          Quick Manual Entry
+        </button>
+        <button 
+          className={`btn ${entryMode === 'excel' ? 'btn-primary' : 'btn-secondary'}`}
+          onClick={() => setEntryMode('excel')}
+        >
+          Excel Grid Entry
+        </button>
+      </div>
+
+      {entryMode === 'quick' ? (
+        <QuickEntryForm onRecordAdded={refreshTransactions} />
+      ) : (
+        <ExcelEntryGrid onRecordsSaved={refreshTransactions} />
+      )}
 
       {/* Recent Entries */}
       {allTransactions.length > 0 && (
@@ -260,10 +343,60 @@ const Home = () => {
               </button>
             </div>
           </div>
+          {selectedRecords.length > 0 && (
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-secondary)', padding: '0.75rem 1rem', borderRadius: '8px', marginBottom: '1rem', border: '1px solid var(--primary)' }}>
+              <span style={{ fontWeight: 'bold' }}>{selectedRecords.length} selected</span>
+              <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginLeft: 'auto' }}>
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="Laggage ()" 
+                  value={bulkLaggage}
+                  onChange={(e) => setBulkLaggage(e.target.value)}
+                  className="input"
+                  style={{ width: '100px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                />
+                <input 
+                  type="number" 
+                  step="0.01" 
+                  placeholder="Collie ()" 
+                  value={bulkCollie}
+                  onChange={(e) => setBulkCollie(e.target.value)}
+                  className="input"
+                  style={{ width: '100px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }}
+                />
+                <button 
+                  className="btn btn-primary btn-sm" 
+                  onClick={handleBulkUpdate} 
+                  disabled={isBulkUpdating}
+                >
+                  {isBulkUpdating ? 'Updating...' : 'Update Selected'}
+                </button>
+                <div style={{ borderLeft: '1px solid var(--border)', height: '24px', margin: '0 0.5rem' }}></div>
+                <button 
+                  className="btn btn-danger btn-sm" 
+                  onClick={handleBulkDelete}
+                  disabled={isBulkUpdating}
+                >
+                  {isBulkUpdating ? 'Deleting...' : 'Delete Selected'}
+                </button>
+              </div>
+            </div>
+          )}
           <div className="table-responsive">
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead>
                 <tr style={{ background: 'var(--bg-secondary)' }}>
+                  <th style={{ padding: '0.75rem', textAlign: 'center', width: '40px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedRecords.length > 0 && selectedRecords.length === filteredTransactions.length}
+                      onChange={(e) => {
+                        if (e.target.checked) setSelectedRecords(filteredTransactions.map(t => t.id));
+                        else setSelectedRecords([]);
+                      }}
+                    />
+                  </th>
                   <th style={{ padding: '0.75rem', textAlign: 'left' }}>Date</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Van</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Group</th>
@@ -280,8 +413,19 @@ const Home = () => {
               <tbody>
                 {filteredTransactions.map(entry => {
                   const isEditing = inlineEditId === entry.id;
+                  const isSelected = selectedRecords.includes(entry.id);
                   return (
-                    <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', background: isEditing ? 'var(--bg-secondary)' : 'transparent' }}>
+                    <tr key={entry.id} style={{ borderBottom: '1px solid var(--border)', background: isEditing || isSelected ? 'var(--bg-secondary)' : 'transparent' }}>
+                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                        <input 
+                          type="checkbox" 
+                          checked={isSelected}
+                          onChange={() => {
+                            if (isSelected) setSelectedRecords(selectedRecords.filter(id => id !== entry.id));
+                            else setSelectedRecords([...selectedRecords, entry.id]);
+                          }}
+                        />
+                      </td>
                       {isEditing ? (
                         <>
                           <td style={{ padding: '0.75rem', textAlign: 'left' }}>
