@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, advancesApi } from '../services/api';
-import { Wallet, Plus, Trash2 } from 'lucide-react';
+import { Wallet, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 
 const Ledger = () => {
   const [years, setYears] = useState([]);
@@ -8,6 +8,12 @@ const Ledger = () => {
   const [users, setUsers] = useState([]);
   const [entries, setEntries] = useState([]);
   
+  const [editingRowId, setEditingRowId] = useState(null);
+  const [editFormData, setEditFormData] = useState({ date: '', advance_amount: '', deduction_amount: '', notes: '' });
+
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [bulkDate, setBulkDate] = useState('');
+
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedPlace, setSelectedPlace] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
@@ -107,20 +113,21 @@ const Ledger = () => {
   };
 
   const handleUserChange = async (e) => {
-    const uId = e.target.value;
-    setSelectedUser(uId);
-    if (uId) {
-      fetchEntries(uId);
-    } else {
-      setEntries([]);
-    }
+    setSelectedUser(e.target.value);
   };
 
-  const fetchEntries = async (id) => {
+  const fetchEntries = async () => {
     setLoading(true);
     try {
-      const data = await advancesApi.getUserAdvances(id);
-      setEntries(data || []);
+      if (selectedUser) {
+        const data = await advancesApi.getUserAdvances(selectedUser);
+        setEntries(data || []);
+      } else if (selectedYear) {
+        const data = await advancesApi.getYearAdvances(selectedYear);
+        setEntries(data || []);
+      } else {
+        setEntries([]);
+      }
     } catch (err) {
       console.error(err);
     } finally {
@@ -129,11 +136,77 @@ const Ledger = () => {
   };
 
   useEffect(() => {
-    setEntries([]);
-    if (selectedUser) {
-        fetchEntries(selectedUser);
+    fetchEntries();
+  }, [selectedUser, selectedYear]);
+
+  const handleEditClick = (e) => {
+    setEditingRowId(e.id);
+    setEditFormData({
+      date: e.date || '',
+      advance_amount: e.advance_amount || '',
+      deduction_amount: e.deduction_amount || '',
+      notes: e.notes || ''
+    });
+  };
+
+  const handleEditSave = async (id) => {
+    try {
+      const payload = {
+        date: editFormData.date,
+        advance_amount: parseFloat(editFormData.advance_amount) || 0,
+        deduction_amount: parseFloat(editFormData.deduction_amount) || 0,
+        notes: editFormData.notes || '',
+        user_id: entries.find(e => e.id === id)?.user_id
+      };
+      await advancesApi.updateAdvance(id, payload);
+      setEditingRowId(null);
+      fetchEntries();
+    } catch (err) {
+      alert("Failed to update entry.");
+      console.error(err);
     }
-  }, [selectedUser]);
+  };
+
+  const handleRowSelect = (id) => {
+    const newSet = new Set(selectedRows);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
+    setSelectedRows(newSet);
+  };
+
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedRows(new Set(entries.map(ent => ent.id)));
+    } else {
+      setSelectedRows(new Set());
+    }
+  };
+
+  const handleBulkDateUpdate = async () => {
+    if (selectedRows.size === 0) return;
+    if (!bulkDate) {
+      alert("Please select a date first.");
+      return;
+    }
+    try {
+      setLoading(true);
+      await advancesApi.bulkUpdateAdvanceDate({
+        entry_ids: Array.from(selectedRows),
+        date: bulkDate
+      });
+      setSelectedRows(new Set());
+      setBulkDate('');
+      fetchEntries();
+    } catch (err) {
+      console.error(err);
+      alert("Failed to update dates");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddEntry = async (e) => {
     e.preventDefault();
@@ -266,25 +339,49 @@ const Ledger = () => {
 
           <div className="card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 className="card-title">History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : ''}</h2>
-              <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
-                <span style={{ color: 'green' }}>Total Advances: {totalAdvance.toFixed(2)}</span>
-                <span style={{ color: 'red' }}>Total Deductions: {totalDeduction.toFixed(2)}</span>
-              </div>
+              <h2 className="card-title">History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : (selectedYear ? 'for All Parties' : '')}</h2>
+              {selectedUser && (
+                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                  <span style={{ color: 'green' }}>Total Advances: {totalAdvance.toFixed(2)}</span>
+                  <span style={{ color: 'red' }}>Total Deductions: {totalDeduction.toFixed(2)}</span>
+                </div>
+              )}
             </div>
 
-            {selectedUser ? (
+            {selectedRows.size > 0 && (
+              <div style={{ padding: '0.75rem', background: 'var(--bg-secondary)', borderRadius: '6px', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border)' }}>
+                <span style={{ fontWeight: 'bold' }}>{selectedRows.size} row(s) selected</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <label>Set Date:</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input type="text" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} placeholder="YYYY-MM-DD" style={{ width: '120px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                    <div style={{ position: 'relative', width: '24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '4px' }}>
+                      <span style={{ cursor: 'pointer', fontSize: '1rem' }}>📅</span>
+                      <input type="date" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                    </div>
+                  </div>
+                  <button className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }} onClick={handleBulkDateUpdate} disabled={loading}>Apply to Selected</button>
+                </div>
+              </div>
+            )}
+
+            {selectedYear ? (
               entries.length === 0 ? (
-                <p style={{ color: 'var(--text-secondary)' }}>No entries found for this party.</p>
+                <p style={{ color: 'var(--text-secondary)' }}>No entries found.</p>
               ) : (
               <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '8px', width: '40px' }}>
+                      <input type="checkbox" onChange={handleSelectAll} checked={entries.length > 0 && selectedRows.size === entries.length} />
+                    </th>
                     <th style={{ padding: '8px' }}>Date</th>
-                    <th style={{ padding: '8px' }}>Previous Balance</th>
+                    {!selectedUser && <th style={{ padding: '8px' }}>Group</th>}
+                    {!selectedUser && <th style={{ padding: '8px' }}>Party</th>}
+                    {selectedUser && <th style={{ padding: '8px' }}>Previous Balance</th>}
                     <th style={{ padding: '8px', color: 'green' }}>Advance Added</th>
                     <th style={{ padding: '8px', color: 'red' }}>Amount Deducted</th>
-                    <th style={{ padding: '8px', color: 'var(--primary)' }}>New Balance</th>
+                    {selectedUser && <th style={{ padding: '8px', color: 'var(--primary)' }}>New Balance</th>}
                     <th style={{ padding: '8px' }}>Notes</th>
                     <th style={{ padding: '8px', textAlign: 'right' }}>Actions</th>
                   </tr>
@@ -305,27 +402,68 @@ const Ledger = () => {
                         return { ...e, previousBalance: prev, newBalance: runningBalance };
                     }).reverse();
                     
-                    return entriesWithBalance.map(e => (
-                      <tr key={e.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td style={{ padding: '8px' }}>{e.date}</td>
-                        <td style={{ padding: '8px', fontWeight: 'bold' }}>{e.previousBalance.toFixed(2)}</td>
-                        <td style={{ padding: '8px', color: 'green' }}>{e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-'}</td>
-                        <td style={{ padding: '8px', color: 'red' }}>{e.deduction_amount > 0 ? `${e.deduction_amount.toFixed(2)}` : '-'}</td>
-                        <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{e.newBalance.toFixed(2)}</td>
-                        <td style={{ padding: '8px' }}>{e.notes || '-'}</td>
+                    return entriesWithBalance.map(e => {
+                      const isEditing = editingRowId === e.id;
+                      return (
+                      <tr key={e.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: selectedRows.has(e.id) ? 'var(--bg-secondary)' : 'transparent' }}>
+                        <td style={{ padding: '8px', textAlign: 'center' }}>
+                          <input type="checkbox" checked={selectedRows.has(e.id)} onChange={() => handleRowSelect(e.id)} />
+                        </td>
+                        <td style={{ padding: '8px' }}>
+                          {isEditing ? (
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                              <input type="text" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ width: '100px', padding: '4px' }} />
+                              <div style={{ position: 'relative', width: '24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '4px' }}>
+                                <span style={{ cursor: 'pointer', fontSize: '1rem' }}>📅</span>
+                                <input type="date" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                              </div>
+                            </div>
+                          ) : e.date}
+                        </td>
+                        {!selectedUser && <td style={{ padding: '8px' }}>{e.place_name || '-'}</td>}
+                        {!selectedUser && <td style={{ padding: '8px' }}>{e.user_name || '-'}</td>}
+                        
+                        {selectedUser && <td style={{ padding: '8px', fontWeight: 'bold' }}>{e.previousBalance.toFixed(2)}</td>}
+                        <td style={{ padding: '8px', color: 'green' }}>
+                          {isEditing ? <input type="number" step="0.01" value={editFormData.advance_amount} onChange={(ev) => setEditFormData({...editFormData, advance_amount: ev.target.value})} style={{ width: '80px', padding: '4px' }} /> : (e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-')}
+                        </td>
+                        <td style={{ padding: '8px', color: 'red' }}>
+                          {isEditing ? <input type="number" step="0.01" value={editFormData.deduction_amount} onChange={(ev) => setEditFormData({...editFormData, deduction_amount: ev.target.value})} style={{ width: '80px', padding: '4px' }} /> : (e.deduction_amount > 0 ? `${e.deduction_amount.toFixed(2)}` : '-')}
+                        </td>
+                        {selectedUser && <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{e.newBalance.toFixed(2)}</td>}
+                        <td style={{ padding: '8px' }}>
+                          {isEditing ? <input type="text" value={editFormData.notes} onChange={(ev) => setEditFormData({...editFormData, notes: ev.target.value})} style={{ width: '100%', padding: '4px' }} /> : (e.notes || '-')}
+                        </td>
                         <td style={{ padding: '8px', textAlign: 'right' }}>
-                          <button onClick={() => handleDelete(e.id)} className="icon-btn icon-btn-sm icon-btn-danger">
-                            <Trash2 size={14} />
-                          </button>
+                          {isEditing ? (
+                            <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                              <button onClick={() => handleEditSave(e.id)} className="icon-btn icon-btn-sm" style={{ color: 'green' }} title="Save">
+                                <Save size={14} />
+                              </button>
+                              <button onClick={() => setEditingRowId(null)} className="icon-btn icon-btn-sm" style={{ color: 'var(--text-secondary)' }} title="Cancel">
+                                <X size={14} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                              <button onClick={() => handleEditClick(e)} className="icon-btn icon-btn-sm" style={{ color: 'var(--primary)' }} title="Edit">
+                                <Edit2 size={14} />
+                              </button>
+                              <button onClick={() => handleDelete(e.id)} className="icon-btn icon-btn-sm icon-btn-danger" title="Delete">
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          )}
                         </td>
                       </tr>
-                    ));
+                      );
+                    });
                   })()}
                 </tbody>
               </table>
             )
             ) : (
-              <p style={{ color: 'var(--text-secondary)' }}>Please select a party from the dropdown above to view their history.</p>
+              <p style={{ color: 'var(--text-secondary)' }}>Please select a year from the dropdown above to view history.</p>
             )}
           </div>
 

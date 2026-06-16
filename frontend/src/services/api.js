@@ -193,8 +193,20 @@ export const advancesApi = {
         const response = await axios.get(`${API_BASE_URL}/advances/place/${placeId}`);
         return response.data;
     },
+    getYearAdvances: async (yearId) => {
+        const response = await axios.get(`${API_BASE_URL}/advances/year/${yearId}`);
+        return response.data;
+    },
     createAdvance: async (payload) => {
         const response = await axios.post(`${API_BASE_URL}/advances/`, payload);
+        return response.data;
+    },
+    updateAdvance: async (id, payload) => {
+        const response = await axios.put(`${API_BASE_URL}/advances/${id}`, payload);
+        return response.data;
+    },
+    bulkUpdateAdvanceDate: async (payload) => {
+        const response = await axios.put(`${API_BASE_URL}/advances/bulk_date`, payload);
         return response.data;
     },
     deleteAdvance: async (id) => {

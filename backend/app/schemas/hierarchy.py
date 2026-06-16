@@ -64,6 +64,8 @@ class TransactionOut(BillRecordBase):
     flower_name: str
     client_name: str
     place_name: str
+    client_id: int
+    place_id: int
 
     class Config:
         orm_mode = True
@@ -108,6 +110,14 @@ class AdvanceEntry(AdvanceEntryBase):
     class Config:
         orm_mode = True
         from_attributes = True
+
+class AdvanceEntryOut(AdvanceEntry):
+    user_name: Optional[str] = None
+    place_name: Optional[str] = None
+
+class BulkDateUpdate(BaseModel):
+    entry_ids: List[int]
+    date: datetime.date
 
 class BulkPlacesCreate(BaseModel):
     year_id: int

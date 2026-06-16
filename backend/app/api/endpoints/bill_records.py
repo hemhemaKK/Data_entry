@@ -49,7 +49,9 @@ def get_all_transactions(
             "print_taken": br.print_taken,
             "flower_name": f.name,
             "client_name": u.name,
-            "place_name": p.name
+            "place_name": p.name,
+            "client_id": u.id,
+            "place_id": p.id
         })
     return result
 

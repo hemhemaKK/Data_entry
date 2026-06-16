@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi } from '../services/api';
 import { DataSheetGrid, textColumn, keyColumn, floatColumn } from 'react-datasheet-grid';
 import 'react-datasheet-grid/dist/style.css';
 import { Save, RefreshCw } from 'lucide-react';
-
+import CreatableSelect from 'react-select/creatable';
 const ExcelEntryGrid = ({ onRecordsSaved }) => {
   const [years, setYears] = useState([]);
   const [places, setPlaces] = useState([]);
@@ -179,8 +179,8 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
 
       // Fetch transactions for the party
       const allTx = await billRecordsApi.getTransactions();
-      // Filter by user name (client_name)
-      const userTx = allTx.filter(t => t.client_name === selectedUserName).slice(0, 50); // Get latest 50
+      // Filter by user id (client_id)
+      const userTx = allTx.filter(t => t.client_id === parseInt(selectedUser)).slice(0, 50); // Get latest 50
       
       // Map to grid format
       const gridData = userTx.map(t => ({
@@ -328,9 +328,120 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
     }
   };
 
+  const flowerOptions = partyFlowers.map(f => ({ value: f.name, label: f.name }));
+
+  const datePickerColumn = {
+    component: ({ rowData, setRowData, focus }) => {
+      return (
+        <div style={{ display: 'flex', width: '100%', height: '100%', alignItems: 'center' }}>
+          <input
+            type="text"
+            autoFocus={focus}
+            value={rowData || ''}
+            placeholder="YYYY-MM-DD"
+            onChange={(e) => setRowData(e.target.value)}
+            style={{
+              flex: 1,
+              minWidth: 0,
+              height: '100%',
+              border: 'none',
+              outline: 'none',
+              background: 'transparent',
+              padding: '0 8px',
+              color: 'black',
+              fontFamily: 'inherit',
+              fontSize: 'inherit',
+            }}
+          />
+          <div style={{ position: 'relative', width: '30px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+             <span style={{ cursor: 'pointer', fontSize: '1rem', color: 'var(--text-secondary)' }}>📅</span>
+             <input 
+                type="date"
+                value={rowData || ''}
+                onChange={(e) => setRowData(e.target.value)}
+                style={{
+                    position: 'absolute',
+                    top: 0, left: 0, right: 0, bottom: 0,
+                    opacity: 0,
+                    cursor: 'pointer',
+                    width: '100%',
+                    height: '100%'
+                }}
+             />
+          </div>
+        </div>
+      );
+    },
+    deleteValue: () => '',
+    copyValue: ({ rowData }) => rowData || '',
+    pasteValue: ({ value }) => {
+      if (!value) return '';
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          return `${yyyy}-${mm}-${dd}`;
+      }
+      return '';
+    },
+  };
+
+  const flowerSelectColumn = {
+    keepFocus: true,
+    component: ({ rowData, setRowData, focus, stopEditing }) => {
+      const selectRef = useRef(null);
+
+      useEffect(() => {
+        if (focus && selectRef.current) {
+          selectRef.current.focus();
+        }
+      }, [focus]);
+
+      return (
+        <CreatableSelect
+          ref={selectRef}
+          menuPortalTarget={document.body}
+          options={flowerOptions}
+          value={flowerOptions.find((o) => o.value === rowData) || (rowData ? { value: rowData, label: rowData } : null)}
+          onChange={(option) => {
+            setRowData(option?.value || '');
+            if (stopEditing) stopEditing({ nextRow: true });
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {
+              e.stopPropagation();
+            }
+          }}
+          styles={{
+            control: (base) => ({
+              ...base,
+              border: 0,
+              boxShadow: 'none',
+              minHeight: '100%',
+              height: '100%',
+              backgroundColor: 'transparent',
+              borderRadius: 0,
+            }),
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+            menu: (base) => ({ ...base, right: 0, left: 'auto', width: 'max-content', minWidth: '100%' }),
+            dropdownIndicator: (base) => ({ ...base, padding: '2px' }),
+            clearIndicator: (base) => ({ ...base, padding: '2px' }),
+            singleValue: (base) => ({ ...base, color: 'black' }),
+            input: (base) => ({ ...base, color: 'black' }),
+            option: (base, state) => ({ ...base, color: 'black', backgroundColor: state.isFocused ? '#e0e0e0' : 'white' }),
+          }}
+        />
+      );
+    },
+    deleteValue: () => '',
+    copyValue: ({ rowData }) => rowData || '',
+    pasteValue: ({ value }) => value || '',
+  };
+
   const columns = [
-    { ...keyColumn('date', textColumn), title: 'Date (YYYY-MM-DD)' },
-    { ...keyColumn('flower', textColumn), title: 'Flower' },
+    { ...keyColumn('date', datePickerColumn), title: 'Date' },
+    { ...keyColumn('flower', flowerSelectColumn), title: 'Flower' },
     { ...keyColumn('van', textColumn), title: 'Van' },
     { ...keyColumn('weight', floatColumn), title: 'Weight (kg)' },
     { ...keyColumn('rate', floatColumn), title: 'Rate (₹)' },
