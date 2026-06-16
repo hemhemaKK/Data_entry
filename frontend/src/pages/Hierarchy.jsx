@@ -1,5 +1,6 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, exportFlowers } from '../services/api';
+import { formatDateDisplay } from '../utils/formatters';
 import TreeNode from '../components/TreeNode';
 import FilterBar from '../components/FilterBar';
 import ExportButton from '../components/ExportButton';
@@ -94,7 +95,7 @@ function Hierarchy() {
                     <td>{f.name}</td>
                     <td>{f.type}</td>
                     <td>{f.quantity}</td>
-                    <td>{f.bloom_date ? new Date(f.bloom_date).toLocaleDateString() : ''}</td>
+                    <td>{f.bloom_date ? formatDateDisplay(f.bloom_date) : ''}</td>
                   </tr>
                 ))}
               </tbody>

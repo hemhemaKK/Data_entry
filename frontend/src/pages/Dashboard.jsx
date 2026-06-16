@@ -1,7 +1,8 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { dashboardApi } from '../services/api';
 import { Link } from 'react-router-dom';
 import { FileUp, FileCheck, AlertTriangle } from 'lucide-react';
+import { formatDateDisplay } from '../utils/formatters';
 
 export default function Dashboard() {
     const [stats, setStats] = useState(null);
@@ -68,7 +69,7 @@ export default function Dashboard() {
                                     </span>
                                 </td>
                                 <td>{file.error_count}</td>
-                                <td>{new Date(file.upload_date).toLocaleDateString()}</td>
+                                <td>{formatDateDisplay(file.upload_date)}</td>
                                 <td>
                                     <Link to={`/results/${file.id}`} className="btn" style={{padding: '0.25rem 0.75rem', fontSize: '0.875rem'}}>View</Link>
                                 </td>

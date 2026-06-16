@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi } from '../services/api';
 import { DataSheetGrid, textColumn, keyColumn, floatColumn } from 'react-datasheet-grid';
+import { formatDateDisplay } from '../utils/formatters';
 import 'react-datasheet-grid/dist/style.css';
 import { Save, RefreshCw } from 'lucide-react';
 import CreatableSelect from 'react-select/creatable';
@@ -83,7 +84,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
       try {
         setLoading(true);
         // Fetch flowers for the party
-        const fData = await getFlowers(uId);
+        const fData = await getFlowers();
         setPartyFlowers(fData || []);
         
         // Add empty rows at the bottom (empty sheet)
@@ -328,7 +329,8 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
     }
   };
 
-  const flowerOptions = partyFlowers.map(f => ({ value: f.name, label: f.name }));
+  const uniqueFlowerNames = Array.from(new Set(partyFlowers.map(f => f.name)));
+  const flowerOptions = uniqueFlowerNames.map(name => ({ value: name, label: name }));
 
   const datePickerColumn = {
     component: ({ rowData, setRowData, focus }) => {
@@ -337,8 +339,8 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
           <input
             type="text"
             autoFocus={focus}
-            value={rowData || ''}
-            placeholder="YYYY-MM-DD"
+            value={focus ? (rowData || '') : formatDateDisplay(rowData)}
+            placeholder={focus ? "YYYY-MM-DD" : "DD-MM-YYYY"}
             onChange={(e) => setRowData(e.target.value)}
             style={{
               flex: 1,
@@ -406,7 +408,11 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
           value={flowerOptions.find((o) => o.value === rowData) || (rowData ? { value: rowData, label: rowData } : null)}
           onChange={(option) => {
             setRowData(option?.value || '');
-            if (stopEditing) stopEditing({ nextRow: true });
+            if (stopEditing) stopEditing({ nextRow: false });
+            setTimeout(() => {
+              const activeEl = document.activeElement || document.body;
+              activeEl.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', keyCode: 9, bubbles: true, cancelable: true }));
+            }, 10);
           }}
           onKeyDown={(e) => {
             if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'Enter') {

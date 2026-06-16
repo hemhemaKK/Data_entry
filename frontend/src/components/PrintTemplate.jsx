@@ -1,4 +1,5 @@
 import React from 'react';
+import { formatDateDisplay } from '../utils/formatters';
 
 const PrintTemplate = ({
     clientName,
@@ -77,7 +78,7 @@ const PrintTemplate = ({
                         <tbody>
                             {flower.records?.map((r, idx) => (
                                 <tr key={idx} style={{ borderBottom: '1px solid #ccc' }}>
-                                    {columns?.date && <td className="col-date" style={{ padding: '4px' }}>{r.date}</td>}
+                                    {columns?.date && <td className="col-date" style={{ padding: '4px' }}>{formatDateDisplay(r.date)}</td>}
                                     {columns?.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
                                     {columns?.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
                                     {columns?.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate ? parseFloat(r.rate).toFixed(2) : '-'}</td>}

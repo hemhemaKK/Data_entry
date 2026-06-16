@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, advancesApi } from '../services/api';
 import { Wallet, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
+import { formatDateDisplay } from '../utils/formatters';
 
 const Ledger = () => {
   const [years, setYears] = useState([]);
@@ -418,13 +419,13 @@ const Ledger = () => {
                                 <input type="date" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
                               </div>
                             </div>
-                          ) : e.date}
+                          ) : formatDateDisplay(e.date)}
                         </td>
                         {!selectedUser && <td style={{ padding: '8px' }}>{e.place_name || '-'}</td>}
                         {!selectedUser && <td style={{ padding: '8px' }}>{e.user_name || '-'}</td>}
                         
                         {selectedUser && <td style={{ padding: '8px', fontWeight: 'bold' }}>{e.previousBalance.toFixed(2)}</td>}
-                        <td style={{ padding: '8px', color: 'green' }}>
+                        <td style={{ padding: '8px', color: '#00E676' }}>
                           {isEditing ? <input type="number" step="0.01" value={editFormData.advance_amount} onChange={(ev) => setEditFormData({...editFormData, advance_amount: ev.target.value})} style={{ width: '80px', padding: '4px' }} /> : (e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-')}
                         </td>
                         <td style={{ padding: '8px', color: 'red' }}>
@@ -437,7 +438,7 @@ const Ledger = () => {
                         <td style={{ padding: '8px', textAlign: 'right' }}>
                           {isEditing ? (
                             <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                              <button onClick={() => handleEditSave(e.id)} className="icon-btn icon-btn-sm" style={{ color: 'green' }} title="Save">
+                              <button onClick={() => handleEditSave(e.id)} className="icon-btn icon-btn-sm" style={{ color: '#00E676' }} title="Save">
                                 <Save size={14} />
                               </button>
                               <button onClick={() => setEditingRowId(null)} className="icon-btn icon-btn-sm" style={{ color: 'var(--text-secondary)' }} title="Cancel">

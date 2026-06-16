@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { uploadsApi } from '../services/api';
 import { Link } from 'react-router-dom';
 import { Trash2, Download } from 'lucide-react';
+import { formatDateDisplay } from '../utils/formatters';
 
 export default function FilesList() {
     const [files, setFiles] = useState([]);
@@ -60,7 +61,7 @@ export default function FilesList() {
                                     </span>
                                 </td>
                                 <td>{file.error_count}</td>
-                                <td>{new Date(file.upload_date).toLocaleString()}</td>
+                                <td>{formatDateDisplay(file.upload_date)}</td>
                                 <td>
                                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                                         <Link to={`/results/${file.id}`} className="btn" style={{padding: '0.25rem 0.5rem'}} title="View Results">View</Link>

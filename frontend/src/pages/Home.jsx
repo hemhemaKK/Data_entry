@@ -4,6 +4,7 @@ import QuickEntryForm from "../components/QuickEntryForm";
 import ExcelEntryGrid from "../components/ExcelEntryGrid";
 import RecordFormModal from "../components/RecordFormModal";
 import { FaEdit, FaTrashAlt, FaSave, FaTimes } from "react-icons/fa";
+import { formatDateDisplay } from '../utils/formatters';
 
 const Home = () => {
   const [years, setYears] = useState([]);
@@ -463,7 +464,7 @@ const Home = () => {
                         </>
                       ) : (
                         <>
-                          <td style={{ padding: '0.75rem', textAlign: 'left' }}>{entry.date}</td>
+                          <td style={{ padding: '0.75rem', textAlign: 'left' }}>{formatDateDisplay(entry.date)}</td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>{entry.van}</td>
                           <td style={{ padding: '0.75rem', color: 'var(--text-secondary)', textAlign: 'right' }}>{entry.place_name}</td>
                           <td style={{ padding: '0.75rem', fontWeight: 500, textAlign: 'right' }}>{entry.client_name}</td>
