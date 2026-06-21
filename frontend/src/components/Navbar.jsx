@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Upload, FileSpreadsheet, Table2, Users, Wallet, Printer } from 'lucide-react';
 
@@ -38,6 +38,11 @@ const Navbar = () => (
         <li>
           <NavLink to="/custom-print" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
             <Printer size={20} /> Custom Print
+          </NavLink>
+        </li>
+        <li>
+          <NavLink to="/export" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <FileSpreadsheet size={20} /> Export Data
           </NavLink>
         </li>
       </ul>

@@ -214,3 +214,18 @@ export const advancesApi = {
         return response.data;
     }
 };
+
+export const exportsApi = {
+    generateExport: async (payload) => {
+        const response = await axios.post(`${API_BASE_URL}/exports/generate`, payload);
+        return response.data;
+    },
+    getHistory: async () => {
+        const response = await axios.get(`${API_BASE_URL}/exports/history`);
+        return response.data;
+    },
+    getDownloadUrl: (id) => {
+        return `${API_BASE_URL}/exports/download/${id}`;
+    }
+};
+

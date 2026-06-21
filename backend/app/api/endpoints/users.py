@@ -13,10 +13,10 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
     user_name = user.name.strip()
     req_lower = user_name.lower()
     
-    existing_users = db.query(User).filter(User.place_id == user.place_id).all()
-    for eu in existing_users:
-        if eu.name and eu.name.strip().lower() == req_lower:
-            raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
+    from sqlalchemy import func
+    existing = db.query(User).filter(User.place_id == user.place_id, func.lower(User.name) == req_lower).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
             
     db_user = User(name=user_name, place_id=user.place_id)
     db.add(db_user)
@@ -51,10 +51,10 @@ def update_user(user_id: int, user: UserCreate, db: Session = Depends(get_db)):
     user_name = user.name.strip()
     req_lower = user_name.lower()
     
-    existing_users = db.query(User).filter(User.place_id == user.place_id, User.id != user_id).all()
-    for eu in existing_users:
-        if eu.name and eu.name.strip().lower() == req_lower:
-            raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
+    from sqlalchemy import func
+    existing = db.query(User).filter(User.place_id == user.place_id, User.id != user_id, func.lower(User.name) == req_lower).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Party '{user_name}' is already created in this group.")
     usr.name = user_name
     usr.place_id = user.place_id
     usr.contact_number = getattr(user, "contact_number", usr.contact_number)

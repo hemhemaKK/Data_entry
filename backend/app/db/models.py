@@ -44,8 +44,8 @@ class Place(Base):
     __table_args__ = (UniqueConstraint('name', 'year_id', name='uq_place_name_year'),)
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    year_id = Column(Integer, ForeignKey("years.id"))
+    name = Column(String, nullable=False, index=True)
+    year_id = Column(Integer, ForeignKey("years.id"), index=True)
     year = relationship("Year", back_populates="places")
     users = relationship("User", back_populates="place", cascade="all, delete-orphan")
     advance_entries = relationship("AdvanceEntry", back_populates="place", cascade="all, delete-orphan")
@@ -55,9 +55,9 @@ class User(Base):
     __table_args__ = (UniqueConstraint('name', 'place_id', name='uq_user_name_place'),)
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, index=True)
     contact_number = Column(String, nullable=True)
-    place_id = Column(Integer, ForeignKey("places.id"))
+    place_id = Column(Integer, ForeignKey("places.id"), index=True)
     place = relationship("Place", back_populates="users")
     flowers = relationship("Flower", back_populates="user", cascade="all, delete-orphan")
     advance_entries = relationship("AdvanceEntry", back_populates="user", cascade="all, delete-orphan")
@@ -80,8 +80,8 @@ class Flower(Base):
     __tablename__ = "flowers"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    name = Column(String, nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
     user = relationship("User", back_populates="flowers")
     bill_records = relationship("BillRecord", back_populates="flower", cascade="all, delete-orphan")
 
@@ -89,11 +89,11 @@ class BillRecord(Base):
     __tablename__ = "bill_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    flower_id = Column(Integer, ForeignKey("flowers.id"))
+    flower_id = Column(Integer, ForeignKey("flowers.id"), index=True)
     upload_id = Column(Integer, ForeignKey("uploads.id"), nullable=True)
-    date = Column(Date, nullable=True)
+    date = Column(Date, nullable=True, index=True)
     weight = Column(Float, nullable=True)
-    van = Column(String, nullable=True)
+    van = Column(String, nullable=True, index=True)
     rate = Column(Float, nullable=True)
     laggage = Column(Float, nullable=True, default=0.0)
     collie = Column(Float, nullable=True, default=0.0)
@@ -101,3 +101,12 @@ class BillRecord(Base):
 
     flower = relationship("Flower", back_populates="bill_records")
     upload = relationship("Upload", backref="bill_records")
+
+class ExportHistory(Base):
+    __tablename__ = "export_history"
+
+    id = Column(Integer, primary_key=True, index=True)
+    filename = Column(String, nullable=False)
+    export_date = Column(DateTime, default=datetime.utcnow)
+    filters_used = Column(String, nullable=True)
+    file_path = Column(String, nullable=False)

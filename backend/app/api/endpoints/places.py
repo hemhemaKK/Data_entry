@@ -13,11 +13,10 @@ def create_place(place: PlaceCreate, db: Session = Depends(get_db)):
     place_name = place.name.strip()
     req_lower = place_name.lower()
     
-    # Python-level strict check
-    existing_places = db.query(Place).filter(Place.year_id == place.year_id).all()
-    for ep in existing_places:
-        if ep.name and ep.name.strip().lower() == req_lower:
-            raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
+    from sqlalchemy import func
+    existing = db.query(Place).filter(Place.year_id == place.year_id, func.lower(Place.name) == req_lower).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
             
     db_place = Place(name=place_name, year_id=place.year_id)
     db.add(db_place)
@@ -54,11 +53,10 @@ def update_place(place_id: int, place: PlaceCreate, db: Session = Depends(get_db
     place_name = place.name.strip()
     req_lower = place_name.lower()
     
-    # Python-level strict check
-    existing_places = db.query(Place).filter(Place.year_id == place.year_id, Place.id != place_id).all()
-    for ep in existing_places:
-        if ep.name and ep.name.strip().lower() == req_lower:
-            raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
+    from sqlalchemy import func
+    existing = db.query(Place).filter(Place.year_id == place.year_id, Place.id != place_id, func.lower(Place.name) == req_lower).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Group '{place_name}' is already created.")
             
     db_place.name = place_name
     db_place.year_id = place.year_id
