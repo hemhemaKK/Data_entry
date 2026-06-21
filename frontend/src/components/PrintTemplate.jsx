@@ -29,22 +29,22 @@ const PrintTemplate = ({
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '1rem', fontWeight: 'bold', background: 'white', color: 'black' }}>
                         <tbody>
                             <tr>
-                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}>Party Name:</td>
-                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}>{clientName}</td>
-                                <td style={{ padding: '4px', width: '20%', border: '1px solid #ccc' }}></td>
-                                <td style={{ padding: '4px', width: '30%', border: '1px solid #ccc' }}></td>
+                                <td style={{ padding: '4px', width: '20%', border: 'none' }}>Party Name:</td>
+                                <td style={{ padding: '4px', width: '30%', border: 'none', textAlign: 'right' }}>{clientName}</td>
+                                <td style={{ padding: '4px', width: '20%', border: 'none' }}></td>
+                                <td style={{ padding: '4px', width: '30%', border: 'none' }}></td>
                             </tr>
                             <tr>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Phone:</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{clientPhone || ''}</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Dates:</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc', fontSize: '0.85rem' }}>{dateRangeString}</td>
+                                <td style={{ padding: '4px', border: 'none' }}>Phone:</td>
+                                <td style={{ padding: '4px', border: 'none' }}>{clientPhone || ''}</td>
+                                <td style={{ padding: '4px', border: 'none' }}></td>
+                                <td style={{ padding: '4px', border: 'none' }}></td>
                             </tr>
                             <tr>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>Address:</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>{placeName || ''}</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc' }}>பாக்கி:</td>
-                                <td style={{ padding: '4px', border: '1px solid #ccc', color: 'black' }}>{clientBalanceFormatted(finalBalance)}</td>
+                                <td style={{ padding: '4px', border: 'none' }}>Address:</td>
+                                <td style={{ padding: '4px', border: 'none' }}>{placeName || ''}</td>
+                                <td style={{ padding: '4px', border: 'none' }}>பாக்கி:</td>
+                                <td style={{ padding: '4px', border: 'none', color: 'black' }}>{clientBalanceFormatted(finalBalance)}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -102,7 +102,7 @@ const PrintTemplate = ({
                 </div>
             ))}
             
-            <div style={{ display: 'flex', width: '80%', margin: '8px auto 0 auto', border: '1px solid black', fontSize: '1rem', fontWeight: 'bold', color: 'black', background: '#ffffff', pageBreakInside: 'avoid' }}>
+            <div style={{ display: 'flex', width: '80%', margin: '8px auto 0 auto', border: 'none', fontSize: '1rem', fontWeight: 'bold', color: 'black', background: '#ffffff', pageBreakInside: 'avoid' }}>
                 <div style={{ flex: 1, padding: '8px', borderRight: '1px solid black' }}>
                     {commissionPercent > 0 && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>

@@ -198,7 +198,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   };
 
   return (
-    <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--primary)' }}>
+    <div className="card quick-entry-form" style={{ marginBottom: '1rem', border: '1px solid var(--primary)' }}>
       <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
         <PlusCircle className="icon" style={{ color: 'var(--primary)' }} />
         <h2 className="card-title">Quick Manual Entry & Years</h2>
@@ -210,29 +210,29 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         {/* Selection Row - Vertical / Compact Stack */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem', maxWidth: '400px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Year:</label>
-            <select ref={yearRef} onKeyDown={(e) => handleEnterKey(e, placeRef)} className="select-input" value={selectedYear} onChange={handleYearChange} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+            <label style={{ width: '80px', fontSize: '1.05rem', fontWeight: 600 }}>Year:</label>
+            <select ref={yearRef} onKeyDown={(e) => handleEnterKey(e, placeRef)} className="select-input" value={selectedYear} onChange={handleYearChange} style={{ flex: 1, padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
               <option value="" style={{ color: 'black' }}>-- Select Year --</option>
               {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Group:</label>
-            <select ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+            <label style={{ width: '80px', fontSize: '1.05rem', fontWeight: 600 }}>Group:</label>
+            <select ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
               <option value="" style={{ color: 'black' }}>-- Select Group --</option>
               {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Party:</label>
-            <select ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+            <label style={{ width: '80px', fontSize: '1.05rem', fontWeight: 600 }}>Party:</label>
+            <select ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
               <option value="" style={{ color: 'black' }}>-- Select Party --</option>
               {users.map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name}</option>)}
             </select>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <label style={{ width: '80px', fontSize: '0.85rem', fontWeight: 600 }}>Flower:</label>
-            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
+            <label style={{ width: '80px', fontSize: '1.05rem', fontWeight: 600 }}>Flower:</label>
+            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
             <datalist id="flower-options">
               {globalFlowers.map(fname => <option key={fname} value={fname} />)}
             </datalist>
@@ -242,28 +242,28 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         {/* Data Entry Row with Button on same line */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'flex-end', background: 'var(--surface)', padding: '1rem', borderRadius: '8px' }}>
           <div style={{ flex: '1 1 120px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Date</label>
-            <input ref={dateRef} onKeyDown={(e) => handleEnterKey(e, vanRef)} type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Date</label>
+            <input ref={dateRef} onKeyDown={(e) => handleEnterKey(e, vanRef)} type="date" value={date} onChange={e => setDate(e.target.value)} required style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Van</label>
-            <input ref={vanRef} onKeyDown={(e) => handleEnterKey(e, weightRef)} type="text" value={van} onChange={e => setVan(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Van</label>
+            <input ref={vanRef} onKeyDown={(e) => handleEnterKey(e, weightRef)} type="text" value={van} onChange={e => setVan(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Weight (kg)</label>
-            <input ref={weightRef} onKeyDown={(e) => handleEnterKey(e, rateRef)} type="number" step="0.001" value={weight} onChange={e => setWeight(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Weight (kg)</label>
+            <input ref={weightRef} onKeyDown={(e) => handleEnterKey(e, rateRef)} type="number" step="0.001" value={weight} onChange={e => setWeight(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Rate ()</label>
-            <input ref={rateRef} onKeyDown={(e) => handleEnterKey(e, laggageRef)} type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Rate</label>
+            <input ref={rateRef} onKeyDown={(e) => handleEnterKey(e, laggageRef)} type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Laggage ()</label>
-            <input ref={laggageRef} onKeyDown={(e) => handleEnterKey(e, collieRef)} type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Laggage</label>
+            <input ref={laggageRef} onKeyDown={(e) => handleEnterKey(e, collieRef)} type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 80px' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Collie ()</label>
-            <input ref={collieRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.05rem', marginBottom: '4px' }}>Collie</label>
+            <input ref={collieRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
             <button ref={submitBtnRef} type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', height: '38px' }} disabled={loading || !selectedFlower}>
@@ -283,7 +283,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             value={newYear} 
             onChange={e => setNewYear(e.target.value)} 
             required 
-            style={{ width: '90px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
+            style={{ width: '90px', padding: '0.5rem', fontSize: '1.05rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }} 
           />
           <button type="submit" className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.95rem' }}>Add</button>
         </form>

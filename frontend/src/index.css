@@ -816,6 +816,7 @@ tfoot td {
    * STRONGEST OVERRIDES FOR FIRST TABLE (HEADER TABLE) 
    * Placed at the bottom to guarantee no generic .print-only rules override it.
    */
+  /* STRONGEST OVERRIDES FOR FIRST TABLE (HEADER TABLE) */
   .print-header table {
     border: 1px solid black !important;
   }
@@ -825,10 +826,26 @@ tfoot td {
     font-size: 1.1rem !important;
     color: black !important;
     font-weight: bold !important;
-    border: 0.5px solid black !important;
+    border: none !important; /* Removed inner lines */
   }
   .print-header table tbody tr {
-    border: 0.5px solid black !important;
+    border: none !important;
+  }
+
+  /* Fix record table header being black due to global th override */
+  table.print-table th, .print-only table th, .month-card table th {
+    background-color: white !important;
+    color: black !important;
+    padding: 2px 4px !important; /* Reduced header padding */
+    text-align: center !important; /* Center the headers */
+  }
+
+  /* Add some space to left-aligned date and adjust right-aligned record values */
+  table.print-table td.col-date, .print-only table td.col-date {
+    padding-left: 10px !important;
+  }
+  .col-van, .col-weight, .col-rate, .col-total, .col-laggage, .col-collie {
+    padding-right: 24px !important; /* Increased significantly to push records leftwards */
   }
 
   
@@ -988,6 +1005,17 @@ table th {
   font-weight: bold !important;
   font-size: 1.05rem !important;
   padding: 12px 8px !important;
+}
+
+/* Bold Quick Entry Form */
+.quick-entry-form,
+.quick-entry-form input,
+.quick-entry-form select,
+.quick-entry-form button,
+.quick-entry-form label,
+.quick-entry-form h2,
+.quick-entry-form h3 {
+  font-weight: bold !important;
 }
 
 .card-title {
