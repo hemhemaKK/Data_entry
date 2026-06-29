@@ -16,7 +16,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
   const [selectedUserName, setSelectedUserName] = useState('');
 
   const [data, setData] = useState([{}]); // At least one empty row
-  const [draftData, setDraftData] = useState(Array(15).fill({}));
+  const [draftData, setDraftData] = useState(Array.from({ length: 15 }, () => ({})));
   const [viewMode, setViewMode] = useState('entry'); // 'entry' or 'latest'
   
   const [loading, setLoading] = useState(false);
@@ -84,11 +84,11 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
       try {
         setLoading(true);
         // Fetch flowers for the party
-        const fData = await getFlowers();
+        const fData = await getFlowers(uId);
         setPartyFlowers(fData || []);
         
         // Add empty rows at the bottom (empty sheet)
-        const emptyRows = Array(15).fill({});
+        const emptyRows = Array.from({ length: 15 }, () => ({}));
         setDraftData(emptyRows);
         setData(emptyRows);
         setViewMode('entry');
@@ -355,22 +355,6 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
               fontSize: 'inherit',
             }}
           />
-          <div style={{ position: 'relative', width: '30px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-             <span style={{ cursor: 'pointer', fontSize: '1rem', color: 'var(--text-secondary)' }}>📅</span>
-             <input 
-                type="date"
-                value={rowData || ''}
-                onChange={(e) => setRowData(e.target.value)}
-                style={{
-                    position: 'absolute',
-                    top: 0, left: 0, right: 0, bottom: 0,
-                    opacity: 0,
-                    cursor: 'pointer',
-                    width: '100%',
-                    height: '100%'
-                }}
-             />
-          </div>
         </div>
       );
     },
