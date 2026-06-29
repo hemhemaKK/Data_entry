@@ -818,7 +818,7 @@ tfoot td {
    */
   /* STRONGEST OVERRIDES FOR FIRST TABLE (HEADER TABLE) */
   .print-header table {
-    border: 1px solid black !important;
+    border: none !important;
   }
   .print-header table th, 
   .print-header table td, 

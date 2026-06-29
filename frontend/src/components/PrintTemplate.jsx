@@ -36,15 +36,15 @@ const PrintTemplate = ({
                             </tr>
                             <tr>
                                 <td style={{ padding: '4px', border: 'none' }}>Phone:</td>
-                                <td style={{ padding: '4px', border: 'none' }}>{clientPhone || ''}</td>
+                                <td style={{ padding: '4px', border: 'none', textAlign: 'left' }}>{clientPhone || ''}</td>
                                 <td style={{ padding: '4px', border: 'none' }}></td>
                                 <td style={{ padding: '4px', border: 'none' }}></td>
                             </tr>
                             <tr>
                                 <td style={{ padding: '4px', border: 'none' }}>Address:</td>
-                                <td style={{ padding: '4px', border: 'none' }}>{placeName || ''}</td>
-                                <td style={{ padding: '4px', border: 'none' }}>பாக்கி:</td>
-                                <td style={{ padding: '4px', border: 'none', color: 'black' }}>{clientBalanceFormatted(finalBalance)}</td>
+                                <td style={{ padding: '4px', border: 'none', textAlign: 'right' }}>{placeName || ''}</td>
+                                <td style={{ padding: '4px', border: 'none', textAlign: 'right' }}></td>
+                                <td style={{ padding: '4px', border: 'none', color: 'black', textAlign: 'right' }}>பாக்கி: {clientBalanceFormatted(finalBalance)}</td>
                             </tr>
                         </tbody>
                     </table>
