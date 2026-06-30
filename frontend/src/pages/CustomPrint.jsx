@@ -22,7 +22,7 @@ const CustomPrint = () => {
   const [printData, setPrintData] = useState([]);
   
   const [columns, setColumns] = useState({
-    date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true
+    date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true
   });
 
   useEffect(() => {
@@ -163,7 +163,7 @@ const CustomPrint = () => {
                 return {
                     weight: acc.weight + w,
                     price: acc.price + p,
-                    laggage: acc.laggage + (parseFloat(r.laggage) || 0),
+                    laggage: acc.laggage + (w * (parseFloat(r.laggage) || 0)),
                     collie: acc.collie + (parseFloat(r.collie) || 0)
                 };
             }, { weight: 0, price: 0, laggage: 0, collie: 0 });

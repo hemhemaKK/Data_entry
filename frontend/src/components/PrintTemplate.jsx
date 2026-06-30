@@ -62,6 +62,7 @@ const PrintTemplate = ({
                             {columns?.rate && <col style={{ width: '15%' }} />}
                             {columns?.total && <col style={{ width: '18%' }} />}
                             {columns?.laggage && <col style={{ width: '12%' }} />}
+                            {columns?.laggageTotal && <col style={{ width: '12%' }} />}
                             {columns?.collie && <col style={{ width: '12%' }} />}
                         </colgroup>
                         <thead>
@@ -72,6 +73,7 @@ const PrintTemplate = ({
                                 {columns?.rate && <th className="col-rate" style={{ padding: '4px', fontWeight: 'bold' }}>Rate</th>}
                                 {columns?.total && <th className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>Total</th>}
                                 {columns?.laggage && <th className="col-laggage" style={{ padding: '4px', fontWeight: 'bold' }}>Laggage</th>}
+                                {columns?.laggageTotal && <th className="col-laggage-total" style={{ padding: '4px', fontWeight: 'bold' }}>Laggage Total</th>}
                                 {columns?.collie && <th className="col-collie" style={{ padding: '4px', fontWeight: 'bold' }}>Collie</th>}
                             </tr>
                         </thead>
@@ -84,6 +86,7 @@ const PrintTemplate = ({
                                     {columns?.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate ? parseFloat(r.rate).toFixed(2) : '-'}</td>}
                                     {columns?.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(0)}</td>}
                                     {columns?.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
+                                    {columns?.laggageTotal && <td className="col-laggage-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.laggage) || 0)).toFixed(2)}</td>}
                                     {columns?.collie && <td className="col-collie" style={{ padding: '4px' }}>{r.collie || '0'}</td>}
                                 </tr>
                             ))}
@@ -94,7 +97,8 @@ const PrintTemplate = ({
                                 {columns?.weight && <td className="col-weight" style={{ padding: '4px' }}>{Number(flower.totals?.weight || 0).toFixed(3)}</td>}
                                 {columns?.rate && <td className="col-rate" style={{ padding: '4px' }}></td>}
                                 {columns?.total && <td className="col-total" style={{ padding: '4px' }}>{Number(flower.totals?.price || 0).toFixed(0)}</td>}
-                                {columns?.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{Number(flower.totals?.laggage || 0).toFixed(2)}</td>}
+                                {columns?.laggage && <td className="col-laggage" style={{ padding: '4px' }}></td>}
+                                {columns?.laggageTotal && <td className="col-laggage-total" style={{ padding: '4px' }}>{Number(flower.totals?.laggage || 0).toFixed(2)}</td>}
                                 {columns?.collie && <td className="col-collie" style={{ padding: '4px' }}>{Number(flower.totals?.collie || 0).toFixed(2)}</td>}
                             </tr>
                         </tfoot>

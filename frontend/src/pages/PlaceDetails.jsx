@@ -52,7 +52,7 @@ const PlaceDetails = () => {
   const [globalFlowers, setGlobalFlowers] = useState([]);
   
   const [clientAdvances, setClientAdvances] = useState([]);
-  const [printCols, setPrintCols] = useState({ date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true });
+  const [printCols, setPrintCols] = useState({ date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true });
   const [isSingleUserPrint, setIsSingleUserPrint] = useState(false);
   const [commissionPercent, setCommissionPercent] = useState(10);
   const [selectedPlace, setSelectedPlace] = useState(null);
@@ -65,7 +65,7 @@ const PlaceDetails = () => {
   const [globalPrintData, setGlobalPrintData] = useState([]);
   
   const [columns, setColumns] = useState({
-    date: true, van: true, weight: true, rate: true, total: true, laggage: true, collie: true
+    date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true
   });
 
   const fetchClients = async () => {
@@ -280,7 +280,7 @@ const PlaceDetails = () => {
                     const l = curr.laggage || 0;
                     const c = curr.collie || 0;
                     acc.weight += w;
-                    acc.laggage += l;
+                    acc.laggage += (w * l);
                     acc.collie += c;
                     acc.price += (w * rt);
                     return acc;
@@ -454,7 +454,7 @@ const PlaceDetails = () => {
                     const l = curr.laggage || 0;
                     const c = curr.collie || 0;
                     acc.weight += w;
-                    acc.laggage += l;
+                    acc.laggage += (w * l);
                     acc.collie += c;
                     acc.price += (w * rt);
                     return acc;
