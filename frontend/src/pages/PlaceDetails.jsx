@@ -588,7 +588,7 @@ const PlaceDetails = () => {
   const filteredFlowers = [...flowers]
     .sort((a, b) => b.id - a.id)
     .filter(
-      (f) => f.name.toLowerCase().includes(flowerFilter.toLowerCase()) && f.bill_records && f.bill_records.length > 0
+      (f) => f.name.toLowerCase().includes(flowerFilter.toLowerCase())
     );
 
   // Calculate Client Summary
