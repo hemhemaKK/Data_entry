@@ -35,8 +35,7 @@ class ExportHistoryResponse(BaseModel):
     class Config:
         orm_mode = True
 
-@router.post("/generate", response_model=ExportHistoryResponse)
-def generate_export(req: ExportRequest, db: Session = Depends(get_db)):
+def generate_export_file(req: ExportRequest, db: Session, timestamp_str: str) -> tuple[str, str]:
     query = (
         db.query(BillRecord, Flower, User, Place)
         .join(Flower, BillRecord.flower_id == Flower.id)
@@ -80,7 +79,6 @@ def generate_export(req: ExportRequest, db: Session = Depends(get_db)):
             "Collie": br.collie
         })
         
-    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
     files_generated = []
     
     for place_name, users_data in grouped_data.items():
@@ -106,11 +104,15 @@ def generate_export(req: ExportRequest, db: Session = Depends(get_db)):
             for fname, fpath in files_generated:
                 zipf.write(fpath, arcname=fname)
                 
-        final_filename = zip_filename
-        final_filepath = zip_path
+        return zip_filename, zip_path
     else:
-        final_filename = files_generated[0][0]
-        final_filepath = files_generated[0][1]
+        return files_generated[0][0], files_generated[0][1]
+
+
+@router.post("/generate", response_model=ExportHistoryResponse)
+def generate_export(req: ExportRequest, db: Session = Depends(get_db)):
+    timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+    final_filename, final_filepath = generate_export_file(req, db, timestamp_str)
         
     # Record history
     history = ExportHistory(
@@ -135,6 +137,17 @@ def download_export(history_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Export not found")
         
     if not os.path.exists(history.file_path):
-        raise HTTPException(status_code=404, detail="File has been deleted from server")
+        if not history.filters_used:
+            raise HTTPException(status_code=404, detail="File has been deleted from server and cannot be regenerated.")
+        try:
+            req_data = json.loads(history.filters_used)
+            req = ExportRequest(**req_data)
+            timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+            new_filename, new_filepath = generate_export_file(req, db, timestamp_str)
+            history.file_path = new_filepath
+            history.filename = new_filename
+            db.commit()
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Failed to regenerate file: {str(e)}")
         
     return FileResponse(history.file_path, filename=history.filename)
