@@ -7,3 +7,7 @@ python-multipart
 aiofiles
 pydantic
 psycopg2-binary
+
+pymysql
+python-dotenv
+cryptography
