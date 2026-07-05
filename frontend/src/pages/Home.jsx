@@ -14,6 +14,7 @@ const Home = () => {
   const [allTransactions, setAllTransactions] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterFlower, setFilterFlower] = useState("");
+  const [filterGroup, setFilterGroup] = useState("");
   const [filterDateFrom, setFilterDateFrom] = useState("");
   const [filterDateTo, setFilterDateTo] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
@@ -218,6 +219,9 @@ const Home = () => {
     if (filterFlower && t.flower_name !== filterFlower) {
       matches = false;
     }
+    if (filterGroup && t.place_name !== filterGroup) {
+      matches = false;
+    }
     if (filterDateFrom && (!t.date || t.date < filterDateFrom)) {
       matches = false;
     }
@@ -243,21 +247,24 @@ const Home = () => {
 
   return (
     <div>
-      <h1 className="page-title">Dashboard</h1>
-      
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-        <button 
-          className={`btn ${entryMode === 'quick' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setEntryMode('quick')}
-        >
-          Quick Manual Entry
-        </button>
-        <button 
-          className={`btn ${entryMode === 'excel' ? 'btn-primary' : 'btn-secondary'}`}
-          onClick={() => setEntryMode('excel')}
-        >
-          Excel Grid Entry
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2rem', marginBottom: '1rem' }}>
+        
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            className={`btn ${entryMode === 'quick' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setEntryMode('quick')}
+            style={{ fontSize: '1.25rem', padding: '0.75rem 1.5rem' }}
+          >
+            Quick Manual Entry
+          </button>
+          <button 
+            className={`btn ${entryMode === 'excel' ? 'btn-primary' : 'btn-secondary'}`}
+            onClick={() => setEntryMode('excel')}
+            style={{ fontSize: '1.25rem', padding: '0.75rem 1.5rem' }}
+          >
+            Excel Grid Entry
+          </button>
+        </div>
       </div>
 
       {entryMode === 'quick' ? (
@@ -280,17 +287,28 @@ const Home = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', minWidth: '150px' }}
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', minWidth: '150px' }}
               />
               <select 
                 value={filterFlower} 
                 onChange={(e) => setFilterFlower(e.target.value)}
                 className="select-input"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               >
                 <option value="">All Flowers</option>
                 {[...new Set(allTransactions.map(t => t.flower_name).filter(Boolean))].sort().map(f => (
                   <option key={f} value={f}>{f}</option>
+                ))}
+              </select>
+              <select 
+                value={filterGroup} 
+                onChange={(e) => setFilterGroup(e.target.value)}
+                className="select-input"
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+              >
+                <option value="">All Groups</option>
+                {[...new Set(allTransactions.map(t => t.place_name).filter(Boolean))].sort().map(p => (
+                  <option key={p} value={p}>{p}</option>
                 ))}
               </select>
               <input 
@@ -305,7 +323,7 @@ const Home = () => {
                 }}
                 className="input black-icon"
                 title="Filter by Month"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <input 
                 type="date" 
@@ -316,7 +334,7 @@ const Home = () => {
                 }}
                 className="input black-icon"
                 title="From Date"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <input 
                 type="date" 
@@ -326,19 +344,19 @@ const Home = () => {
                    if (e.target.value) setFilterMonth('');
                 }}
                 className="input black-icon"
-                title="To Date"
-                style={{ padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+                style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               />
               <button
                 className="btn btn-secondary"
                 onClick={() => {
                   setSearchTerm('');
                   setFilterFlower('');
+                  setFilterGroup('');
                   setFilterDateFrom('');
                   setFilterDateTo('');
                   setFilterMonth('');
                 }}
-                style={{ padding: '0.5rem 1rem' }}
+                style={{ padding: '0.5rem 1rem', fontSize: '1.15rem' }}
               >
                 Clear
               </button>
@@ -384,9 +402,9 @@ const Home = () => {
               </div>
             </div>
           )}
-          <div className="table-responsive">
+          <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
-              <thead>
+              <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 <tr style={{ background: 'var(--bg-secondary)' }}>
                   <th style={{ padding: '0.75rem', textAlign: 'center', width: '40px' }}>
                     <input 

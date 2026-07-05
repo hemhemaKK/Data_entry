@@ -15,32 +15,32 @@ def get_user_advances(user_id: int, db: Session = Depends(get_db)):
 def get_place_advances(place_id: int, db: Session = Depends(get_db)):
     return db.query(AdvanceEntry).filter(AdvanceEntry.place_id == place_id).order_by(AdvanceEntry.date.desc()).all()
 
-@router.get("/year/{year_id}", response_model=List[AdvanceEntryOut])
+from sqlalchemy.orm import joinedload
+
+@router.get("/year/{year_id}")
 def get_year_advances(year_id: int, db: Session = Depends(get_db)):
     advances = db.query(AdvanceEntry).join(User, AdvanceEntry.user_id == User.id, isouter=True)\
         .join(Place, (AdvanceEntry.place_id == Place.id) | (User.place_id == Place.id))\
-        .filter(Place.year_id == year_id).order_by(AdvanceEntry.date.desc()).all()
+        .options(joinedload(AdvanceEntry.user).joinedload(User.place), joinedload(AdvanceEntry.place))\
+        .filter(Place.year_id == year_id).order_by(AdvanceEntry.created_at.desc()).all()
         
     result = []
     for adv in advances:
-        user_name = None
-        place_name = None
-        if adv.user_id:
-            user = db.query(User).filter(User.id == adv.user_id).first()
-            if user:
-                user_name = user.name
-                place = db.query(Place).filter(Place.id == user.place_id).first()
-                if place:
-                    place_name = place.name
-        elif adv.place_id:
-            place = db.query(Place).filter(Place.id == adv.place_id).first()
-            if place:
-                place_name = place.name
+        user_name = adv.user.name if adv.user else None
+        place_name = adv.user.place.name if adv.user and adv.user.place else (adv.place.name if adv.place else None)
         
-        adv_dict = AdvanceEntrySchema.from_orm(adv).dict()
-        adv_dict["user_name"] = user_name
-        adv_dict["place_name"] = place_name
-        result.append(adv_dict)
+        result.append({
+            "id": adv.id,
+            "date": adv.date,
+            "advance_amount": adv.advance_amount,
+            "deduction_amount": adv.deduction_amount,
+            "notes": adv.notes,
+            "user_id": adv.user_id,
+            "place_id": adv.place_id,
+            "user_name": user_name,
+            "place_name": place_name,
+            "created_at": adv.created_at
+        })
     
     return result
 

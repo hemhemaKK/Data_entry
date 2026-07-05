@@ -67,8 +67,8 @@ export default function UploadPage() {
             <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', justifyContent: 'center' }}>
                 {/* Template 1 */}
                 <div className="card" style={{ flex: '1 1 400px', maxWidth: '600px' }}>
-                    <h2 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.25rem' }}>Upload (Template 1)</h2>
-                    <p style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                    <h2 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.5rem' }}>Upload (Template 1)</h2>
+                    <p style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.15rem' }}>
                         Place = Filename, Party = Sheet Name
                     </p>
                     <div 
@@ -78,8 +78,8 @@ export default function UploadPage() {
                         onClick={() => fileInputRef1.current.click()}
                     >
                         <UploadCloud size={48} />
-                        <h3>{file1 ? file1.name : "Click or drag & drop to upload"}</h3>
-                        <p style={{fontSize: '0.875rem'}}>Support for .xlsx and .xls files</p>
+                        <h3 style={{ fontSize: '1.25rem', margin: '0.5rem 0' }}>{file1 ? file1.name : "Click or drag & drop to upload"}</h3>
+                        <p style={{fontSize: '1.1rem'}}>Support for .xlsx and .xls files</p>
                         <input 
                             type="file" 
                             ref={fileInputRef1} 
@@ -96,7 +96,7 @@ export default function UploadPage() {
                             className="btn" 
                             onClick={() => handleUpload('template1')} 
                             disabled={!file1 || uploading1}
-                            style={{ opacity: (!file1 || uploading1) ? 0.5 : 1 }}
+                            style={{ opacity: (!file1 || uploading1) ? 0.5 : 1, fontSize: '1.25rem', padding: '0.75rem 1.5rem' }}
                         >
                             {uploading1 ? 'Processing...' : 'Validate File'}
                         </button>
@@ -105,8 +105,8 @@ export default function UploadPage() {
 
                 {/* Template 2 */}
                 <div className="card" style={{ flex: '1 1 400px', maxWidth: '600px' }}>
-                    <h2 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.25rem' }}>Upload (Template 2)</h2>
-                    <p style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
+                    <h2 style={{ textAlign: 'center', marginBottom: '1rem', fontSize: '1.5rem' }}>Upload (Template 2)</h2>
+                    <p style={{ textAlign: 'center', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.15rem' }}>
                         Place = Sheet Name, Party = Column "Party Name"
                     </p>
                     <div 
@@ -116,8 +116,8 @@ export default function UploadPage() {
                         onClick={() => fileInputRef2.current.click()}
                     >
                         <UploadCloud size={48} />
-                        <h3>{file2 ? file2.name : "Click or drag & drop to upload"}</h3>
-                        <p style={{fontSize: '0.875rem'}}>Support for .xlsx and .xls files</p>
+                        <h3 style={{ fontSize: '1.25rem', margin: '0.5rem 0' }}>{file2 ? file2.name : "Click or drag & drop to upload"}</h3>
+                        <p style={{fontSize: '1.1rem'}}>Support for .xlsx and .xls files</p>
                         <input 
                             type="file" 
                             ref={fileInputRef2} 
@@ -134,7 +134,7 @@ export default function UploadPage() {
                             className="btn btn-secondary" 
                             onClick={() => handleUpload('template2')} 
                             disabled={!file2 || uploading2}
-                            style={{ opacity: (!file2 || uploading2) ? 0.5 : 1 }}
+                            style={{ opacity: (!file2 || uploading2) ? 0.5 : 1, fontSize: '1.25rem', padding: '0.75rem 1.5rem' }}
                         >
                             {uploading2 ? 'Processing...' : 'Validate File'}
                         </button>

@@ -19,6 +19,12 @@ try:
 except Exception:
     pass
 
+try:
+    with engine.begin() as conn:
+        conn.execute(text("ALTER TABLE advance_entries ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;"))
+except Exception:
+    pass
+
 
 app = FastAPI(title="Excel Validation API")
 

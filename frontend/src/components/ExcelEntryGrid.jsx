@@ -16,7 +16,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
   const [selectedUserName, setSelectedUserName] = useState('');
 
   const [data, setData] = useState([{}]); // At least one empty row
-  const [draftData, setDraftData] = useState(Array.from({ length: 15 }, () => ({})));
+  const [draftData, setDraftData] = useState(Array.from({ length: 31 }, () => ({})));
   const [viewMode, setViewMode] = useState('entry'); // 'entry' or 'latest'
   
   const [loading, setLoading] = useState(false);
@@ -88,7 +88,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
         setPartyFlowers(fData || []);
         
         // Add empty rows at the bottom (empty sheet)
-        const emptyRows = Array.from({ length: 15 }, () => ({}));
+        const emptyRows = Array.from({ length: 31 }, () => ({}));
         setDraftData(emptyRows);
         setData(emptyRows);
         setViewMode('entry');
@@ -452,24 +452,24 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
 
       <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem', alignItems: 'flex-end' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Year</label>
-          <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ minWidth: '120px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+          <label style={{ fontSize: '1.2rem', fontWeight: 600 }}>Year</label>
+          <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ minWidth: '120px', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
             <option value="">-- Year --</option>
             {years.map(y => <option key={y.id} value={y.id}>{y.year}</option>)}
           </select>
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Group</label>
-          <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ minWidth: '150px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+          <label style={{ fontSize: '1.2rem', fontWeight: 600 }}>Group</label>
+          <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ minWidth: '150px', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
             <option value="">-- Group --</option>
             {places.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
         </div>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-          <label style={{ fontSize: '0.85rem', fontWeight: 600 }}>Party</label>
-          <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ minWidth: '180px', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+          <label style={{ fontSize: '1.2rem', fontWeight: 600 }}>Party</label>
+          <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ minWidth: '180px', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
             <option value="">-- Party --</option>
             {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
           </select>
@@ -481,7 +481,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
               <button 
                 onClick={handleGoToEntry} 
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
+                style={{ padding: '0.75rem 1.25rem', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'var(--bg-secondary)', border: '1px solid var(--border)' }}
               >
                 Go Back to Entry
               </button>
@@ -492,9 +492,9 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
                 onClick={fetchLatestEntries} 
                 disabled={isSaving || loading} 
                 className="btn btn-secondary" 
-                style={{ padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                style={{ padding: '0.75rem 1.25rem', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
               >
-                <RefreshCw size={16} />
+                <RefreshCw size={20} />
                 Show Latest
               </button>
             )}
@@ -504,9 +504,9 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
               onClick={handleSave} 
               disabled={isSaving} 
               className="btn btn-primary" 
-              style={{ padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+              style={{ padding: '0.75rem 1.5rem', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             >
-              <Save size={18} />
+              <Save size={20} />
               {isSaving ? "Saving..." : "Save Data"}
             </button>
           </div>

@@ -1,6 +1,7 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://data-entry-ed9f.onrender.com/api';
+const isDev = import.meta.env.DEV;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || (isDev ? 'http://localhost:8000/api' : 'https://data-entry-ed9f.onrender.com/api');
 
 export const createYear = async (year) => {
   const response = await axios.post(`${API_BASE_URL}/years`, { year });

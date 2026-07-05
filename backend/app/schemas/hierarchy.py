@@ -101,6 +101,7 @@ class AdvanceEntryBase(BaseModel):
     advance_amount: Optional[float] = 0.0
     deduction_amount: Optional[float] = 0.0
     notes: Optional[str] = None
+    created_at: Optional[datetime.datetime] = None
 
 class AdvanceEntryCreate(AdvanceEntryBase):
     pass

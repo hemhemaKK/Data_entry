@@ -65,7 +65,7 @@ const PlaceDetails = () => {
   const [globalPrintData, setGlobalPrintData] = useState([]);
   
   const [columns, setColumns] = useState({
-    date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true
+    date: true, van: true, weight: true, rate: true, total: true, laggage: false, laggageTotal: false, collie: false
   });
 
   const fetchClients = async () => {

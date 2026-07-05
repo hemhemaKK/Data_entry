@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { getYears, getPlaces, getUsers, advancesApi } from '../services/api';
 import { Wallet, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
 import { formatDateDisplay } from '../utils/formatters';
@@ -27,7 +27,13 @@ const Ledger = () => {
   const [loading, setLoading] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [allUsersForYear, setAllUsersForYear] = useState([]);
+
+  const [filterDateFrom, setFilterDateFrom] = useState('');
+  const [filterDateTo, setFilterDateTo] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
 
   const dateRef = useRef(null);
   const advRef = useRef(null);
@@ -49,6 +55,13 @@ const Ledger = () => {
     setDate(today);
     fetchYears();
   }, []);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
 
   const fetchYears = async () => {
     try {
@@ -139,6 +152,11 @@ const Ledger = () => {
   useEffect(() => {
     fetchEntries();
   }, [selectedUser, selectedYear]);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedYear, selectedPlace, selectedUser, filterDateFrom, filterDateTo, searchQuery]);
 
   const handleEditClick = (e) => {
     setEditingRowId(e.id);
@@ -258,8 +276,65 @@ const Ledger = () => {
     }
   };
 
-  const totalAdvance = entries.reduce((sum, e) => sum + (e.advance_amount || 0), 0);
-  const totalDeduction = entries.reduce((sum, e) => sum + (e.deduction_amount || 0), 0);
+  // --- DATA PROCESSING LOGIC ---
+  const entriesWithBalance = useMemo(() => {
+      let baseEntries = [...entries];
+      if (!selectedUser && selectedPlace) {
+         const pId = parseInt(selectedPlace);
+         const userMap = new Map();
+         allUsersForYear.forEach(u => userMap.set(u.id, u.place_id));
+         
+         baseEntries = baseEntries.filter(e => {
+             return userMap.get(e.user_id) === pId;
+         });
+      }
+
+      // Optimization: Skip expensive sorting and balancing if we are not viewing a specific party's ledger
+      if (!selectedUser) {
+          return baseEntries;
+      }
+
+      // Sort ascending to calculate running balance accurately
+      const sortedEntries = baseEntries.sort((a, b) => {
+          if (a.date !== b.date) return a.date < b.date ? -1 : 1;
+          return a.id - b.id;
+      });
+      
+      let runningBalance = 0;
+      return sortedEntries.map(e => {
+          const prev = runningBalance;
+          runningBalance += (e.advance_amount || 0) - (e.deduction_amount || 0);
+          return { ...e, previousBalance: prev, newBalance: runningBalance };
+      });
+  }, [entries, selectedUser, selectedPlace, allUsersForYear]);
+
+  const finalDisplayEntries = useMemo(() => {
+      let displayEntries = [...entriesWithBalance];
+      if (filterDateFrom) {
+         displayEntries = displayEntries.filter(e => e.date >= filterDateFrom);
+      }
+      if (filterDateTo) {
+         displayEntries = displayEntries.filter(e => e.date <= filterDateTo);
+      }
+      if (debouncedSearchQuery.trim() !== '') {
+         const sq = debouncedSearchQuery.toLowerCase();
+         displayEntries = displayEntries.filter(e => {
+             const u = e.user_name;
+             const p = e.place_name;
+             return (u && u.toLowerCase().includes(sq)) ||
+                    (p && p.toLowerCase().includes(sq));
+         });
+      }
+      
+      if (selectedUser) {
+          // Reverse back to descending (newest first) for display
+          return displayEntries.reverse();
+      }
+      return displayEntries;
+  }, [entriesWithBalance, filterDateFrom, filterDateTo, debouncedSearchQuery, selectedUser]);
+
+  const totalAdvance = useMemo(() => finalDisplayEntries.reduce((sum, e) => sum + (e.advance_amount || 0), 0), [finalDisplayEntries]);
+  const totalDeduction = useMemo(() => finalDisplayEntries.reduce((sum, e) => sum + (e.deduction_amount || 0), 0), [finalDisplayEntries]);
 
   return (
     <div className="page-container fade-in">
@@ -267,82 +342,71 @@ const Ledger = () => {
         <h1 className="page-title"><Wallet className="icon" /> Ledger: Advances & Deductions</h1>
       </div>
 
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
-
-        <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '120px' }}>
-          <option value="" style={{ color: 'black' }}>-- Select Year --</option>
-          {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
-        </select>
-        
-        <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
-          <option value="" style={{ color: 'black' }}>-- All Groups --</option>
-          {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
-        </select>
-
-        <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear} style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
-          <option value="" style={{ color: 'black' }}>-- Select Party --</option>
-          {users.filter(u => 
-             (u.name || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
-             (u.placeName || '').toLowerCase().includes(searchQuery.toLowerCase())
-          ).map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name} ({u.placeName})</option>)}
-        </select>
-
-        <div style={{ marginLeft: 'auto' }}>
-          <input 
-            type="text" 
-            placeholder="Search by name or group..." 
-            value={searchQuery}
-            onChange={(e) => {
-              const query = e.target.value;
-              setSearchQuery(query);
-              if (query.trim() !== '') {
-                  const filtered = users.filter(u => 
-                       (u.name || '').toLowerCase().includes(query.toLowerCase()) || 
-                       (u.placeName || '').toLowerCase().includes(query.toLowerCase())
-                  );
-                  if (filtered.length > 0) {
-                      setSelectedUser(filtered[0].id.toString());
-                  }
-              }
-            }}
-            className="select-input"
-            style={{ padding: '0.5rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)', minWidth: '200px' }}
-          />
-        </div>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem', alignItems: 'start' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
           
           <div className="card">
-            <h2 className="card-title">Add Entry</h2>
-            <form onSubmit={handleAddEntry} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Date</label>
-                <input type="date" ref={dateRef} onKeyDown={(e) => handleEnterKey(e, advRef)} required value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <h2 className="card-title" style={{ marginBottom: '1.5rem' }}>Add Entry</h2>
+            
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', flexWrap: 'wrap', alignItems: 'center', background: 'var(--bg-secondary)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--border)' }}>
+              <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '120px' }}>
+                <option value="" style={{ color: 'black' }}>-- Select Year --</option>
+                {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
+              </select>
+              
+              <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
+                <option value="" style={{ color: 'black' }}>-- All Groups --</option>
+                {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
+              </select>
+
+              <select className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedYear} style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: 'black', minWidth: '150px' }}>
+                <option value="" style={{ color: 'black' }}>-- Select Party --</option>
+                {users.map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name} ({u.placeName})</option>)}
+              </select>
+            </div>
+            <form onSubmit={handleAddEntry} style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'flex-end' }}>
+              <div style={{ flex: '1 1 150px' }}>
+                <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Date</label>
+                <input type="date" ref={dateRef} onKeyDown={(e) => handleEnterKey(e, advRef)} required value={date} onChange={(e) => setDate(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', color: '#000', backgroundColor: '#fff', colorScheme: 'light' }} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'green' }}>Advance Amount ()</label>
-                <input type="number" step="0.01" ref={advRef} onKeyDown={(e) => handleEnterKey(e, dedRef)} value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+              <div style={{ flex: '1 1 150px' }}>
+                <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px', color: 'lightgreen' }}>Advance Amount (₹)</label>
+                <input type="number" step="0.01" ref={advRef} onKeyDown={(e) => handleEnterKey(e, dedRef)} value={advanceAmount} onChange={(e) => setAdvanceAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px', color: 'red' }}>Deduction Amount ()</label>
-                <input type="number" step="0.01" ref={dedRef} onKeyDown={(e) => handleEnterKey(e, notesRef)} value={deductionAmount} onChange={(e) => setDeductionAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+              <div style={{ flex: '1 1 150px' }}>
+                <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px', color: 'red' }}>Deduction Amount (₹)</label>
+                <input type="number" step="0.01" ref={dedRef} onKeyDown={(e) => handleEnterKey(e, notesRef)} value={deductionAmount} onChange={(e) => setDeductionAmount(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', marginBottom: '4px' }}>Notes (Optional)</label>
-                <input type="text" ref={notesRef} onKeyDown={(e) => handleEnterKey(e, saveBtnRef)} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+              <div style={{ flex: '2 1 200px' }}>
+                <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Notes (Optional)</label>
+                <input type="text" ref={notesRef} onKeyDown={(e) => handleEnterKey(e, saveBtnRef)} value={notes} onChange={(e) => setNotes(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
               </div>
-              <button type="submit" ref={saveBtnRef} className="btn btn-primary focus-ring" disabled={loading}>
+              <button type="submit" ref={saveBtnRef} className="btn btn-primary focus-ring" disabled={loading} style={{ flex: '0 0 auto', padding: '0.65rem 1.5rem', fontSize: '1.2rem' }}>
                 <Plus size={16} style={{ marginRight: '8px' }} /> Add to Ledger
               </button>
             </form>
           </div>
 
           <div className="card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-              <h2 className="card-title">History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : (selectedYear ? 'for All Parties' : '')}</h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <h2 className="card-title" style={{ margin: 0 }}>History {selectedUser ? `for ${users.find(u => u.id.toString() === selectedUser)?.name}` : (selectedYear ? 'for All Parties' : '')}</h2>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <input type="date" value={filterDateFrom} onChange={(e) => setFilterDateFrom(e.target.value)} title="Date From" className="select-input black-icon" style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: '#000', colorScheme: 'light' }} />
+                <span style={{ fontWeight: 'bold' }}>To</span>
+                <input type="date" value={filterDateTo} onChange={(e) => setFilterDateTo(e.target.value)} title="Date To" className="select-input black-icon" style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: '#000', colorScheme: 'light', marginRight: '1rem' }} />
+                
+                <input 
+                  type="text" 
+                  placeholder="Search group or party..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="select-input"
+                  style={{ padding: '0.5rem', fontSize: '1.2rem', borderRadius: '6px', border: '1px solid var(--border)', background: 'white', color: '#000', minWidth: '220px' }}
+                />
+              </div>
+
               {selectedUser && (
-                <div style={{ display: 'flex', gap: '1rem', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                <div style={{ display: 'flex', gap: '1rem', fontSize: '1.15rem', fontWeight: 'bold' }}>
                   <span style={{ color: 'green' }}>Total Advances: {totalAdvance.toFixed(2)}</span>
                   <span style={{ color: 'red' }}>Total Deductions: {totalDeduction.toFixed(2)}</span>
                 </div>
@@ -355,10 +419,10 @@ const Ledger = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <label>Set Date:</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input type="text" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} placeholder="YYYY-MM-DD" style={{ width: '120px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+                    <input type="text" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} placeholder="YYYY-MM-DD" style={{ width: '120px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)', color: '#000', backgroundColor: '#fff' }} />
                     <div style={{ position: 'relative', width: '24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '4px' }}>
                       <span style={{ cursor: 'pointer', fontSize: '1rem' }}>📅</span>
-                      <input type="date" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                      <input type="date" value={bulkDate} onChange={(e) => setBulkDate(e.target.value)} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%', colorScheme: 'light' }} />
                     </div>
                   </div>
                   <button className="btn btn-primary" style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }} onClick={handleBulkDateUpdate} disabled={loading}>Apply to Selected</button>
@@ -370,7 +434,8 @@ const Ledger = () => {
               entries.length === 0 ? (
                 <p style={{ color: 'var(--text-secondary)' }}>No entries found.</p>
               ) : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+              <div style={{ overflowX: 'auto', paddingBottom: '1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '1.15rem' }}>
                 <thead>
                   <tr style={{ borderBottom: '1px solid var(--border)' }}>
                     <th style={{ padding: '8px', width: '40px' }}>
@@ -389,21 +454,14 @@ const Ledger = () => {
                 </thead>
                 <tbody>
                   {(() => {
-                    let runningBalance = 0;
-                    const sortedEntries = [...entries].sort((a, b) => {
-                        const d1 = new Date(a.date);
-                        const d2 = new Date(b.date);
-                        if (d1.getTime() !== d2.getTime()) return d1 - d2;
-                        return a.id - b.id;
-                    });
-                    
-                    const entriesWithBalance = sortedEntries.map(e => {
-                        const prev = runningBalance;
-                        runningBalance += (e.advance_amount || 0) - (e.deduction_amount || 0);
-                        return { ...e, previousBalance: prev, newBalance: runningBalance };
-                    }).reverse();
-                    
-                    return entriesWithBalance.map(e => {
+                    let paginatedEntries;
+                    if (!selectedUser) {
+                        paginatedEntries = finalDisplayEntries.slice(0, 10);
+                    } else {
+                        paginatedEntries = finalDisplayEntries.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+                    }
+
+                    return paginatedEntries.map(e => {
                       const isEditing = editingRowId === e.id;
                       return (
                       <tr key={e.id} style={{ borderBottom: '1px solid var(--border)', backgroundColor: selectedRows.has(e.id) ? 'var(--bg-secondary)' : 'transparent' }}>
@@ -413,10 +471,10 @@ const Ledger = () => {
                         <td style={{ padding: '8px' }}>
                           {isEditing ? (
                             <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                              <input type="text" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ width: '100px', padding: '4px' }} />
+                              <input type="text" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ width: '100px', padding: '4px', color: '#000', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid var(--border)' }} />
                               <div style={{ position: 'relative', width: '24px', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', marginLeft: '4px' }}>
                                 <span style={{ cursor: 'pointer', fontSize: '1rem' }}>📅</span>
-                                <input type="date" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%' }} />
+                                <input type="date" value={editFormData.date} onChange={(ev) => setEditFormData({...editFormData, date: ev.target.value})} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, opacity: 0, cursor: 'pointer', width: '100%', height: '100%', colorScheme: 'light' }} />
                               </div>
                             </div>
                           ) : formatDateDisplay(e.date)}
@@ -426,14 +484,14 @@ const Ledger = () => {
                         
                         {selectedUser && <td style={{ padding: '8px', fontWeight: 'bold' }}>{e.previousBalance.toFixed(2)}</td>}
                         <td style={{ padding: '8px', color: '#00E676' }}>
-                          {isEditing ? <input type="number" step="0.01" value={editFormData.advance_amount} onChange={(ev) => setEditFormData({...editFormData, advance_amount: ev.target.value})} style={{ width: '80px', padding: '4px' }} /> : (e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-')}
+                          {isEditing ? <input type="number" step="0.01" value={editFormData.advance_amount} onChange={(ev) => setEditFormData({...editFormData, advance_amount: ev.target.value})} style={{ width: '80px', padding: '4px', color: '#000', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid var(--border)' }} /> : (e.advance_amount > 0 ? `${e.advance_amount.toFixed(2)}` : '-')}
                         </td>
                         <td style={{ padding: '8px', color: 'red' }}>
-                          {isEditing ? <input type="number" step="0.01" value={editFormData.deduction_amount} onChange={(ev) => setEditFormData({...editFormData, deduction_amount: ev.target.value})} style={{ width: '80px', padding: '4px' }} /> : (e.deduction_amount > 0 ? `${e.deduction_amount.toFixed(2)}` : '-')}
+                          {isEditing ? <input type="number" step="0.01" value={editFormData.deduction_amount} onChange={(ev) => setEditFormData({...editFormData, deduction_amount: ev.target.value})} style={{ width: '80px', padding: '4px', color: '#000', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid var(--border)' }} /> : (e.deduction_amount > 0 ? `${e.deduction_amount.toFixed(2)}` : '-')}
                         </td>
                         {selectedUser && <td style={{ padding: '8px', color: 'var(--primary)', fontWeight: 'bold' }}>{e.newBalance.toFixed(2)}</td>}
                         <td style={{ padding: '8px' }}>
-                          {isEditing ? <input type="text" value={editFormData.notes} onChange={(ev) => setEditFormData({...editFormData, notes: ev.target.value})} style={{ width: '100%', padding: '4px' }} /> : (e.notes || '-')}
+                          {isEditing ? <input type="text" value={editFormData.notes} onChange={(ev) => setEditFormData({...editFormData, notes: ev.target.value})} style={{ width: '100%', padding: '4px', color: '#000', backgroundColor: '#fff', borderRadius: '4px', border: '1px solid var(--border)' }} /> : (e.notes || '-')}
                         </td>
                         <td style={{ padding: '8px', textAlign: 'right' }}>
                           {isEditing ? (
@@ -462,6 +520,34 @@ const Ledger = () => {
                   })()}
                 </tbody>
               </table>
+              
+              {/* Pagination Controls */}
+              {selectedUser && (() => {
+                const totalPages = Math.ceil(finalDisplayEntries.length / ITEMS_PER_PAGE) || 1;
+                return (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1rem', padding: '1rem', borderTop: '1px solid var(--border)' }}>
+                    <button 
+                      className="btn btn-secondary" 
+                      style={{ fontSize: '1.15rem' }}
+                      disabled={currentPage === 1} 
+                      onClick={() => setCurrentPage(prev => prev - 1)}
+                    >
+                      Previous
+                    </button>
+                    <span style={{ fontSize: '1.15rem', fontWeight: 'bold' }}>Page {currentPage} of {totalPages}</span>
+                    <button 
+                      className="btn btn-secondary" 
+                      style={{ fontSize: '1.15rem' }}
+                      disabled={currentPage === totalPages} 
+                      onClick={() => setCurrentPage(prev => prev + 1)}
+                    >
+                      Next
+                    </button>
+                  </div>
+                );
+              })()}
+              
+              </div>
             )
             ) : (
               <p style={{ color: 'var(--text-secondary)' }}>Please select a year from the dropdown above to view history.</p>

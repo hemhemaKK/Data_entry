@@ -72,6 +72,7 @@ class AdvanceEntry(Base):
     advance_amount = Column(Float, default=0.0)
     deduction_amount = Column(Float, default=0.0)
     notes = Column(String(1000), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
     
     user = relationship("User", back_populates="advance_entries")
     place = relationship("Place", back_populates="advance_entries")

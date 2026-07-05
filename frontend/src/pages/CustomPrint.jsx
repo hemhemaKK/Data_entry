@@ -17,12 +17,15 @@ const CustomPrint = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [commissionPercent, setCommissionPercent] = useState(10);
+  const [selectedFlowerName, setSelectedFlowerName] = useState('');
+  const [groupFlowerNames, setGroupFlowerNames] = useState([]);
+  const [selectedVan, setSelectedVan] = useState('');
   
   const [isPrinting, setIsPrinting] = useState(false);
   const [printData, setPrintData] = useState([]);
   
   const [columns, setColumns] = useState({
-    date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true
+    date: true, van: true, weight: true, rate: true, total: true, laggage: false, laggageTotal: false, collie: false
   });
 
   useEffect(() => {
@@ -72,13 +75,24 @@ const CustomPrint = () => {
     setUsers([]);
     setSelectedUserIds(new Set());
     setSelectAll(false);
+    setSelectedFlowerName('');
     if (pId) {
       try {
         const u = await getUsers(pId);
         setUsers(u || []);
+        const f = await getFlowers(null, { place_id: pId });
+        if (f) {
+            const uniqueNames = [...new Set(f.map(flower => flower.name.trim().toLowerCase()))];
+            const displayNames = uniqueNames.map(name => {
+               const original = f.find(fl => fl.name.trim().toLowerCase() === name);
+               return original ? original.name.trim() : name;
+            }).sort();
+            setGroupFlowerNames(displayNames);
+        }
       } catch (err) { console.error(err); }
     } else {
       setUsers([]);
+      setGroupFlowerNames([]);
     }
   };
 
@@ -126,10 +140,15 @@ const CustomPrint = () => {
         const processedFlowers = [];
 
         for (let flower of flowers) {
+            if (selectedFlowerName && flower.name.trim().toLowerCase() !== selectedFlowerName.toLowerCase()) {
+                continue;
+            }
             let records = flower.bill_records || [];
             
-            // Apply Date Filter
+            // Apply Date and Van Filter
             records = records.filter(r => {
+                if (selectedVan && (r.van || '').toLowerCase() !== selectedVan.toLowerCase()) return false;
+
                 if (!r.date) return true;
                 const recordDate = new Date(r.date);
                 if (isNaN(recordDate.getTime())) return true;
@@ -267,34 +286,51 @@ const CustomPrint = () => {
       <div className="card no-print" style={{ marginBottom: '2rem' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', alignItems: 'end' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Year</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Select Year</label>
+            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="" style={{ color: 'black' }}>-- Select Year --</option>
               {years.map(y => <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>)}
             </select>
           </div>
           
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Select Group</label>
-            <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Select Group</label>
+            <select className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="" style={{ color: 'black' }}>-- Select Group --</option>
               {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
             </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/> From Date</label>
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Select Flower</label>
+            <select className="select-input" value={selectedFlowerName} onChange={(e) => setSelectedFlowerName(e.target.value)} disabled={!selectedPlace} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+              <option value="" style={{ color: 'black' }}>-- All Flowers --</option>
+              {groupFlowerNames.map(name => <option key={name} value={name} style={{ color: 'black' }}>{name}</option>)}
+            </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}><Calendar size={14} style={{ display: 'inline', marginRight: '4px' }}/> To Date</label>
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Select Van</label>
+            <select className="select-input" value={selectedVan} onChange={(e) => setSelectedVan(e.target.value)} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+              <option value="" style={{ color: 'black' }}>-- Both --</option>
+              <option value="v1" style={{ color: 'black' }}>V1</option>
+              <option value="v2" style={{ color: 'black' }}>V2</option>
+            </select>
           </div>
 
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.9rem' }}>Commission (%)</label>
-            <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} className="input" style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}><Calendar size={18} style={{ display: 'inline', marginRight: '6px' }}/> From Date</label>
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', colorScheme: 'dark' }} />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}><Calendar size={18} style={{ display: 'inline', marginRight: '6px' }}/> To Date</label>
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', colorScheme: 'dark' }} />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}>Commission (%)</label>
+            <input type="number" step="0.1" value={commissionPercent} onChange={(e) => setCommissionPercent(parseFloat(e.target.value) || 0)} className="input" style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
         </div>
 

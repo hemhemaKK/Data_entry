@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { uploadsApi } from '../services/api';
 import { Link } from 'react-router-dom';
 import { Trash2, Download, Table2, ArrowLeft } from 'lucide-react';
@@ -34,7 +34,7 @@ export default function Transactions() {
         }
     };
 
-    if (loading) return <div>Loading...</div>;
+    if (loading) return <div style={{ fontSize: '1.5rem', fontWeight: 'bold', padding: '2rem' }}>Loading...</div>;
 
     return (
         <div>

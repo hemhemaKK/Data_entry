@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { bulkApi, getYears, getPlaces, deletePlace, deleteUser } from '../services/api';
-import { Users, MapPin, Flower2, Trash2 } from 'lucide-react';
+import { bulkApi, getYears, getPlaces, deletePlace, deleteUser, updatePlace, updateUser } from '../services/api';
+import { Users, MapPin, Flower2, Trash2, Edit2, Check, X } from 'lucide-react';
 
 const BulkAdd = () => {
   const [years, setYears] = useState([]);
@@ -19,6 +19,12 @@ const BulkAdd = () => {
   const [allUniqueFlowers, setAllUniqueFlowers] = useState([]);
   const [expandedPlaceId, setExpandedPlaceId] = useState(null);
   const [placeUsersMap, setPlaceUsersMap] = useState({});
+
+  const [editingGroupId, setEditingGroupId] = useState(null);
+  const [editingGroupName, setEditingGroupName] = useState('');
+
+  const [editingPartyId, setEditingPartyId] = useState(null);
+  const [editingPartyName, setEditingPartyName] = useState('');
 
   useEffect(() => {
     fetchYears();
@@ -85,6 +91,29 @@ const BulkAdd = () => {
       await bulkApi.deleteGlobalFlower(flowerName);
       fetchViewerData();
     } catch (err) { alert("Failed to delete flowers"); console.error(err); }
+  };
+
+  const handleUpdateGroup = async (e, id) => {
+    e.stopPropagation();
+    if (!editingGroupName.trim()) return;
+    try {
+      await updatePlace(id, { name: editingGroupName.trim(), year_id: parseInt(selectedYear) });
+      setPlaces(places.map(p => p.id === id ? { ...p, name: editingGroupName.trim() } : p));
+      setEditingGroupId(null);
+    } catch (err) { alert("Failed to update group name"); console.error(err); }
+  };
+
+  const handleUpdateParty = async (e, placeId, userId) => {
+    e.stopPropagation();
+    if (!editingPartyName.trim()) return;
+    try {
+      await updateUser(userId, { name: editingPartyName.trim(), place_id: placeId });
+      setPlaceUsersMap({
+        ...placeUsersMap,
+        [placeId]: placeUsersMap[placeId].map(u => u.id === userId ? { ...u, name: editingPartyName.trim() } : u)
+      });
+      setEditingPartyId(null);
+    } catch (err) { alert("Failed to update party name"); console.error(err); }
   };
 
   const fetchPlaces = async (yearId) => {
@@ -205,11 +234,10 @@ const BulkAdd = () => {
         <div className="card">
           <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <MapPin className="icon" />
-            <h2 className="card-title">1. Add Groups</h2>
+            <h2 className="card-title" style={{ fontSize: '1.15rem' }}>1. Add Groups</h2>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Year</label>
-            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+            <select className="select-input" value={selectedYear} onChange={handleYearChange} style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="" style={{ color: 'black' }}>-- Select Year --</option>
               {years.map(y => (
                 <option key={y.id} value={y.id} style={{ color: 'black' }}>{y.year}</option>
@@ -217,10 +245,10 @@ const BulkAdd = () => {
             </select>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Groups List (comma or line separated)</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '1.1rem' }}>Groups List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
               placeholder="Mysore&#10;Bangalore&#10;Ooty"
               value={bulkPlacesText}
               onChange={(e) => setBulkPlacesText(e.target.value)}
@@ -235,11 +263,10 @@ const BulkAdd = () => {
         <div className="card">
           <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Users className="icon" />
-            <h2 className="card-title">2. Add Parties</h2>
+            <h2 className="card-title" style={{ fontSize: '1.15rem' }}>2. Add Parties</h2>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Select Place</label>
-            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
+            <select className="select-input" value={selectedPlace} onChange={(e) => setSelectedPlace(e.target.value)} style={{ width: '100%', padding: '0.75rem', marginTop: '0.5rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }}>
               <option value="" style={{ color: 'black' }}>-- Select Group --</option>
               {places.map(p => (
                 <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>
@@ -247,10 +274,10 @@ const BulkAdd = () => {
             </select>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Parties List (comma or line separated)</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '1.1rem' }}>Parties List (comma or line separated)</label>
             <textarea 
               rows={5} 
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', transition: 'border-color 0.2s', resize: 'vertical' }}
               placeholder="Ramesh&#10;Suresh&#10;Mahesh"
               value={bulkUsersText}
               onChange={(e) => setBulkUsersText(e.target.value)}
@@ -265,20 +292,20 @@ const BulkAdd = () => {
         <div className="card">
           <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <Flower2 className="icon" />
-            <h2 className="card-title">3. Add Global Flowers</h2>
+            <h2 className="card-title" style={{ fontSize: '1.15rem' }}>3. Add Global Flowers</h2>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '1rem' }}>
             Creates common flowers that are available to ALL parties instantly.
           </p>
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500 }}>Flowers List (comma or line separated)</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, fontSize: '1.1rem' }}>Flowers List (comma or line separated)</label>
             <textarea 
               rows={5} 
               className="input" 
               placeholder="e.g. Rose, Lily, Jasmine"
               value={bulkFlowersText}
               onChange={(e) => setBulkFlowersText(e.target.value)}
-              style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', resize: 'vertical' }}
+              style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', resize: 'vertical' }}
             />
           </div>
           <button className="btn btn-primary" style={{ width: '100%' }} onClick={handleAddFlowers} disabled={loading || !bulkFlowersText}>
@@ -290,7 +317,7 @@ const BulkAdd = () => {
 
       {selectedYear && (
         <div style={{ marginTop: '3rem' }}>
-          <h2 style={{ marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)' }}>
+          <h2 style={{ marginBottom: '1.5rem', paddingBottom: '0.5rem', borderBottom: '1px solid var(--border)', fontSize: '1.25rem' }}>
             Existing Data for Selected Year
           </h2>
           
@@ -301,7 +328,7 @@ const BulkAdd = () => {
             ) : (
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {allUniqueFlowers.map((fn, idx) => (
-                  <span key={idx} style={{ padding: '0.25rem 0.5rem 0.25rem 0.75rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border)', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <span key={idx} style={{ padding: '0.35rem 0.6rem 0.35rem 0.85rem', background: 'var(--bg-secondary)', borderRadius: '16px', border: '1px solid var(--border)', fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                     {fn}
                     <button onClick={() => handleDeleteGlobalFlower(fn)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', padding: '2px', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Flower Globally" onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
                        <Trash2 size={12} />
@@ -317,45 +344,106 @@ const BulkAdd = () => {
             {places.length === 0 ? (
               <p style={{ color: 'var(--text-secondary)' }}>No groups added yet.</p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {places.map(p => (
-                  <div key={p.id} style={{ border: '1px solid var(--border)', borderRadius: '8px', overflow: 'hidden' }}>
+              <div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                  {places.map(p => (
                     <div 
+                      key={p.id} 
                       onClick={() => togglePlace(p.id)}
-                      style={{ padding: '1rem', background: 'var(--bg-secondary)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                      style={{ 
+                        padding: '0.5rem 1rem', 
+                        background: expandedPlaceId === p.id ? 'var(--primary)' : 'var(--bg-secondary)', 
+                        border: expandedPlaceId === p.id ? '1px solid var(--primary)' : '1px solid var(--border)', 
+                        borderRadius: '8px', 
+                        cursor: 'pointer', 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        gap: '0.75rem'
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <span style={{ fontWeight: 500 }}>{p.name}</span>
-                        <button onClick={(e) => handleDeletePlace(e, p.id, p.name)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '4px' }} title="Delete Group" onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-                           <Trash2 size={14} />
-                        </button>
-                      </div>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        {expandedPlaceId === p.id ? '▼ Hide Parties' : '▶ Show Parties'}
-                      </span>
-                    </div>
-                    {expandedPlaceId === p.id && (
-                      <div style={{ padding: '1rem', background: 'var(--surface)' }}>
-                        {!placeUsersMap[p.id] ? (
-                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Loading...</p>
-                        ) : placeUsersMap[p.id].length === 0 ? (
-                          <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>No parties in this group.</p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        {editingGroupId === p.id ? (
+                          <>
+                            <input 
+                              type="text" 
+                              value={editingGroupName} 
+                              onChange={(e) => setEditingGroupName(e.target.value)} 
+                              onClick={(e) => e.stopPropagation()}
+                              autoFocus
+                              style={{ padding: '0.25rem 0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black', width: '120px' }} 
+                            />
+                            <button onClick={(e) => handleUpdateGroup(e, p.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--success)', display: 'flex', alignItems: 'center', padding: '4px' }} title="Save">
+                               <Check size={16} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); setEditingGroupId(null); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '4px' }} title="Cancel">
+                               <X size={16} />
+                            </button>
+                          </>
                         ) : (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '0.5rem' }}>
-                            {placeUsersMap[p.id].map(u => (
-                              <div key={u.id} style={{ padding: '0.5rem 0.75rem', background: 'rgba(255,255,255,0.02)', borderRadius: '4px', fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)' }}>
-                                <span>{u.name}</span>
-                                <button onClick={(e) => handleDeleteUser(e, p.id, u.id, u.name)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '2px' }} title="Delete Party" onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-                                   <Trash2 size={14} />
+                          <>
+                            <span style={{ fontWeight: 500, fontSize: '1.2rem', color: expandedPlaceId === p.id ? 'white' : 'var(--text-primary)' }}>{p.name}</span>
+                            <button onClick={(e) => { e.stopPropagation(); setEditingGroupId(p.id); setEditingGroupName(p.name); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: expandedPlaceId === p.id ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '4px', marginLeft: '0.25rem' }} title="Edit Group" onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = expandedPlaceId === p.id ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)'}>
+                               <Edit2 size={14} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeletePlace(e, p.id, p.name); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: expandedPlaceId === p.id ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '4px' }} title="Delete Group" onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = expandedPlaceId === p.id ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)'}>
+                               <Trash2 size={14} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {expandedPlaceId && (
+                  <div style={{ padding: '1.5rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', width: '100%' }}>
+                    <h4 style={{ marginBottom: '1rem', color: 'var(--primary)', fontSize: '1.2rem' }}>
+                      Parties in {places.find(p => p.id === expandedPlaceId)?.name}
+                    </h4>
+                    {!placeUsersMap[expandedPlaceId] ? (
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '1.1rem' }}>Loading...</p>
+                    ) : placeUsersMap[expandedPlaceId].length === 0 ? (
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '1.1rem' }}>No parties in this group.</p>
+                    ) : (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                        {placeUsersMap[expandedPlaceId].map(u => (
+                          <div key={u.id} style={{ padding: '0.4rem 0.75rem', background: 'var(--bg-secondary)', borderRadius: '16px', fontSize: '1.15rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: '1px solid var(--border)', gap: '0.5rem' }}>
+                            {editingPartyId === u.id ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                <input 
+                                  type="text" 
+                                  value={editingPartyName} 
+                                  onChange={(e) => setEditingPartyName(e.target.value)} 
+                                  autoFocus
+                                  style={{ padding: '0.25rem 0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black', width: '100px' }} 
+                                />
+                                <button onClick={(e) => handleUpdateParty(e, expandedPlaceId, u.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--success)', display: 'flex', alignItems: 'center', padding: '2px' }} title="Save">
+                                   <Check size={16} />
+                                </button>
+                                <button onClick={() => setEditingPartyId(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '2px' }} title="Cancel">
+                                   <X size={16} />
                                 </button>
                               </div>
-                            ))}
+                            ) : (
+                              <>
+                                <span>{u.name}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                  <button onClick={() => { setEditingPartyId(u.id); setEditingPartyName(u.name); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '2px' }} title="Edit Party" onMouseOver={(e) => e.currentTarget.style.color = 'var(--primary)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                                     <Edit2 size={14} />
+                                  </button>
+                                  <button onClick={(e) => handleDeleteUser(e, expandedPlaceId, u.id, u.name)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', padding: '2px' }} title="Delete Party" onMouseOver={(e) => e.currentTarget.style.color = 'var(--danger)'} onMouseOut={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+                                     <Trash2 size={14} />
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </div>
-                        )}
+                        ))}
                       </div>
                     )}
                   </div>
-                ))}
+                )}
               </div>
             )}
           </div>
