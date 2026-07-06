@@ -33,7 +33,9 @@ const QuickEntryForm = ({ onRecordAdded }) => {
 
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedPlace, setSelectedPlace] = useState('');
+  const [selectedPlaceName, setSelectedPlaceName] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
+  const [selectedUserName, setSelectedUserName] = useState('');
   const [selectedFlower, setSelectedFlower] = useState('');
 
   // Form Fields
@@ -116,33 +118,48 @@ const QuickEntryForm = ({ onRecordAdded }) => {
     const yId = e.target.value;
     setSelectedYear(yId);
     setSelectedPlace('');
+    setSelectedPlaceName('');
     setSelectedUser('');
+    setSelectedUserName('');
     setUsers([]);
     if (yId) fetchPlaces(yId);
     else setPlaces([]);
   };
 
   const handlePlaceChange = async (e) => {
-    const pId = e.target.value;
-    setSelectedPlace(pId);
-    setSelectedUser('');
-    if (pId) {
+    const val = e.target.value;
+    setSelectedPlaceName(val);
+    const pObj = places.find(p => p.name.toLowerCase() === val.toLowerCase());
+    
+    if (pObj) {
+      setSelectedPlace(pObj.id);
+      setSelectedUser('');
+      setSelectedUserName('');
       try {
-        const data = await getUsers(pId);
+        const data = await getUsers(pObj.id);
         setUsers(data || []);
       } catch (err) { console.error(err); }
-    } else setUsers([]);
+    } else {
+      setSelectedPlace('');
+      setSelectedUser('');
+      setSelectedUserName('');
+      setUsers([]);
+    }
   };
 
   const handleUserChange = async (e) => {
-    const uId = e.target.value;
-    setSelectedUser(uId);
-    if (uId) {
+    const val = e.target.value;
+    setSelectedUserName(val);
+    const uObj = users.find(u => u.name.toLowerCase() === val.toLowerCase());
+    
+    if (uObj) {
+      setSelectedUser(uObj.id);
       try {
-        const data = await getFlowers(uId);
+        const data = await getFlowers(uObj.id);
         setPartyFlowers(data || []);
       } catch (err) { console.error(err); }
     } else {
+      setSelectedUser('');
       setPartyFlowers([]);
     }
   };
@@ -218,24 +235,24 @@ const QuickEntryForm = ({ onRecordAdded }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Group:</label>
-            <select ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} className="select-input" value={selectedPlace} onChange={handlePlaceChange} disabled={!selectedYear} style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
-              <option value="" style={{ color: 'black' }}>-- Select Group --</option>
-              {places.map(p => <option key={p.id} value={p.id} style={{ color: 'black' }}>{p.name}</option>)}
-            </select>
+            <input ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} list="group-options" className="input" value={selectedPlaceName} onChange={handlePlaceChange} disabled={!selectedYear} placeholder="Type or select group..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
+            <datalist id="group-options">
+              {places.map(p => <option key={p.id} value={p.name} />)}
+            </datalist>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Party:</label>
-            <select ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} className="select-input" value={selectedUser} onChange={handleUserChange} disabled={!selectedPlace} style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
-              <option value="" style={{ color: 'black' }}>-- Select Party --</option>
-              {users.map(u => <option key={u.id} value={u.id} style={{ color: 'black' }}>{u.name}</option>)}
-            </select>
+            <input ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} list="party-options" className="input" value={selectedUserName} onChange={handleUserChange} disabled={!selectedPlace} placeholder="Type or select party..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
+            <datalist id="party-options">
+              {users.map(u => <option key={u.id} value={u.name} />)}
+            </datalist>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Flower:</label>
-            <select ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
-              <option value="" style={{ color: 'black' }}>-- Select Flower --</option>
-              {partyFlowers.map(f => <option key={f.id} value={f.name} style={{ color: 'black' }}>{f.name}</option>)}
-            </select>
+            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
+            <datalist id="flower-options">
+              {globalFlowers.map(fname => <option key={fname} value={fname} />)}
+            </datalist>
           </div>
         </div>
  

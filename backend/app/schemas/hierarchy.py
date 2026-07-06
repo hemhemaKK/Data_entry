@@ -94,6 +94,13 @@ class Flower(FlowerBase):
         orm_mode = True
         from_attributes = True
 
+class FlowerOut(FlowerBase):
+    id: int
+
+    class Config:
+        orm_mode = True
+        from_attributes = True
+
 class AdvanceEntryBase(BaseModel):
     user_id: Optional[int] = None
     place_id: Optional[int] = None

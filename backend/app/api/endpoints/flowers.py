@@ -4,7 +4,7 @@ from typing import List, Optional
 
 from app.db.database import get_db
 from app.db.models import Flower, User
-from app.schemas.hierarchy import FlowerCreate, Flower as FlowerSchema
+from app.schemas.hierarchy import FlowerCreate, Flower as FlowerSchema, FlowerOut
 
 router = APIRouter()
 
@@ -34,10 +34,9 @@ def create_flower(flower: FlowerCreate, db: Session = Depends(get_db)):
     db.refresh(db_flower)
     return db_flower
 
-@router.get("/", response_model=List[FlowerSchema])
+@router.get("/", response_model=List[FlowerOut])
 def list_flowers(user_id: Optional[int] = None, place_id: Optional[int] = None, db: Session = Depends(get_db)):
-    from sqlalchemy.orm import selectinload
-    query = db.query(Flower).options(selectinload(Flower.bill_records))
+    query = db.query(Flower)
     if user_id:
         query = query.filter(Flower.user_id == user_id)
     if place_id:
