@@ -15,52 +15,74 @@ def get_all_transactions(
     limit: int = Query(500),
     db: Session = Depends(get_db)
 ):
-    query = (
-        db.query(BillRecord, Flower, User, Place)
-        .join(Flower, BillRecord.flower_id == Flower.id)
-        .join(User, Flower.user_id == User.id)
-        .join(Place, User.place_id == Place.id)
-    )
-
     if search:
         search_term = f"%{search.lower()}%"
-        query = query.filter(
-            or_(
-                Flower.name.ilike(search_term),
-                User.name.ilike(search_term),
-                Place.name.ilike(search_term),
-                BillRecord.van.ilike(search_term)
+        query = (
+            db.query(BillRecord, Flower, User, Place)
+            .join(Flower, BillRecord.flower_id == Flower.id)
+            .join(User, Flower.user_id == User.id)
+            .join(Place, User.place_id == Place.id)
+            .filter(
+                or_(
+                    Flower.name.ilike(search_term),
+                    User.name.ilike(search_term),
+                    Place.name.ilike(search_term),
+                    BillRecord.van.ilike(search_term)
+                )
             )
         )
-
-    records = query.order_by(BillRecord.id.desc()).limit(limit).all()
-    
-    result = []
-    for br, f, u, p in records:
-        result.append({
-            "id": br.id,
-            "flower_id": br.flower_id,
-            "date": br.date,
-            "weight": br.weight,
-            "van": br.van,
-            "rate": br.rate,
-            "laggage": br.laggage,
-            "collie": br.collie,
-            "print_taken": br.print_taken,
-            "flower_name": f.name,
-            "client_name": u.name,
-            "place_name": p.name,
-            "client_id": u.id,
-            "place_id": p.id
-        })
-    return result
+        records = query.order_by(BillRecord.id.desc()).limit(limit).all()
+        
+        result = []
+        for br, f, u, p in records:
+            result.append({
+                "id": br.id,
+                "flower_id": br.flower_id,
+                "date": br.date,
+                "weight": br.weight,
+                "van": br.van,
+                "rate": br.rate,
+                "laggage": br.laggage,
+                "collie": br.collie,
+                "print_taken": br.print_taken,
+                "flower_name": f.name,
+                "client_name": u.name,
+                "place_name": p.name,
+                "client_id": u.id,
+                "place_id": p.id
+            })
+        return result
+    else:
+        from sqlalchemy.orm import selectinload
+        records = db.query(BillRecord).options(
+            selectinload(BillRecord.flower).selectinload(Flower.user).selectinload(User.place)
+        ).order_by(BillRecord.id.desc()).limit(limit).all()
+        
+        result = []
+        for br in records:
+            f = br.flower
+            u = f.user if f else None
+            p = u.place if u else None
+            result.append({
+                "id": br.id,
+                "flower_id": br.flower_id,
+                "date": br.date,
+                "weight": br.weight,
+                "van": br.van,
+                "rate": br.rate,
+                "laggage": br.laggage,
+                "collie": br.collie,
+                "print_taken": br.print_taken,
+                "flower_name": f.name if f else "",
+                "client_name": u.name if u else "",
+                "place_name": p.name if p else "",
+                "client_id": u.id if u else None,
+                "place_id": p.id if p else None
+            })
+        return result
 
 @router.post("/", response_model=BillRecordSchema)
 def create_bill_record(record: BillRecordCreate, db: Session = Depends(get_db)):
-    flower = db.query(Flower).filter(Flower.id == record.flower_id).first()
-    if not flower:
-        raise HTTPException(status_code=404, detail="Flower not found")
-    
     van_val = record.van.strip() if record.van and record.van.strip() else "v1"
     
     db_record = BillRecord(
@@ -74,9 +96,22 @@ def create_bill_record(record: BillRecordCreate, db: Session = Depends(get_db)):
         print_taken=record.print_taken or False
     )
     db.add(db_record)
+    db.flush()
+    
+    resp = {
+        "id": db_record.id,
+        "flower_id": db_record.flower_id,
+        "date": db_record.date,
+        "weight": db_record.weight,
+        "van": db_record.van,
+        "rate": db_record.rate,
+        "laggage": db_record.laggage,
+        "collie": db_record.collie,
+        "print_taken": db_record.print_taken
+    }
+    
     db.commit()
-    db.refresh(db_record)
-    return db_record
+    return resp
 
 @router.put("/mark_printed", response_model=dict)
 def mark_records_printed(payload: MarkPrintedPayload, db: Session = Depends(get_db)):
@@ -108,9 +143,21 @@ def update_bill_record(record_id: int, record: BillRecordCreate, db: Session = D
     if record.print_taken is not None:
         db_record.print_taken = record.print_taken
     
+    db.flush()
+    resp = {
+        "id": db_record.id,
+        "flower_id": db_record.flower_id,
+        "date": db_record.date,
+        "weight": db_record.weight,
+        "van": db_record.van,
+        "rate": db_record.rate,
+        "laggage": db_record.laggage,
+        "collie": db_record.collie,
+        "print_taken": db_record.print_taken
+    }
+    
     db.commit()
-    db.refresh(db_record)
-    return db_record
+    return resp
 
 @router.delete("/{record_id}")
 def delete_bill_record(record_id: int, db: Session = Depends(get_db)):

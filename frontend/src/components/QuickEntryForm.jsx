@@ -232,10 +232,10 @@ const QuickEntryForm = ({ onRecordAdded }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Flower:</label>
-            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
-            <datalist id="flower-options">
-              {globalFlowers.map(fname => <option key={fname} value={fname} />)}
-            </datalist>
+            <select ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} className="select-input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}>
+              <option value="" style={{ color: 'black' }}>-- Select Flower --</option>
+              {partyFlowers.map(f => <option key={f.id} value={f.name} style={{ color: 'black' }}>{f.name}</option>)}
+            </select>
           </div>
         </div>
  
