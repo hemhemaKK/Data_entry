@@ -128,8 +128,28 @@ const QuickEntryForm = ({ onRecordAdded }) => {
 
   const handlePlaceChange = async (e) => {
     const val = e.target.value;
-    setSelectedPlaceName(val);
-    const pObj = places.find(p => p.name.toLowerCase() === val.toLowerCase());
+    let newPlaceName = val;
+    let matchFound = null;
+
+    if (e.nativeEvent.inputType === 'insertText') {
+      const match = places.find(p => p.name.toLowerCase().startsWith(val.toLowerCase()));
+      if (match) {
+        newPlaceName = val + match.name.substring(val.length);
+        matchFound = match;
+      }
+    }
+
+    setSelectedPlaceName(newPlaceName);
+
+    if (matchFound) {
+      setTimeout(() => {
+        if (placeRef.current) {
+          placeRef.current.setSelectionRange(val.length, newPlaceName.length);
+        }
+      }, 0);
+    }
+
+    const pObj = matchFound || places.find(p => p.name.toLowerCase() === newPlaceName.toLowerCase());
     
     if (pObj) {
       setSelectedPlace(pObj.id);
@@ -149,8 +169,28 @@ const QuickEntryForm = ({ onRecordAdded }) => {
 
   const handleUserChange = async (e) => {
     const val = e.target.value;
-    setSelectedUserName(val);
-    const uObj = users.find(u => u.name.toLowerCase() === val.toLowerCase());
+    let newUserName = val;
+    let matchFound = null;
+
+    if (e.nativeEvent.inputType === 'insertText') {
+      const match = users.find(u => u.name.toLowerCase().startsWith(val.toLowerCase()));
+      if (match) {
+        newUserName = val + match.name.substring(val.length);
+        matchFound = match;
+      }
+    }
+
+    setSelectedUserName(newUserName);
+
+    if (matchFound) {
+      setTimeout(() => {
+        if (userRef.current) {
+          userRef.current.setSelectionRange(val.length, newUserName.length);
+        }
+      }, 0);
+    }
+
+    const uObj = matchFound || users.find(u => u.name.toLowerCase() === newUserName.toLowerCase());
     
     if (uObj) {
       setSelectedUser(uObj.id);
@@ -161,6 +201,30 @@ const QuickEntryForm = ({ onRecordAdded }) => {
     } else {
       setSelectedUser('');
       setPartyFlowers([]);
+    }
+  };
+
+  const handleFlowerChange = (e) => {
+    const val = e.target.value;
+    let newFlowerName = val;
+    let matchFound = null;
+
+    if (e.nativeEvent.inputType === 'insertText') {
+      const match = globalFlowers.find(fname => fname.toLowerCase().startsWith(val.toLowerCase()));
+      if (match) {
+        newFlowerName = val + match.substring(val.length);
+        matchFound = match;
+      }
+    }
+
+    setSelectedFlower(newFlowerName);
+
+    if (matchFound) {
+      setTimeout(() => {
+        if (flowerRef.current) {
+          flowerRef.current.setSelectionRange(val.length, newFlowerName.length);
+        }
+      }, 0);
     }
   };
 
@@ -249,7 +313,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Flower:</label>
-            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={(e) => setSelectedFlower(e.target.value)} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
+            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={handleFlowerChange} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
             <datalist id="flower-options">
               {globalFlowers.map(fname => <option key={fname} value={fname} />)}
             </datalist>
