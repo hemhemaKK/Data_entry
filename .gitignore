@@ -29,3 +29,19 @@ reports/
 
 # Environment
 .env
+
+# Data Migrations & Exports
+backend/migrate_*.py
+backend/import_*.py
+backend/export_*.py
+backend/download_*.py
+backend/dump_*.py
+backend/fix_*.py
+backend/preview_*.py
+backend/test_*.py
+backend/debug_*.py
+backend/render_export/
+backend/exports/
+*.sql
+*.zip
+error_trace.json
