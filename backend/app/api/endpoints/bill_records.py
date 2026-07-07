@@ -12,17 +12,27 @@ router = APIRouter()
 @router.get("/transactions", response_model=List[TransactionOut])
 def get_all_transactions(
     search: Optional[str] = Query(None),
+    place_name: Optional[str] = Query(None),
+    flower_name: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    month: Optional[str] = Query(None),
     limit: int = Query(500),
     db: Session = Depends(get_db)
 ):
-    if search:
-        search_term = f"%{search.lower()}%"
-        query = (
-            db.query(BillRecord, Flower, User, Place)
-            .join(Flower, BillRecord.flower_id == Flower.id)
-            .join(User, Flower.user_id == User.id)
-            .join(Place, User.place_id == Place.id)
-            .filter(
+    # If no complex cross-table filters are applied, use the fast path with selectinload
+    if not any([search, place_name, flower_name, date_from, date_to, month]):
+        from sqlalchemy.orm import selectinload
+        records = db.query(BillRecord).options(
+            selectinload(BillRecord.flower).selectinload(Flower.user).selectinload(User.place)
+        ).order_by(BillRecord.id.desc()).limit(limit).all()
+    else:
+        # If filters are applied, use joins
+        query = db.query(BillRecord).join(Flower, BillRecord.flower_id == Flower.id).join(User, Flower.user_id == User.id).join(Place, User.place_id == Place.id)
+        
+        if search:
+            search_term = f"%{search.lower()}%"
+            query = query.filter(
                 or_(
                     Flower.name.ilike(search_term),
                     User.name.ilike(search_term),
@@ -30,56 +40,46 @@ def get_all_transactions(
                     BillRecord.van.ilike(search_term)
                 )
             )
-        )
-        records = query.order_by(BillRecord.id.desc()).limit(limit).all()
         
-        result = []
-        for br, f, u, p in records:
-            result.append({
-                "id": br.id,
-                "flower_id": br.flower_id,
-                "date": br.date,
-                "weight": br.weight,
-                "van": br.van,
-                "rate": br.rate,
-                "laggage": br.laggage,
-                "collie": br.collie,
-                "print_taken": br.print_taken,
-                "flower_name": f.name,
-                "client_name": u.name,
-                "place_name": p.name,
-                "client_id": u.id,
-                "place_id": p.id
-            })
-        return result
-    else:
+        if place_name:
+            query = query.filter(Place.name == place_name)
+        if flower_name:
+            query = query.filter(Flower.name == flower_name)
+        if date_from:
+            query = query.filter(BillRecord.date >= date_from)
+        if date_to:
+            query = query.filter(BillRecord.date <= date_to)
+        if month:
+            from sqlalchemy import func
+            query = query.filter(func.substr(func.date(BillRecord.date), 1, 7) == month)
+            
         from sqlalchemy.orm import selectinload
-        records = db.query(BillRecord).options(
+        records = query.options(
             selectinload(BillRecord.flower).selectinload(Flower.user).selectinload(User.place)
         ).order_by(BillRecord.id.desc()).limit(limit).all()
-        
-        result = []
-        for br in records:
-            f = br.flower
-            u = f.user if f else None
-            p = u.place if u else None
-            result.append({
-                "id": br.id,
-                "flower_id": br.flower_id,
-                "date": br.date,
-                "weight": br.weight,
-                "van": br.van,
-                "rate": br.rate,
-                "laggage": br.laggage,
-                "collie": br.collie,
-                "print_taken": br.print_taken,
-                "flower_name": f.name if f else "",
-                "client_name": u.name if u else "",
-                "place_name": p.name if p else "",
-                "client_id": u.id if u else None,
-                "place_id": p.id if p else None
-            })
-        return result
+
+    result = []
+    for br in records:
+        f = br.flower
+        u = f.user if f else None
+        p = u.place if u else None
+        result.append({
+            "id": br.id,
+            "flower_id": br.flower_id,
+            "date": br.date,
+            "weight": br.weight,
+            "van": br.van,
+            "rate": br.rate,
+            "laggage": br.laggage,
+            "collie": br.collie,
+            "print_taken": br.print_taken,
+            "flower_name": f.name if f else "",
+            "client_name": u.name if u else "",
+            "place_name": p.name if p else "",
+            "client_id": u.id if u else None,
+            "place_id": p.id if p else None
+        })
+    return result
 
 @router.post("/", response_model=BillRecordSchema)
 def create_bill_record(record: BillRecordCreate, db: Session = Depends(get_db)):

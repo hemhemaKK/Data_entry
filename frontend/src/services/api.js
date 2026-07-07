@@ -160,8 +160,8 @@ export const billRecordsApi = {
         const response = await axios.put(`${API_BASE_URL}/bill-records/mark_printed`, { record_ids: recordIds, status: status });
         return response.data;
     },
-    getTransactions: async () => {
-        const response = await axios.get(`${API_BASE_URL}/bill-records/transactions`);
+    getTransactions: async (params = {}) => {
+        const response = await axios.get(`${API_BASE_URL}/bill-records/transactions`, { params });
         return response.data;
     }
 };

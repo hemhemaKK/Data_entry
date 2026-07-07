@@ -34,9 +34,11 @@ def create_flower(flower: FlowerCreate, db: Session = Depends(get_db)):
     db.refresh(db_flower)
     return db_flower
 
-@router.get("/", response_model=List[FlowerOut])
+from sqlalchemy.orm import selectinload
+
+@router.get("/", response_model=List[FlowerSchema])
 def list_flowers(user_id: Optional[int] = None, place_id: Optional[int] = None, db: Session = Depends(get_db)):
-    query = db.query(Flower)
+    query = db.query(Flower).options(selectinload(Flower.bill_records))
     if user_id:
         query = query.filter(Flower.user_id == user_id)
     if place_id:

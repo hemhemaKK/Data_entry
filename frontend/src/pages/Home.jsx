@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { getYears, billRecordsApi } from "../services/api";
+import { getYears, billRecordsApi, getPlaces } from "../services/api";
 import QuickEntryForm from "../components/QuickEntryForm";
 import ExcelEntryGrid from "../components/ExcelEntryGrid";
 import RecordFormModal from "../components/RecordFormModal";
@@ -12,6 +12,7 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [allTransactions, setAllTransactions] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterFlower, setFilterFlower] = useState("");
   const [filterGroup, setFilterGroup] = useState("");
@@ -57,9 +58,17 @@ const Home = () => {
     }
   };
 
-  const fetchTransactions = async (query = "") => {
+  const fetchTransactions = async () => {
     try {
-      const transactions = await billRecordsApi.getTransactions(query);
+      const params = {};
+      if (searchTerm) params.search = searchTerm;
+      if (filterGroup) params.place_name = filterGroup;
+      if (filterFlower) params.flower_name = filterFlower;
+      if (filterDateFrom) params.date_from = filterDateFrom;
+      if (filterDateTo) params.date_to = filterDateTo;
+      if (filterMonth) params.month = filterMonth;
+
+      const transactions = await billRecordsApi.getTransactions(params);
       setAllTransactions(transactions);
     } catch (err) {
       console.error(err);
@@ -71,17 +80,26 @@ const Home = () => {
 
   useEffect(() => {
     fetchYears();
+    const fetchAllGroups = async () => {
+      try {
+        const data = await getPlaces();
+        setAllGroups(data || []);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchAllGroups();
   }, []);
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchTransactions(searchTerm);
+      fetchTransactions();
     }, 400);
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, filterGroup, filterFlower, filterDateFrom, filterDateTo, filterMonth]);
 
-  const refreshTransactions = () => fetchTransactions(searchTerm);
+  const refreshTransactions = () => fetchTransactions();
 
 
 
@@ -203,41 +221,9 @@ const Home = () => {
     }
   };
 
-  // Filter logic
-  let filteredTransactions = allTransactions.filter(t => {
-    let matches = true;
+  let filteredTransactions = allTransactions;
 
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      const matchSearch = 
-        (t.place_name && t.place_name.toLowerCase().includes(searchLower)) ||
-        (t.client_name && t.client_name.toLowerCase().includes(searchLower)) ||
-        (t.flower_name && t.flower_name.toLowerCase().includes(searchLower));
-      if (!matchSearch) matches = false;
-    }
-
-    if (filterFlower && t.flower_name !== filterFlower) {
-      matches = false;
-    }
-    if (filterGroup && t.place_name !== filterGroup) {
-      matches = false;
-    }
-    if (filterDateFrom && (!t.date || t.date < filterDateFrom)) {
-      matches = false;
-    }
-    if (filterDateTo && (!t.date || t.date > filterDateTo)) {
-      matches = false;
-    }
-    if (filterMonth) {
-      if (!t.date || !t.date.startsWith(filterMonth)) {
-        matches = false;
-      }
-    }
-
-    return matches;
-  });
-
-  const isDefaultView = !searchTerm && !filterDateFrom && !filterDateTo && !filterMonth && !filterFlower;
+  const isDefaultView = !searchTerm && !filterDateFrom && !filterDateTo && !filterMonth && !filterFlower && !filterGroup;
   if (isDefaultView) {
     filteredTransactions = filteredTransactions.slice(0, 20);
   }
@@ -307,8 +293,8 @@ const Home = () => {
                 style={{ padding: '0.5rem', fontSize: '1.15rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
               >
                 <option value="">All Groups</option>
-                {[...new Set(allTransactions.map(t => t.place_name).filter(Boolean))].sort().map(p => (
-                  <option key={p} value={p}>{p}</option>
+                {allGroups.map(p => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
                 ))}
               </select>
               <input 
@@ -402,7 +388,7 @@ const Home = () => {
               </div>
             </div>
           )}
-          <div className="table-container" style={{ maxHeight: '500px', overflowY: 'auto' }}>
+          <div className="table-container" style={{ overflowX: 'auto' }}>
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
                 <tr style={{ background: 'var(--bg-secondary)' }}>
