@@ -83,7 +83,7 @@ const PrintTemplate = ({
                                     {columns?.date && <td className="col-date" style={{ padding: '4px' }}>{formatDateDisplay(r.date)}</td>}
                                     {columns?.van && <td className="col-van" style={{ padding: '4px' }}>{r.van || '-'}</td>}
                                     {columns?.weight && <td className="col-weight" style={{ padding: '4px' }}>{r.weight !== null && r.weight !== undefined ? parseFloat(r.weight).toFixed(3) : '-'}</td>}
-                                    {columns?.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate ? parseFloat(r.rate).toFixed(2) : '-'}</td>}
+                                    {columns?.rate && <td className="col-rate" style={{ padding: '4px' }}>{r.rate ? parseFloat(r.rate) : '-'}</td>}
                                     {columns?.total && <td className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.rate) || 0)).toFixed(0)}</td>}
                                     {columns?.laggage && <td className="col-laggage" style={{ padding: '4px' }}>{r.laggage || '0'}</td>}
                                     {columns?.laggageTotal && <td className="col-laggage-total" style={{ padding: '4px', fontWeight: 'bold', textAlign: 'right' }}>{((parseFloat(r.weight) || 0) * (parseFloat(r.laggage) || 0)).toFixed(2)}</td>}
