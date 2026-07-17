@@ -137,7 +137,7 @@ const CustomPrint = () => {
         const advances = await advancesApi.getUserAdvances(userId);
         
         let clientTotalPrice = 0;
-        const processedFlowers = [];
+        const processedFlowersMap = new Map();
 
         for (let flower of flowers) {
             if (selectedFlowerName && flower.name.trim().toLowerCase() !== selectedFlowerName.toLowerCase()) {
@@ -169,13 +169,28 @@ const CustomPrint = () => {
 
             if (records.length === 0) continue;
 
-            records.sort((a, b) => {
+            const normalizedName = flower.name.trim().toLowerCase();
+            if (!processedFlowersMap.has(normalizedName)) {
+                processedFlowersMap.set(normalizedName, {
+                    ...flower,
+                    name: flower.name.trim(),
+                    records: []
+                });
+            }
+            
+            processedFlowersMap.get(normalizedName).records.push(...records);
+        }
+
+        const processedFlowers = Array.from(processedFlowersMap.values());
+
+        for (let pf of processedFlowers) {
+            pf.records.sort((a, b) => {
                 if (!a.date) return 1;
                 if (!b.date) return -1;
                 return new Date(a.date) - new Date(b.date);
             });
 
-            const totals = records.reduce((acc, r) => {
+            pf.totals = pf.records.reduce((acc, r) => {
                 const w = parseFloat(r.weight) || 0;
                 const rate = parseFloat(r.rate) || 0;
                 const p = w * rate;
@@ -187,13 +202,7 @@ const CustomPrint = () => {
                 };
             }, { weight: 0, price: 0, laggage: 0, collie: 0 });
 
-            processedFlowers.push({
-                ...flower,
-                records,
-                totals
-            });
-
-            clientTotalPrice += totals.price;
+            clientTotalPrice += pf.totals.price;
         }
 
         if (processedFlowers.length === 0) continue;
