@@ -329,12 +329,12 @@ const CustomPrint = () => {
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}><Calendar size={18} style={{ display: 'inline', marginRight: '6px' }}/> From Date</label>
-            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', colorScheme: 'dark' }} />
+            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="custom-print-date" style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
 
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '1.2rem', fontWeight: 'bold' }}><Calendar size={18} style={{ display: 'inline', marginRight: '6px' }}/> To Date</label>
-            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)', colorScheme: 'dark' }} />
+            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="custom-print-date" style={{ width: '100%', padding: '0.75rem', fontSize: '1.2rem', borderRadius: '8px', border: '1px solid var(--border)', background: 'rgba(255, 255, 255, 0.05)', color: 'var(--text-primary)' }} />
           </div>
 
           <div>

@@ -1035,3 +1035,7 @@ table th {
 .dsg-cell:not(.dsg-cell-header) {
   font-size: 1.25rem !important;
 }
+
+.custom-print-date::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(100);
+}

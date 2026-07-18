@@ -1,7 +1,143 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getYears, getPlaces, getUsers, getFlowers, billRecordsApi, createYear, updateYear, deleteYear } from '../services/api';
 import { Link } from 'react-router-dom';
-import { PlusCircle } from 'lucide-react';
+import { Save, PlusCircle, Trash2, Printer } from 'lucide-react';
+
+const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, onKeyDown, inputRef }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const wrapperRef = useRef(null);
+
+  useEffect(() => {
+    const opt = options.find(o => o.id.toString() === value.toString());
+    if (opt) {
+      setSearchTerm(opt.name);
+    } else {
+      setSearchTerm('');
+    }
+  }, [value, options]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
+        setIsOpen(false);
+        const opt = options.find(o => o.id.toString() === value.toString());
+        setSearchTerm(opt ? opt.name : '');
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [wrapperRef, value, options]);
+
+  const currentSelectedOpt = options.find(o => o.id.toString() === value.toString());
+  const isSearchTermPristine = currentSelectedOpt && searchTerm === currentSelectedOpt.name;
+
+  const filteredOptions = isSearchTermPristine 
+    ? options 
+    : options.filter(opt => opt.name.toLowerCase().includes(searchTerm.toLowerCase()));
+
+  // Reset active index when search changes, OR set to currently selected item if pristine
+  useEffect(() => {
+    if (isOpen) {
+      if (isSearchTermPristine && currentSelectedOpt) {
+        const idx = options.findIndex(o => o.id.toString() === currentSelectedOpt.id.toString());
+        setActiveIndex(idx >= 0 ? idx : 0);
+      } else {
+        setActiveIndex(0);
+      }
+    }
+  }, [searchTerm, isOpen, isSearchTermPristine, currentSelectedOpt ? currentSelectedOpt.id : null]);
+
+  const handleSelect = (id) => {
+    onChange({ target: { value: id } });
+    setIsOpen(false);
+  };
+
+  return (
+    <div ref={wrapperRef} style={{ position: 'relative', flex: 1 }}>
+      <input
+        ref={inputRef}
+        type="text"
+        className="input"
+        placeholder={placeholder}
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setIsOpen(true);
+        }}
+        onFocus={(e) => {
+          setIsOpen(true);
+          e.target.select();
+        }}
+        onKeyDown={(e) => {
+           if (e.key === 'Tab' && e.shiftKey) {
+               setIsOpen(false);
+               return; // Allow native shift-tab navigation
+           }
+           
+           if (e.key === 'Enter' || e.key === 'Tab') {
+              e.preventDefault();
+              
+              if (isOpen && filteredOptions.length > 0 && searchTerm.trim() !== '') {
+                  // They are making a valid selection
+                  const selectedId = filteredOptions[activeIndex].id;
+                  handleSelect(selectedId);
+                  if (onKeyDown) setTimeout(() => onKeyDown(e), 0);
+              } else {
+                  // Invalid or empty selection
+                  // Do NOT go to the next field. Just revert to the last valid value.
+                  setIsOpen(false);
+                  const opt = options.find(o => o.id.toString() === value.toString());
+                  setSearchTerm(opt ? opt.name : '');
+              }
+              return;
+           }
+
+           if (isOpen && filteredOptions.length > 0) {
+              if (e.key === 'ArrowDown') {
+                  e.preventDefault();
+                  setActiveIndex(prev => (prev + 1) % filteredOptions.length);
+                  return;
+              }
+              if (e.key === 'ArrowUp') {
+                  e.preventDefault();
+                  setActiveIndex(prev => (prev - 1 + filteredOptions.length) % filteredOptions.length);
+                  return;
+              }
+           }
+        }}
+        disabled={disabled}
+        style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }}
+      />
+      {isOpen && !disabled && (
+        <ul style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 1000, background: 'white', border: '1px solid var(--border)', borderRadius: '4px', maxHeight: '250px', overflowY: 'auto', listStyle: 'none', padding: 0, margin: 0, boxShadow: '0 4px 6px rgba(0,0,0,0.3)' }}>
+          {filteredOptions.length === 0 ? (
+            <li style={{ padding: '0.75rem', color: 'gray' }}>No options found</li>
+          ) : (
+            filteredOptions.map((opt, idx) => (
+              <li 
+                key={idx} 
+                onClick={() => handleSelect(opt.id)}
+                style={{ 
+                  padding: '0.75rem', 
+                  cursor: 'pointer', 
+                  color: opt.id === 'ADD_NEW' ? 'blue' : 'black', 
+                  fontWeight: opt.id === 'ADD_NEW' ? 'bold' : 'normal', 
+                  borderBottom: '1px solid #eee',
+                  background: activeIndex === idx ? '#e6f7ff' : 'white'
+                }}
+                onMouseEnter={() => setActiveIndex(idx)}
+              >
+                {opt.name}
+              </li>
+            ))
+          )}
+        </ul>
+      )}
+    </div>
+  );
+};
 
 const QuickEntryForm = ({ onRecordAdded }) => {
   const yearRef = useRef(null);
@@ -127,104 +263,67 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   };
 
   const handlePlaceChange = async (e) => {
-    const val = e.target.value;
-    let newPlaceName = val;
-    let matchFound = null;
-
-    if (e.nativeEvent.inputType === 'insertText') {
-      const match = places.find(p => p.name.toLowerCase().startsWith(val.toLowerCase()));
-      if (match) {
-        newPlaceName = val + match.name.substring(val.length);
-        matchFound = match;
-      }
-    }
-
-    setSelectedPlaceName(newPlaceName);
-
-    if (matchFound) {
-      setTimeout(() => {
-        if (placeRef.current) {
-          placeRef.current.setSelectionRange(val.length, newPlaceName.length);
-        }
-      }, 0);
-    }
-
-    const pObj = matchFound || places.find(p => p.name.toLowerCase() === newPlaceName.toLowerCase());
+    const pId = e.target.value;
     
-    if (pObj) {
-      setSelectedPlace(pObj.id);
-      setSelectedUser('');
-      setSelectedUserName('');
+    // If the group hasn't actually changed, don't clear the party
+    if (pId && selectedPlace && pId.toString() === selectedPlace.toString()) {
+      return;
+    }
+
+    const pObj = places.find(p => p.id === parseInt(pId));
+    
+    setSelectedPlace(pId);
+    setSelectedPlaceName(pObj ? pObj.name : '');
+    setSelectedUser('');
+    setSelectedUserName('');
+    setUsers([]);
+    
+    if (pId) {
       try {
-        const data = await getUsers(pObj.id);
+        const data = await getUsers(pId);
         setUsers(data || []);
       } catch (err) { console.error(err); }
-    } else {
-      setSelectedPlace('');
-      setSelectedUser('');
-      setSelectedUserName('');
-      setUsers([]);
     }
   };
 
   const handleUserChange = async (e) => {
-    const val = e.target.value;
-    let newUserName = val;
-    let matchFound = null;
-
-    if (e.nativeEvent.inputType === 'insertText') {
-      const match = users.find(u => u.name.toLowerCase().startsWith(val.toLowerCase()));
-      if (match) {
-        newUserName = val + match.name.substring(val.length);
-        matchFound = match;
-      }
-    }
-
-    setSelectedUserName(newUserName);
-
-    if (matchFound) {
-      setTimeout(() => {
-        if (userRef.current) {
-          userRef.current.setSelectionRange(val.length, newUserName.length);
-        }
-      }, 0);
-    }
-
-    const uObj = matchFound || users.find(u => u.name.toLowerCase() === newUserName.toLowerCase());
+    const uId = e.target.value;
     
-    if (uObj) {
-      setSelectedUser(uObj.id);
+    // If the party hasn't actually changed, don't clear the flower list
+    if (uId && selectedUser && uId.toString() === selectedUser.toString()) {
+      return;
+    }
+
+    const uObj = users.find(u => u.id === parseInt(uId));
+    
+    setSelectedUser(uId);
+    setSelectedUserName(uObj ? uObj.name : '');
+    
+    if (uId) {
       try {
-        const data = await getFlowers(uObj.id);
+        const data = await getFlowers(uId);
         setPartyFlowers(data || []);
       } catch (err) { console.error(err); }
     } else {
-      setSelectedUser('');
       setPartyFlowers([]);
     }
   };
 
   const handleFlowerChange = (e) => {
     const val = e.target.value;
-    let newFlowerName = val;
-    let matchFound = null;
-
-    if (e.nativeEvent.inputType === 'insertText') {
-      const match = globalFlowers.find(fname => fname.toLowerCase().startsWith(val.toLowerCase()));
-      if (match) {
-        newFlowerName = val + match.substring(val.length);
-        matchFound = match;
-      }
-    }
-
-    setSelectedFlower(newFlowerName);
-
-    if (matchFound) {
-      setTimeout(() => {
-        if (flowerRef.current) {
-          flowerRef.current.setSelectionRange(val.length, newFlowerName.length);
+    if (val === 'ADD_NEW') {
+      const newFlower = prompt("Enter new flower name:");
+      if (newFlower && newFlower.trim()) {
+        const cleaned = newFlower.trim();
+        setSelectedFlower(cleaned);
+        if (!globalFlowers.find(f => f.toLowerCase() === cleaned.toLowerCase())) {
+          setGlobalFlowers([...globalFlowers, cleaned]);
         }
-      }, 0);
+      } else {
+        setSelectedFlower('');
+      }
+    } else {
+      setSelectedFlower(val);
     }
   };
 
@@ -299,24 +398,39 @@ const QuickEntryForm = ({ onRecordAdded }) => {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Group:</label>
-            <input ref={placeRef} onKeyDown={(e) => handleEnterKey(e, userRef)} list="group-options" className="input" value={selectedPlaceName} onChange={handlePlaceChange} disabled={!selectedYear} placeholder="Type or select group..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
-            <datalist id="group-options">
-              {places.map(p => <option key={p.id} value={p.name} />)}
-            </datalist>
+            <SearchableDropdown
+              inputRef={placeRef}
+              options={places.map(p => ({ id: p.id, name: p.name }))}
+              value={selectedPlace}
+              onChange={handlePlaceChange}
+              disabled={!selectedYear}
+              placeholder="Select Group..."
+              onKeyDown={(e) => handleEnterKey(e, userRef)}
+            />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Party:</label>
-            <input ref={userRef} onKeyDown={(e) => handleEnterKey(e, flowerRef)} list="party-options" className="input" value={selectedUserName} onChange={handleUserChange} disabled={!selectedPlace} placeholder="Type or select party..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
-            <datalist id="party-options">
-              {users.map(u => <option key={u.id} value={u.name} />)}
-            </datalist>
+            <SearchableDropdown
+              inputRef={userRef}
+              options={users.map(u => ({ id: u.id, name: u.name }))}
+              value={selectedUser}
+              onChange={handleUserChange}
+              disabled={!selectedPlace}
+              placeholder="Select Party..."
+              onKeyDown={(e) => handleEnterKey(e, flowerRef)}
+            />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Flower:</label>
-            <input ref={flowerRef} onKeyDown={(e) => handleEnterKey(e, dateRef)} list="flower-options" className="input" value={selectedFlower} onChange={handleFlowerChange} disabled={!selectedUser} placeholder="Type or select flower..." style={{ flex: 1, padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)', background: 'white', color: 'black' }} />
-            <datalist id="flower-options">
-              {globalFlowers.map(fname => <option key={fname} value={fname} />)}
-            </datalist>
+            <SearchableDropdown
+              inputRef={flowerRef}
+              options={globalFlowers.map(f => ({ id: f, name: f })).concat([{id: 'ADD_NEW', name: '+ Add New Flower...'}])}
+              value={selectedFlower}
+              onChange={handleFlowerChange}
+              disabled={!selectedUser}
+              placeholder="Select Flower..."
+              onKeyDown={(e) => handleEnterKey(e, dateRef)}
+            />
           </div>
         </div>
  
