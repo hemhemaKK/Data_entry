@@ -294,7 +294,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 </tr>
               ))}
             </tbody>
-            <tfoot>
+            <tbody className="print-table-total">
               <tr style={{ background: '#f0f0f0', fontWeight: 'bold', color: 'black', borderTop: '1px solid black', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                 <td className="col-date" colSpan="3" style={{ padding: '8px 4px', textAlign: 'right' }}>Total:</td>
                 <td className="col-weight" style={{ padding: '8px 4px' }}>{totals.weight.toFixed(3)}</td>
@@ -305,7 +305,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 <td className="col-collie" style={{ padding: '8px 4px' }}>{totals.collie.toFixed(2)}</td>
                 <td className="col-actions no-print" style={{ padding: '8px 4px' }}></td>
               </tr>
-            </tfoot>
+            </tbody>
           </table>
           </div>
         </div>
@@ -401,7 +401,7 @@ const InlineAddForm = ({ flowerId, onSave, onCancel }) => {
   );
 };
 
-const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance, fromDate, toDate, commissionPercent, onEdit, onDelete, onRecordsUpdated }) => {
+const FlowerCard = ({ flower, userId, clientName, clientPhone, placeName, clientBalance, fromDate, toDate, commissionPercent, onEdit, onDelete, onRecordsUpdated }) => {
   const [expanded, setExpanded] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [printTargetMonth, setPrintTargetMonth] = useState(null);
@@ -463,7 +463,8 @@ const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance,
 
   const handleUpdateRecord = async (recordId, payload) => {
     try {
-      await billRecordsApi.updateRecord(recordId, payload);
+      const finalPayload = { ...payload, user_id: userId || payload.user_id || (flower.bill_records?.[0]?.user_id) };
+      await billRecordsApi.updateRecord(recordId, finalPayload);
       if (onRecordsUpdated) onRecordsUpdated();
     } catch (err) {
       alert("Failed to update record");
@@ -485,7 +486,8 @@ const FlowerCard = ({ flower, clientName, clientPhone, placeName, clientBalance,
 
   const handleCreateRecord = async (payload) => {
     try {
-      await billRecordsApi.createRecord(payload);
+      const finalPayload = { ...payload, user_id: userId || payload.user_id || (flower.bill_records?.[0]?.user_id) };
+      await billRecordsApi.createRecord(finalPayload);
       setShowAddForm(false);
       if (onRecordsUpdated) onRecordsUpdated();
     } catch (err) {

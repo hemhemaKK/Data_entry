@@ -36,7 +36,7 @@ const ExportData = () => {
         setSelectedUser('');
     }, [selectedPlace]);
 
-    const fetchYears = async () => {
+    async function fetchYears() {
         try {
             const data = await getYears();
             setYears(data);
@@ -47,34 +47,34 @@ const ExportData = () => {
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
-    const fetchPlaces = async (yearId) => {
+    async function fetchPlaces(yearId) {
         try {
             const data = await getPlaces(yearId);
             setPlaces(data);
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
-    const fetchUsers = async (placeId) => {
+    async function fetchUsers(placeId) {
         try {
             const data = await getUsers(placeId);
             setUsers(data);
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
-    const fetchHistory = async () => {
+    async function fetchHistory() {
         try {
             const data = await exportsApi.getHistory();
             setHistory(data);
         } catch (error) {
             console.error(error);
         }
-    };
+    }
 
     const handleExport = async (e) => {
         e.preventDefault();

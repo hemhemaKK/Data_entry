@@ -297,6 +297,7 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
         }
 
         const payload = {
+          user_id: parseInt(selectedUser, 10),
           flower_id: finalFlowerId,
           date: formattedDate,
           weight: parseFloat(row.weight) || 0,

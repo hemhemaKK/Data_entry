@@ -27,11 +27,17 @@ reports/
 *.csv
 .DS_Store
 
-# Environment
+# Environment & Certificates
 .env
+*.env
+*.pem
+*.crt
+*.cer
+*.key
 
 # Data Migrations & Exports
 backend/migrate_*.py
+backend/copy_*.py
 backend/import_*.py
 backend/export_*.py
 backend/download_*.py
@@ -45,3 +51,11 @@ backend/exports/
 *.sql
 *.zip
 error_trace.json
+
+# Local Dev Scripts & Batch Files
+*.bat
+create_*.py
+fetch_*.py
+backend/check_*.py
+backend/verify_*.py
+test_*.json

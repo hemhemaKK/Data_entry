@@ -63,7 +63,7 @@ const Ledger = () => {
     return () => clearTimeout(handler);
   }, [searchQuery]);
 
-  const fetchYears = async () => {
+  async function fetchYears() {
     try {
       const data = await getYears();
       const yearsData = data || [];
@@ -81,9 +81,9 @@ const Ledger = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
-  const handleYearChange = async (e) => {
+  async function handleYearChange(e) {
     const yId = e.target.value;
     setSelectedYear(yId);
     setSelectedPlace('');

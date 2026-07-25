@@ -59,7 +59,7 @@ class User(Base):
     contact_number = Column(String(50), nullable=True)
     place_id = Column(Integer, ForeignKey("places.id"), index=True)
     place = relationship("Place", back_populates="users")
-    flowers = relationship("Flower", back_populates="user", cascade="all, delete-orphan")
+    bill_records = relationship("BillRecord", back_populates="user")
     advance_entries = relationship("AdvanceEntry", back_populates="user", cascade="all, delete-orphan")
 
 class AdvanceEntry(Base):
@@ -81,16 +81,15 @@ class Flower(Base):
     __tablename__ = "flowers"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
-    user = relationship("User", back_populates="flowers")
+    name = Column(String(255), nullable=False, unique=True, index=True)
     bill_records = relationship("BillRecord", back_populates="flower", cascade="all, delete-orphan")
 
 class BillRecord(Base):
     __tablename__ = "bill_records"
 
     id = Column(Integer, primary_key=True, index=True)
-    flower_id = Column(Integer, ForeignKey("flowers.id"), index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    flower_id = Column(Integer, ForeignKey("flowers.id"), index=True, nullable=False)
     upload_id = Column(Integer, ForeignKey("uploads.id"), nullable=True)
     date = Column(Date, nullable=True, index=True)
     weight = Column(Float, nullable=True)
@@ -100,6 +99,7 @@ class BillRecord(Base):
     collie = Column(Float, nullable=True, default=0.0)
     print_taken = Column(Boolean, default=False)
 
+    user = relationship("User", back_populates="bill_records")
     flower = relationship("Flower", back_populates="bill_records")
     upload = relationship("Upload", backref="bill_records")
 

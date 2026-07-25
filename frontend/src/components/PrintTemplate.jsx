@@ -91,7 +91,7 @@ const PrintTemplate = ({
                                 </tr>
                             ))}
                         </tbody>
-                        <tfoot>
+                        <tbody className="print-table-total">
                             <tr style={{ borderTop: '1px solid black', fontWeight: 'bold', backgroundColor: '#f0f0f0', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>
                                 <td colSpan={(columns?.date ? 1 : 0) + (columns?.van ? 1 : 0)} style={{ padding: '4px', textAlign: 'right' }}>Total:</td>
                                 {columns?.weight && <td className="col-weight" style={{ padding: '4px' }}>{Number(flower.totals?.weight || 0).toFixed(3)}</td>}
@@ -101,7 +101,7 @@ const PrintTemplate = ({
                                 {columns?.laggageTotal && <td className="col-laggage-total" style={{ padding: '4px', textAlign: 'right' }}>{Number(flower.totals?.laggage || 0).toFixed(2)}</td>}
                                 {columns?.collie && <td className="col-collie" style={{ padding: '4px' }}>{Number(flower.totals?.collie || 0).toFixed(2)}</td>}
                             </tr>
-                        </tfoot>
+                        </tbody>
                     </table>
                 </div>
             ))}

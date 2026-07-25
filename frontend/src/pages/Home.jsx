@@ -137,7 +137,8 @@ const Home = () => {
       rate: parseFloat(inlineForm.rate) || 0,
       laggage: parseFloat(inlineForm.laggage) || 0,
       collie: parseFloat(inlineForm.collie) || 0,
-      flower_id: f_id
+      flower_id: f_id,
+      user_id: inlineForm.user_id || inlineForm.client_id || allTransactions.find(t => t.id === inlineEditId)?.user_id
     };
     try {
       await billRecordsApi.updateRecord(inlineEditId, payload);
@@ -185,6 +186,7 @@ const Home = () => {
           weight: record.weight || 0,
           rate: record.rate || 0,
           flower_id: record.flower_id,
+          user_id: record.user_id || record.client_id,
           laggage: bulkLaggage !== '' ? parseFloat(bulkLaggage) : record.laggage,
           collie: bulkCollie !== '' ? parseFloat(bulkCollie) : record.collie,
         };

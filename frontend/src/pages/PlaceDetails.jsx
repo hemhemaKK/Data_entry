@@ -50,6 +50,7 @@ const PlaceDetails = () => {
   const [summaryMonth, setSummaryMonth] = useState('');
   
   const [globalFlowers, setGlobalFlowers] = useState([]);
+  const [manuallyAddedFlowers, setManuallyAddedFlowers] = useState([]);
   
   const [clientAdvances, setClientAdvances] = useState([]);
   const [printCols, setPrintCols] = useState({ date: true, van: true, weight: true, rate: true, total: true, laggage: true, laggageTotal: true, collie: true });
@@ -109,6 +110,7 @@ const PlaceDetails = () => {
   // When a client is selected, fetch their flowers and advances
   useEffect(() => {
     if (selectedClient) {
+      setManuallyAddedFlowers([]);
       fetchFlowers(selectedClient.id);
       fetchClientAdvances(selectedClient.id);
     }
@@ -186,14 +188,19 @@ const PlaceDetails = () => {
   const handleFlowerCreate = async (payload) => {
     const newNames = payload.names || [payload.name];
     let createdAny = false;
+    const addedNames = [...manuallyAddedFlowers];
     
     for (const n of newNames) {
-      if (flowers.some((f) => f.name.toLowerCase() === n.toLowerCase())) {
-        alert(`Flower name "${n}" already exists for this client. Skipping.`);
+      const existing = flowers.find((f) => f.name.toLowerCase() === n.toLowerCase());
+      if (existing) {
+        if (!addedNames.includes(existing.name.toLowerCase())) {
+          addedNames.push(existing.name.toLowerCase());
+        }
         continue;
       }
       try {
-        await createFlower({ name: n, user_id: selectedClient.id });
+        await createFlower({ name: n });
+        addedNames.push(n.toLowerCase());
         createdAny = true;
       } catch (err) {
         console.error(err);
@@ -201,6 +208,7 @@ const PlaceDetails = () => {
       }
     }
     
+    setManuallyAddedFlowers(addedNames);
     if (createdAny) {
       fetchFlowers(selectedClient.id);
       fetchGlobalFlowers(); // Refresh global list too
@@ -587,6 +595,11 @@ const PlaceDetails = () => {
 
   const filteredFlowers = [...flowers]
     .sort((a, b) => b.id - a.id)
+    .filter((f) => {
+      const hasRecords = f.bill_records && f.bill_records.length > 0;
+      const isManuallyAdded = manuallyAddedFlowers.includes(f.name.toLowerCase());
+      return hasRecords || isManuallyAdded;
+    })
     .filter(
       (f) => f.name.toLowerCase().includes(flowerFilter.toLowerCase())
     );
@@ -770,6 +783,7 @@ const PlaceDetails = () => {
               <FlowerCard
                 key={flower.id}
                 flower={flower}
+                userId={selectedClient.id}
                 clientName={selectedClient.name}
                 clientPhone={selectedClient.contact_number}
                 placeName={selectedPlace?.name || ''}

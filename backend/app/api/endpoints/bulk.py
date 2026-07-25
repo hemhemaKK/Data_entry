@@ -76,11 +76,11 @@ def create_bulk_flowers(bulk_data: BulkFlowersCreate, db: Session = Depends(get_
         if lower_fname in added_in_batch:
             continue
             
-        existing = db.query(Flower).filter(Flower.user_id.is_(None), func.lower(Flower.name) == lower_fname).first()
+        existing = db.query(Flower).filter(func.lower(Flower.name) == lower_fname).first()
         if existing:
             continue
             
-        new_flower = Flower(name=fname, user_id=None)
+        new_flower = Flower(name=fname)
         db.add(new_flower)
         added_in_batch.add(lower_fname)
         created_count += 1

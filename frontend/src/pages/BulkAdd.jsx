@@ -30,7 +30,7 @@ const BulkAdd = () => {
     fetchYears();
   }, []);
 
-  const fetchYears = async () => {
+  async function fetchYears() {
     try {
       const data = await getYears();
       const yearsData = data || [];
@@ -48,7 +48,7 @@ const BulkAdd = () => {
     } catch (err) {
       console.error(err);
     }
-  };
+  }
 
   const fetchViewerData = async () => {
     try {
@@ -139,7 +139,7 @@ const BulkAdd = () => {
     }
   };
 
-  const handleYearChange = (e) => {
+  function handleYearChange(e) {
     const yId = e.target.value;
     setSelectedYear(yId);
     setSelectedPlace('');

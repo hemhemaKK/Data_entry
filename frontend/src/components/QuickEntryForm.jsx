@@ -10,13 +10,14 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, o
   const wrapperRef = useRef(null);
 
   useEffect(() => {
+    if (isOpen) return; // Do not overwrite what the user is typing while the dropdown is open!
     const opt = options.find(o => o.id.toString() === value.toString());
     if (opt) {
       setSearchTerm(opt.name);
     } else {
       setSearchTerm('');
     }
-  }, [value, options]);
+  }, [value, options, isOpen]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -33,9 +34,73 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, o
   const currentSelectedOpt = options.find(o => o.id.toString() === value.toString());
   const isSearchTermPristine = currentSelectedOpt && searchTerm === currentSelectedOpt.name;
 
+  const matchOption = (opt, term) => {
+    if (!term || !term.trim()) return true;
+    const termClean = term.toLowerCase().trim();
+    const nameClean = (opt.name || '').toLowerCase();
+    const searchKey = ((opt.name || '') + ' ' + (opt.contact_number || '') + ' ' + (opt.searchKey || '')).toLowerCase();
+    
+    // 1. Direct substring check
+    if (searchKey.includes(termClean) || nameClean.includes(termClean)) return true;
+    
+    // 2. Acronym / Cleaned substring check (strips periods, hyphens, spaces, parens)
+    const strip = (s) => (s || '').replace(/[\.\-\(\)\s]+/g, '');
+    if (strip(searchKey).includes(strip(termClean))) return true;
+    
+    // 3. Multi-word check: all words in search term must appear anywhere in option
+    const words = termClean.split(/\s+/).filter(Boolean);
+    if (words.length > 1 && words.every(w => searchKey.includes(w) || strip(searchKey).includes(strip(w)))) {
+      return true;
+    }
+    
+    return false;
+  };
+
+  const getScore = (opt, term) => {
+    if (!term || !term.trim()) return 0;
+    if (opt.id === 'ADD_NEW') return -1000;
+    const termClean = term.toLowerCase().trim();
+    const nameClean = (opt.name || '').toLowerCase().trim();
+    const strip = (s) => (s || '').replace(/[\.\-\(\)\s]+/g, '');
+    const nameStrip = strip(nameClean);
+    const termStrip = strip(termClean);
+
+    // 1. Exact match (highest priority)
+    if (nameClean === termClean || nameStrip === termStrip) return 100;
+    
+    // 2. Starts with search term (e.g., typing "kk" matching "KKI")
+    if (nameClean.startsWith(termClean) || nameStrip.startsWith(termStrip)) return 80;
+
+    // 3. Any word in the name starts with search term (e.g., "Sri KKI" matching "kk")
+    const words = nameClean.split(/[\s\-\.\(\)]+/).filter(Boolean);
+    if (words.some(w => w.startsWith(termClean))) return 70;
+
+    // 4. Acronym match (e.g., typing "mvr" matching "M. V. R.")
+    const acronym = words.map(w => w[0]).join('');
+    if (acronym.startsWith(termClean)) return 60;
+
+    // 5. Contains match (e.g., typing "kk" matching "KANNAKURUKKAI")
+    if (nameClean.includes(termClean) || nameStrip.includes(termStrip)) return 20;
+
+    return 10;
+  };
+
   const filteredOptions = isSearchTermPristine 
     ? options 
-    : options.filter(opt => opt.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    : options
+        .filter(opt => matchOption(opt, searchTerm))
+        .sort((a, b) => {
+          if (a.id === 'ADD_NEW') return 1;
+          if (b.id === 'ADD_NEW') return -1;
+          const scoreA = getScore(a, searchTerm);
+          const scoreB = getScore(b, searchTerm);
+          if (scoreB !== scoreA) return scoreB - scoreA;
+          // If scores are tied, prefer shorter name length (more exact/concise match)
+          const lenDiff = (a.name || '').length - (b.name || '').length;
+          if (lenDiff !== 0) return lenDiff;
+          // Finally, sort alphabetically
+          return (a.name || '').localeCompare(b.name || '');
+        });
 
   // Reset active index when search changes, OR set to currently selected item if pristine
   useEffect(() => {
@@ -66,9 +131,17 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, o
           setSearchTerm(e.target.value);
           setIsOpen(true);
         }}
-        onFocus={(e) => {
+        onClick={(e) => {
           setIsOpen(true);
-          e.target.select();
+          setTimeout(() => {
+            if (e.target) e.target.select();
+          }, 0);
+        }}
+        onFocus={(e) => {
+          if (!value) setIsOpen(true);
+          setTimeout(() => {
+            if (e.target) e.target.select();
+          }, 0);
         }}
         onKeyDown={(e) => {
            if (e.key === 'Tab' && e.shiftKey) {
@@ -84,6 +157,10 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, o
                   const selectedId = filteredOptions[activeIndex].id;
                   handleSelect(selectedId);
                   if (onKeyDown) setTimeout(() => onKeyDown(e), 0);
+              } else if (!isOpen && value) {
+                  // Dropdown is not open and we already have a valid selection!
+                  // Just keep the same selection and move to the next field!
+                  if (onKeyDown) setTimeout(() => onKeyDown(e), 0);
               } else {
                   // Invalid or empty selection
                   // Do NOT go to the next field. Just revert to the last valid value.
@@ -94,17 +171,18 @@ const SearchableDropdown = ({ options, value, onChange, placeholder, disabled, o
               return;
            }
 
-           if (isOpen && filteredOptions.length > 0) {
-              if (e.key === 'ArrowDown') {
-                  e.preventDefault();
-                  setActiveIndex(prev => (prev + 1) % filteredOptions.length);
-                  return;
-              }
-              if (e.key === 'ArrowUp') {
-                  e.preventDefault();
-                  setActiveIndex(prev => (prev - 1 + filteredOptions.length) % filteredOptions.length);
-                  return;
-              }
+           if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+               if (!isOpen) {
+                   setIsOpen(true);
+                   return;
+               }
+               e.preventDefault();
+               if (e.key === 'ArrowDown') {
+                   setActiveIndex(prev => (prev + 1) % (filteredOptions.length || 1));
+               } else {
+                   setActiveIndex(prev => (prev - 1 + (filteredOptions.length || 1)) % (filteredOptions.length || 1));
+               }
+               return;
            }
         }}
         disabled={disabled}
@@ -340,7 +418,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
         finalFlowerId = existingFlower.id;
       } else {
         const { createFlower } = await import('../services/api');
-        const newFlower = await createFlower({ name: selectedFlower, user_id: parseInt(selectedUser, 10) });
+        const newFlower = await createFlower({ name: selectedFlower });
         finalFlowerId = newFlower.id;
         setPartyFlowers([...partyFlowers, newFlower]);
       }
@@ -350,6 +428,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
       else if (!isNaN(processedVan)) processedVan = 'v' + processedVan;
 
       const payload = {
+        user_id: parseInt(selectedUser, 10),
         flower_id: finalFlowerId,
         date: date || null,
         weight: parseFloat(weight) || 0,
@@ -412,7 +491,7 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             <label style={{ width: '80px', fontSize: '1.2rem', fontWeight: 600 }}>Party:</label>
             <SearchableDropdown
               inputRef={userRef}
-              options={users.map(u => ({ id: u.id, name: u.name }))}
+              options={users.map(u => ({ id: u.id, name: u.name, contact_number: u.contact_number }))}
               value={selectedUser}
               onChange={handleUserChange}
               disabled={!selectedPlace}

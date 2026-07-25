@@ -33,13 +33,13 @@ class ExportHistoryResponse(BaseModel):
     filters_used: Optional[str]
     
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 def generate_export_file(req: ExportRequest, db: Session, timestamp_str: str) -> tuple[str, str]:
     query = (
         db.query(BillRecord, Flower, User, Place)
         .join(Flower, BillRecord.flower_id == Flower.id)
-        .join(User, Flower.user_id == User.id)
+        .join(User, BillRecord.user_id == User.id)
         .join(Place, User.place_id == Place.id)
     )
     

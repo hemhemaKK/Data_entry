@@ -764,7 +764,7 @@ tr:hover td {
 }
 
 /* Ensure table footers are bold globally */
-tfoot td {
+tfoot td, .print-table-total td {
   font-weight: bold !important;
 }
 
@@ -810,12 +810,18 @@ tfoot td {
     font-weight: bold !important;
   }
 
-  /* Total Row (tfoot) */
-  table.print-table tfoot td, .print-only table tfoot td {
+  /* Total Row (tfoot / print-table-total) */
+  table.print-table tfoot td, .print-only table tfoot td,
+  table.print-table .print-table-total td, .print-only table .print-table-total td {
     font-size: 1.1rem !important;
     color: black !important;
     font-weight: bold !important;
     border: 0.5px solid black !important;
+  }
+
+  tbody.print-table-total tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 
   /* 
@@ -934,7 +940,7 @@ tfoot td {
     padding: 1px 6px !important; 
     color: black !important;
   }
-  tfoot td {
+  tfoot td, .print-table-total td {
     font-weight: bold !important;
   }
   th {

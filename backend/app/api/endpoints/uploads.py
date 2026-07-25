@@ -131,12 +131,11 @@ async def upload_file(file: UploadFile = File(...), template_type: str = Form("t
                             
                         flower_name = str(row.get("flower")).strip() if pd.notna(row.get("flower")) else "Unknown"
                         req_lower = flower_name.lower()
+                        from sqlalchemy import func
                         
-                        existing_flowers = db.query(Flower).filter(Flower.user_id == user_obj.id).all()
-                        flower = next((f for f in existing_flowers if f.name and f.name.strip().lower() == req_lower), None)
-                        
+                        flower = db.query(Flower).filter(func.lower(Flower.name) == req_lower).first()
                         if not flower:
-                            flower = Flower(name=flower_name, user_id=user_obj.id)
+                            flower = Flower(name=flower_name)
                             db.add(flower)
                             db.commit()
                             db.refresh(flower)
@@ -158,6 +157,7 @@ async def upload_file(file: UploadFile = File(...), template_type: str = Form("t
                         
                         # Deduplicate
                         existing_record = db.query(BillRecord).filter(
+                            BillRecord.user_id == user_obj.id,
                             BillRecord.flower_id == flower.id,
                             BillRecord.date == date_val,
                             BillRecord.weight == weight_val,
@@ -172,6 +172,7 @@ async def upload_file(file: UploadFile = File(...), template_type: str = Form("t
                             db.flush()
                         
                         bill_record = BillRecord(
+                            user_id=user_obj.id,
                             flower_id=flower.id,
                             upload_id=db_upload.id,
                             date=date_val,
