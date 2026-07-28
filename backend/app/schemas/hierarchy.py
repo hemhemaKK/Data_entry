@@ -75,6 +75,8 @@ class TransactionOut(BillRecordBase):
     place_name: str
     client_id: Optional[int] = None
     place_id: Optional[int] = None
+    user_id: Optional[int] = None
+    flower_id: Optional[int] = None
 
     class Config:
         from_attributes = True
