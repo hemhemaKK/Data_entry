@@ -15,8 +15,7 @@ from app.core.config import settings
 
 router = APIRouter()
 
-EXPORTS_DIR = "exports"
-os.makedirs(EXPORTS_DIR, exist_ok=True)
+
 
 class ExportRequest(BaseModel):
     year_id: int
@@ -84,7 +83,7 @@ def generate_export_file(req: ExportRequest, db: Session, timestamp_str: str) ->
     for place_name, users_data in grouped_data.items():
         safe_place_name = "".join(c for c in place_name if c.isalnum() or c in " -_").strip()
         filename = f"{safe_place_name}.xlsx"
-        file_path = os.path.join(EXPORTS_DIR, f"{safe_place_name}_{timestamp_str}.xlsx")
+        file_path = os.path.join(settings.EXPORTS_DIR, f"{safe_place_name}_{timestamp_str}.xlsx")
         
         with pd.ExcelWriter(file_path, engine="openpyxl") as writer:
             for user_name, rows in users_data.items():
@@ -99,7 +98,7 @@ def generate_export_file(req: ExportRequest, db: Session, timestamp_str: str) ->
     # If multiple files, zip them
     if len(files_generated) > 1:
         zip_filename = f"BulkExport_{timestamp_str}.zip"
-        zip_path = os.path.join(EXPORTS_DIR, zip_filename)
+        zip_path = os.path.join(settings.EXPORTS_DIR, zip_filename)
         with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
             for fname, fpath in files_generated:
                 zipf.write(fpath, arcname=fname)
@@ -136,7 +135,11 @@ def download_export(history_id: int, db: Session = Depends(get_db)):
     if not history:
         raise HTTPException(status_code=404, detail="Export not found")
         
-    if not os.path.exists(history.file_path):
+    file_path = history.file_path
+    if file_path and not os.path.isabs(file_path):
+        file_path = os.path.abspath(os.path.join(settings.EXPORTS_DIR, os.path.basename(file_path)))
+        
+    if not os.path.exists(file_path):
         if not history.filters_used:
             raise HTTPException(status_code=404, detail="File has been deleted from server and cannot be regenerated.")
         try:
@@ -147,7 +150,8 @@ def download_export(history_id: int, db: Session = Depends(get_db)):
             history.file_path = new_filepath
             history.filename = new_filename
             db.commit()
+            file_path = new_filepath
         except Exception as e:
             raise HTTPException(status_code=500, detail=f"Failed to regenerate file: {str(e)}")
         
-    return FileResponse(history.file_path, filename=history.filename)
+    return FileResponse(file_path, filename=history.filename)

@@ -88,31 +88,7 @@ def create_bill_record(record: BillRecordCreate, db: Session = Depends(get_db)):
     laggage_val = record.laggage or 0.0
     collie_val = record.collie or 0.0
     
-    # Deduplication check: if all values are identical, do not store a duplicate
-    existing = db.query(BillRecord).filter(
-        BillRecord.user_id == record.user_id,
-        BillRecord.flower_id == record.flower_id,
-        BillRecord.date == record.date,
-        BillRecord.weight == record.weight,
-        BillRecord.van == van_val,
-        BillRecord.rate == record.rate,
-        BillRecord.laggage == laggage_val,
-        BillRecord.collie == collie_val
-    ).first()
-    
-    if existing:
-        return {
-            "id": existing.id,
-            "user_id": existing.user_id,
-            "flower_id": existing.flower_id,
-            "date": existing.date,
-            "weight": existing.weight,
-            "van": existing.van,
-            "rate": existing.rate,
-            "laggage": existing.laggage,
-            "collie": existing.collie,
-            "print_taken": existing.print_taken
-        }
+
     
     db_record = BillRecord(
         user_id=record.user_id,
@@ -166,34 +142,7 @@ def update_bill_record(record_id: int, record: BillRecordCreate, db: Session = D
     laggage_val = record.laggage or 0.0
     collie_val = record.collie or 0.0
     
-    # Deduplication check: if another record already has these exact values, remove duplicate and return existing
-    existing = db.query(BillRecord).filter(
-        BillRecord.id != record_id,
-        BillRecord.user_id == record.user_id,
-        BillRecord.flower_id == record.flower_id,
-        BillRecord.date == record.date,
-        BillRecord.weight == record.weight,
-        BillRecord.van == van_val,
-        BillRecord.rate == record.rate,
-        BillRecord.laggage == laggage_val,
-        BillRecord.collie == collie_val
-    ).first()
-    
-    if existing:
-        db.delete(db_record)
-        db.commit()
-        return {
-            "id": existing.id,
-            "user_id": existing.user_id,
-            "flower_id": existing.flower_id,
-            "date": existing.date,
-            "weight": existing.weight,
-            "van": existing.van,
-            "rate": existing.rate,
-            "laggage": existing.laggage,
-            "collie": existing.collie,
-            "print_taken": existing.print_taken
-        }
+
     
     db_record.user_id = record.user_id
     db_record.flower_id = record.flower_id

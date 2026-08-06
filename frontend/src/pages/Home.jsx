@@ -262,8 +262,7 @@ const Home = () => {
       )}
 
       {/* Recent Entries */}
-      {allTransactions.length > 0 && (
-        <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--border)' }}>
+      <div className="card" style={{ marginBottom: '1rem', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
             <h2 className="card-title" style={{ fontSize: '1.25rem', margin: 0 }}>
               {(searchTerm || filterFlower || filterDateFrom || filterDateTo || filterMonth) ? "Search/Filter Results" : "Recent Entries (Latest 20)"}
@@ -418,7 +417,14 @@ const Home = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredTransactions.map(entry => {
+                {filteredTransactions.length === 0 ? (
+                  <tr>
+                    <td colSpan="12" style={{ padding: '2rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+                      No records found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredTransactions.map(entry => {
                   const isEditing = inlineEditId === entry.id;
                   const isSelected = selectedRecords.includes(entry.id);
                   return (
@@ -492,12 +498,12 @@ const Home = () => {
                       )}
                     </tr>
                   );
-                })}
+                  })
+                )}
               </tbody>
             </table>
           </div>
         </div>
-      )}
 
 
 

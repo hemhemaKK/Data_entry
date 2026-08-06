@@ -155,21 +155,7 @@ async def upload_file(file: UploadFile = File(...), template_type: str = Form("t
                         laggage_val = float(row.get("laggage")) if "laggage" in df.columns and pd.notna(row.get("laggage")) else 0.0
                         collie_val = float(row.get("collie")) if "collie" in df.columns and pd.notna(row.get("collie")) else 0.0
                         
-                        # Deduplicate
-                        existing_record = db.query(BillRecord).filter(
-                            BillRecord.user_id == user_obj.id,
-                            BillRecord.flower_id == flower.id,
-                            BillRecord.date == date_val,
-                            BillRecord.weight == weight_val,
-                            BillRecord.van == van_val,
-                            BillRecord.rate == rate_val,
-                            BillRecord.laggage == laggage_val,
-                            BillRecord.collie == collie_val
-                        ).first()
 
-                        if existing_record:
-                            db.delete(existing_record)
-                            db.flush()
                         
                         bill_record = BillRecord(
                             user_id=user_obj.id,
@@ -287,10 +273,18 @@ def delete_upload(upload_id: int, db: Session = Depends(get_db)):
     upload = db.query(Upload).filter(Upload.id == upload_id).first()
     if not upload:
         raise HTTPException(status_code=404, detail="Upload not found")
-    if os.path.exists(upload.file_path):
-        os.remove(upload.file_path)
-    if upload.report_path and os.path.exists(upload.report_path):
-        os.remove(upload.report_path)
+        
+    file_path = upload.file_path
+    if file_path and not os.path.isabs(file_path):
+        file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, os.path.basename(file_path)))
+    if file_path and os.path.exists(file_path):
+        os.remove(file_path)
+        
+    report_path = upload.report_path
+    if report_path and not os.path.isabs(report_path):
+        report_path = os.path.abspath(os.path.join(settings.REPORTS_DIR, os.path.basename(report_path)))
+    if report_path and os.path.exists(report_path):
+        os.remove(report_path)
     
     # Delete associated data
     db.query(BillRecord).filter(BillRecord.upload_id == upload_id).delete()
@@ -302,26 +296,49 @@ def delete_upload(upload_id: int, db: Session = Depends(get_db)):
 @router.get("/{upload_id}/report")
 def download_report(upload_id: int, db: Session = Depends(get_db)):
     upload = db.query(Upload).filter(Upload.id == upload_id).first()
-    if not upload or not upload.report_path or not os.path.exists(upload.report_path):
+    if not upload or not upload.report_path:
         raise HTTPException(status_code=404, detail="Report not found")
-    return FileResponse(upload.report_path, filename=f"report_{upload.original_file_name}")
+        
+    report_path = upload.report_path
+    if not os.path.isabs(report_path):
+        report_path = os.path.abspath(os.path.join(settings.REPORTS_DIR, os.path.basename(report_path)))
+        
+    if not os.path.exists(report_path):
+        raise HTTPException(status_code=404, detail="Report not found")
+        
+    return FileResponse(report_path, filename=f"report_{upload.original_file_name}")
 
 @router.get("/{upload_id}/download")
 def download_excel(upload_id: int, db: Session = Depends(get_db)):
     upload = db.query(Upload).filter(Upload.id == upload_id).first()
-    if not upload or not upload.file_path or not os.path.exists(upload.file_path):
+    if not upload or not upload.file_path:
         raise HTTPException(status_code=404, detail="File not found")
-    return FileResponse(upload.file_path, filename=upload.original_file_name)
+        
+    file_path = upload.file_path
+    if not os.path.isabs(file_path):
+        file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, os.path.basename(file_path)))
+        
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    return FileResponse(file_path, filename=upload.original_file_name)
 
 @router.get("/{upload_id}/data")
 def get_excel_data(upload_id: int, db: Session = Depends(get_db)):
     upload = db.query(Upload).filter(Upload.id == upload_id).first()
-    if not upload or not upload.file_path or not os.path.exists(upload.file_path):
+    if not upload or not upload.file_path:
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    file_path = upload.file_path
+    if not os.path.isabs(file_path):
+        file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, os.path.basename(file_path)))
+        
+    if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
     
     try:
         import json
-        with pd.ExcelFile(upload.file_path) as xl:
+        with pd.ExcelFile(file_path) as xl:
             data = {}
             for sheet in xl.sheet_names:
                 df = xl.parse(sheet_name=sheet)
