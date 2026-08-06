@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { uploadsApi } from '../services/api';
-import { Download, ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronUp } from 'lucide-react';
 import SearchBar from '../components/SearchBar';
 
 export default function ValidationResults() {
@@ -69,16 +69,7 @@ export default function ValidationResults() {
                             {upload.error_count}
                         </div>
                     </div>
-                    <div style={{ marginLeft: 'auto', display: 'flex', gap: '1rem' }}>
-                        <a href={uploadsApi.downloadExcelUrl(upload.id)} className="btn btn-secondary" download title="Download Original File">
-                            <Download size={20} /> Download Original
-                        </a>
-                        {upload.error_count > 0 && (
-                            <a href={uploadsApi.downloadReportUrl(upload.id)} className="btn" style={{background: '#dc3545'}} download title="Download Error Report">
-                                <Download size={20} /> Download Error Report
-                            </a>
-                        )}
-                    </div>
+
                 </div>
             </div>
 
@@ -109,6 +100,15 @@ export default function ValidationResults() {
             {upload.errors && upload.errors.length === 0 && upload.status === 'SUCCESS' && (
                 <div className="card" style={{textAlign: 'center', color: 'var(--success)', marginBottom: '2rem'}}>
                     <h3>Success! No errors found. The file is perfectly valid.</h3>
+                    {excelData && Object.keys(excelData).length > 0 && (
+                        <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {Object.keys(excelData).map(sheetName => (
+                                <div key={sheetName} style={{ fontSize: '1.1rem' }}>
+                                    ✅ Sheet Name <strong>"{sheetName}"</strong> is uploaded successfully
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
 

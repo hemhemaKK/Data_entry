@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { uploadsApi } from '../services/api';
 import { Link } from 'react-router-dom';
-import { Trash2, Download, Table2, ArrowLeft } from 'lucide-react';
+import { Trash2, Table2, ArrowLeft } from 'lucide-react';
 
 export default function Transactions() {
     const [files, setFiles] = useState([]);
@@ -96,14 +96,7 @@ export default function Transactions() {
                                         <Link to={`/results/${file.id}`} className="btn" style={{padding: '0.25rem 0.5rem'}} title="View Data & Results">
                                             View
                                         </Link>
-                                        <a href={uploadsApi.downloadExcelUrl(file.id)} className="btn btn-primary" style={{padding: '0.25rem 0.5rem'}} download title="Download Original Excel">
-                                            <Download size={16} />
-                                        </a>
-                                        {file.error_count > 0 && (
-                                            <a href={uploadsApi.downloadReportUrl(file.id)} className="btn btn-warning" style={{padding: '0.25rem 0.5rem'}} download title="Download Error Report">
-                                                <Download size={16} />
-                                            </a>
-                                        )}
+
                                         <button className="btn btn-danger" style={{padding: '0.25rem 0.5rem'}} onClick={() => handleDelete(file.id)}>
                                             <Trash2 size={16} />
                                         </button>
