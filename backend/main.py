@@ -4,27 +4,29 @@ from app.api.endpoints import uploads, dashboard, years, places, users, flowers,
 from app.db.database import engine, Base
 import uvicorn
 
+from app.core.config import settings
 from sqlalchemy import text
-Base.metadata.create_all(bind=engine)
 
-try:
-    with engine.begin() as conn:
-        conn.execute(text("ALTER TABLE bill_records ADD COLUMN print_taken BOOLEAN DEFAULT FALSE;"))
-except Exception:
-    pass
+if settings.DATABASE_URL.startswith("sqlite"):
+    Base.metadata.create_all(bind=engine)
 
-try:
-    with engine.begin() as conn:
-        conn.execute(text("ALTER TABLE advance_entries ADD COLUMN place_id INTEGER REFERENCES places(id);"))
-except Exception:
-    pass
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE bill_records ADD COLUMN print_taken BOOLEAN DEFAULT FALSE;"))
+    except Exception:
+        pass
 
-try:
-    with engine.begin() as conn:
-        conn.execute(text("ALTER TABLE advance_entries ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;"))
-except Exception:
-    pass
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE advance_entries ADD COLUMN place_id INTEGER REFERENCES places(id);"))
+    except Exception:
+        pass
 
+    try:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE advance_entries ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP;"))
+    except Exception:
+        pass
 
 app = FastAPI(title="Excel Validation API")
 
