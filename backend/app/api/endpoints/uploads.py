@@ -337,24 +337,53 @@ def download_excel(upload_id: int, db: Session = Depends(get_db)):
 @router.get("/{upload_id}/data")
 def get_excel_data(upload_id: int, db: Session = Depends(get_db)):
     upload = db.query(Upload).filter(Upload.id == upload_id).first()
-    if not upload or not upload.file_path:
-        raise HTTPException(status_code=404, detail="File not found")
+    if not upload:
+        raise HTTPException(status_code=404, detail="Upload not found")
         
-    file_path = upload.file_path
-    if not os.path.isabs(file_path):
+    file_path = upload.file_path if upload.file_path else ""
+    if file_path and not os.path.isabs(file_path):
         file_path = os.path.abspath(os.path.join(settings.UPLOAD_DIR, os.path.basename(file_path)))
         
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="File not found")
+    if file_path and os.path.exists(file_path):
+        try:
+            import json
+            import pandas as pd
+            with pd.ExcelFile(file_path) as xl:
+                data = {}
+                for sheet in xl.sheet_names:
+                    df = xl.parse(sheet_name=sheet)
+                    json_str = df.to_json(orient='records', date_format='iso')
+                    data[sheet] = json.loads(json_str)
+            return data
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"Could not read excel data: {str(e)}")
+            
+    # File not found on disk (ephemeral storage wiped). Reconstruct from database.
+    from sqlalchemy.orm import selectinload
+    records = db.query(BillRecord).options(
+        selectinload(BillRecord.flower), selectinload(BillRecord.user).selectinload(User.place)
+    ).filter(BillRecord.upload_id == upload_id).all()
     
-    try:
-        import json
-        with pd.ExcelFile(file_path) as xl:
-            data = {}
-            for sheet in xl.sheet_names:
-                df = xl.parse(sheet_name=sheet)
-                json_str = df.to_json(orient='records', date_format='iso')
-                data[sheet] = json.loads(json_str)
-        return data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Could not read excel data: {str(e)}")
+    if not records:
+        return {}
+        
+    data = {}
+    for br in records:
+        # Group by client name to simulate sheet structure
+        sheet_name = br.user.name if br.user else "Unknown Client"
+        if sheet_name not in data:
+            data[sheet_name] = []
+            
+        row_dict = {
+            "date": br.date.isoformat() if br.date else None,
+            "flower": br.flower.name if br.flower else "",
+            "weight": br.weight,
+            "van": br.van,
+            "rate": br.rate
+        }
+        if br.laggage: row_dict["laggage"] = br.laggage
+        if br.collie: row_dict["collie"] = br.collie
+        
+        data[sheet_name].append(row_dict)
+        
+    return data
