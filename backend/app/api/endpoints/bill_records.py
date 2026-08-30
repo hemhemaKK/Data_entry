@@ -84,7 +84,19 @@ def get_all_transactions(
 
 @router.post("/", response_model=BillRecordSchema)
 def create_bill_record(record: BillRecordCreate, db: Session = Depends(get_db)):
-    van_val = record.van.strip() if record.van and record.van.strip() else "v1"
+    van_raw = record.van.strip() if record.van and record.van.strip() else ""
+    if van_raw.lower() == "nan":
+        van_raw = ""
+    if van_raw.endswith(".0"):
+        van_raw = van_raw[:-2]
+    if van_raw == "":
+        van_val = "V1"
+    elif van_raw.isdigit():
+        van_val = f"V{van_raw}"
+    elif van_raw.upper().startswith("V") and van_raw[1:].isdigit():
+        van_val = f"V{van_raw[1:]}"
+    else:
+        van_val = van_raw.upper() if van_raw else "V1"
     laggage_val = record.laggage or 0.0
     collie_val = record.collie or 0.0
     
@@ -138,7 +150,19 @@ def update_bill_record(record_id: int, record: BillRecordCreate, db: Session = D
     if not db_record:
         raise HTTPException(status_code=404, detail="Record not found")
     
-    van_val = record.van.strip() if record.van and record.van.strip() else "v1"
+    van_raw = record.van.strip() if record.van and record.van.strip() else ""
+    if van_raw.lower() == "nan":
+        van_raw = ""
+    if van_raw.endswith(".0"):
+        van_raw = van_raw[:-2]
+    if van_raw == "":
+        van_val = "V1"
+    elif van_raw.isdigit():
+        van_val = f"V{van_raw}"
+    elif van_raw.upper().startswith("V") and van_raw[1:].isdigit():
+        van_val = f"V{van_raw[1:]}"
+    else:
+        van_val = van_raw.upper() if van_raw else "V1"
     laggage_val = record.laggage or 0.0
     collie_val = record.collie or 0.0
     

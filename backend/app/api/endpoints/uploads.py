@@ -150,7 +150,18 @@ async def upload_file(file: UploadFile = File(...), template_type: str = Form("t
                         
                         weight_val = float(row.get("weight")) if pd.notna(row.get("weight")) else None
                         van_raw = str(row.get("van")).strip() if pd.notna(row.get("van")) else ""
-                        van_val = van_raw if van_raw != "" else "1"
+                        if van_raw.lower() == "nan":
+                            van_raw = ""
+                        if van_raw.endswith(".0"):
+                            van_raw = van_raw[:-2]
+                        if van_raw == "":
+                            van_val = "V1"
+                        elif van_raw.isdigit():
+                            van_val = f"V{van_raw}"
+                        elif van_raw.upper().startswith("V") and van_raw[1:].isdigit():
+                            van_val = f"V{van_raw[1:]}"
+                        else:
+                            van_val = van_raw.upper() if van_raw else "V1"
                         rate_val = float(row.get("rate")) if pd.notna(row.get("rate")) else None
                         laggage_val = float(row.get("laggage")) if "laggage" in df.columns and pd.notna(row.get("laggage")) else 0.0
                         collie_val = float(row.get("collie")) if "collie" in df.columns and pd.notna(row.get("collie")) else 0.0
