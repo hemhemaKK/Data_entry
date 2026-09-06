@@ -251,6 +251,14 @@ export const creditSalesApi = {
         const response = await axios.put(`${API_BASE_URL}/credit-sales/bulk/update`, payload);
         return response.data;
     },
+    updateUser: async (id, payload) => {
+        const response = await axios.put(`${API_BASE_URL}/credit-sales/user/${id}`, payload);
+        return response.data;
+    },
+    deleteUser: async (id) => {
+        const response = await axios.delete(`${API_BASE_URL}/credit-sales/user/${id}`);
+        return response.data;
+    },
     bulkDeleteEntries: async (payload) => {
         const response = await axios.post(`${API_BASE_URL}/credit-sales/bulk/delete`, payload);
         return response.data;

@@ -28,6 +28,10 @@ const CreditSales = () => {
   const [editingRecordId, setEditingRecordId] = useState(null);
   const [editFormData, setEditFormData] = useState({});
 
+  // User Editing
+  const [editingUserId, setEditingUserId] = useState(null);
+  const [editUserFormData, setEditUserFormData] = useState({});
+
   // Drilldown
   const [expandedUsers, setExpandedUsers] = useState([]);
   const [expandedMonths, setExpandedMonths] = useState({});
@@ -152,6 +156,36 @@ const CreditSales = () => {
     } catch (err) {
       console.error("Failed to delete record:", err);
       alert("Failed to delete record");
+    }
+  };
+
+  const handleUserEditChange = (e) => {
+    const { name, value } = e.target;
+    setEditUserFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSaveUserEdit = async () => {
+    if (!editUserFormData.customer_name) return alert('Customer Name is required');
+    try {
+      await creditSalesApi.updateUser(editingUserId, {
+        customer_name: editUserFormData.customer_name
+      });
+      setEditingUserId(null);
+      fetchData();
+    } catch (err) {
+      console.error('Failed to update user:', err);
+      alert('Failed to update user');
+    }
+  };
+
+  const handleDeleteUser = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this user AND all their credit sales records? This cannot be undone.")) return;
+    try {
+      await creditSalesApi.deleteUser(id);
+      fetchData();
+    } catch (err) {
+      console.error("Failed to delete user:", err);
+      alert("Failed to delete user");
     }
   };
 
@@ -306,7 +340,7 @@ const CreditSales = () => {
       <div className="card quick-entry-form" style={{ marginBottom: '1.5rem', padding: '1.5rem', border: '1px solid var(--primary)' }}>
         <div className="card-header" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
           <Plus className="icon" style={{ color: 'var(--primary)' }} />
-          <h2 className="card-title">Add New Entry</h2>
+          <h2 className="card-title">Sales Entry</h2>
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end' }}>
           <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 150px' }}>
@@ -321,7 +355,7 @@ const CreditSales = () => {
               options={(() => {
                 const names = [...new Set(data.users.map(u => u.customer_name))].filter(Boolean);
                 const opts = names.map(n => ({ id: n, name: n }));
-                return opts.concat([{ id: 'ADD_NEW', name: '+ Add New Customer...' }]);
+                return opts.concat([{ id: 'ADD_NEW', name: 'New Customer...' }]);
               })()}
               value={formData.customer_name}
               onChange={(e) => {
@@ -528,28 +562,53 @@ const CreditSales = () => {
                   <th style={{ textAlign: 'right' }}>Total Credited (₹)</th>
                   <th style={{ textAlign: 'right' }}>Total Debited (₹)</th>
                   <th style={{ textAlign: 'right' }}>Balance (₹)</th>
+                  <th style={{ textAlign: 'center', width: '80px' }}>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {processedUsers.length === 0 ? (
-                  <tr><td colSpan="5" style={{textAlign: 'center'}}>No users found.</td></tr>
+                  <tr><td colSpan="6" style={{textAlign: 'center'}}>No users found.</td></tr>
                 ) : [...processedUsers].sort((a, b) => b.id - a.id).map((user) => {
                   const isUserExpanded = expandedUsers.includes(user.id);
                   return (
                     <React.Fragment key={user.id}>
-                      <tr onClick={() => toggleUser(user.id)} style={{ cursor: 'pointer', background: isUserExpanded ? 'var(--bg-secondary)' : 'transparent' }}>
-                        <td>{user.id}</td>
-                        <td style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                          {isUserExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
-                          {user.customer_name}
-                        </td>
-                        <td style={{ textAlign: 'right', color: '#10b981' }}>{user.total_credited ? `₹${user.total_credited.toLocaleString('en-IN')}` : '-'}</td>
-                        <td style={{ textAlign: 'right', color: '#ef4444' }}>{user.total_debited ? `₹${user.total_debited.toLocaleString('en-IN')}` : '-'}</td>
-                        <td style={{ textAlign: 'right', fontWeight: '700', color: user.balance >= 0 ? '#10b981' : '#ef4444' }}>{user.balance != null ? `₹${user.balance.toLocaleString('en-IN')}` : '-'}</td>
-                      </tr>
+                      {editingUserId === user.id ? (
+                        <tr style={{ background: 'var(--bg-secondary)' }}>
+                          <td>{user.id}</td>
+                          <td colSpan="5">
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+                              <input type="text" name="customer_name" value={editUserFormData.customer_name} onChange={handleUserEditChange} className="input" style={{ width: '250px' }} />
+                              <button className="btn btn-primary btn-sm" onClick={(e) => { e.stopPropagation(); handleSaveUserEdit(); }}>Save</button>
+                              <button className="btn btn-secondary btn-sm" onClick={(e) => { e.stopPropagation(); setEditingUserId(null); }}>Cancel</button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : (
+                        <tr onClick={() => toggleUser(user.id)} style={{ cursor: 'pointer', background: isUserExpanded ? 'var(--bg-secondary)' : 'transparent' }}>
+                          <td>{user.id}</td>
+                          <td style={{ fontWeight: '600', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            {isUserExpanded ? <ChevronDown size={18} /> : <ChevronRight size={18} />}
+                            {user.customer_name}
+                          </td>
+                          <td style={{ textAlign: 'right', color: '#10b981' }}>{user.total_credited ? `₹${user.total_credited.toLocaleString('en-IN')}` : '-'}</td>
+                          <td style={{ textAlign: 'right', color: '#ef4444' }}>{user.total_debited ? `₹${user.total_debited.toLocaleString('en-IN')}` : '-'}</td>
+                          <td style={{ textAlign: 'right', fontWeight: '700', color: user.balance >= 0 ? '#10b981' : '#ef4444' }}>{user.balance != null ? `₹${user.balance.toLocaleString('en-IN')}` : '-'}</td>
+                          <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
+                            <button className="btn btn-icon" onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingUserId(user.id);
+                              setEditUserFormData({ customer_name: user.customer_name || '' });
+                            }} title="Edit"><Edit2 size={16} /></button>
+                            <button className="btn btn-icon" onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteUser(user.id);
+                            }} title="Delete" style={{ color: 'var(--danger)' }}><Trash2 size={16} /></button>
+                          </td>
+                        </tr>
+                      )}
                       {isUserExpanded && (
                         <tr>
-                          <td colSpan="5" style={{ padding: 0 }}>
+                          <td colSpan="6" style={{ padding: 0 }}>
                             <div style={{ padding: '1rem', background: 'var(--bg-secondary)', borderTop: '1px solid var(--border)' }}>
                               <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1.1rem', color: 'var(--text-secondary)' }}>Monthly History</h4>
                               <table className="table" style={{ width: '100%', background: 'var(--bg-primary)', borderRadius: '4px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>

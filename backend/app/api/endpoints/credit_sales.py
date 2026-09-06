@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 from app.db.database import get_db
@@ -152,3 +154,29 @@ def bulk_delete_entries(payload: BulkDeleteCreditSalesSchema, db: Session = Depe
     db.query(CreditSalesRecord).filter(CreditSalesRecord.id.in_(payload.record_ids)).delete(synchronize_session=False)
     db.commit()
     return {"message": f"Deleted {len(payload.record_ids)} records"}
+
+class CreditSalesUserUpdate(BaseModel):
+    customer_name: str
+    phone_number: Optional[str] = None
+
+@router.put('/user/{user_id}')
+def update_credit_sales_user(user_id: int, payload: CreditSalesUserUpdate, db: Session = Depends(get_db)):
+    user = db.query(CreditSalesUser).filter(CreditSalesUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    user.customer_name = payload.customer_name
+    if payload.phone_number is not None:
+        user.phone_number = payload.phone_number
+    db.commit()
+    return {'message': 'User updated successfully'}
+
+@router.delete('/user/{user_id}')
+def delete_credit_sales_user(user_id: int, db: Session = Depends(get_db)):
+    user = db.query(CreditSalesUser).filter(CreditSalesUser.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail='User not found')
+    # Let's delete associated records manually or cascade is handled by DB
+    db.query(CreditSalesRecord).filter(CreditSalesRecord.credit_sales_user_id == user_id).delete()
+    db.delete(user)
+    db.commit()
+    return {'message': 'User and associated records deleted'}
