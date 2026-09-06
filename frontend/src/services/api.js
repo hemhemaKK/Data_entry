@@ -230,3 +230,29 @@ export const exportsApi = {
     }
 };
 
+export const creditSalesApi = {
+    getAllData: async () => {
+        const response = await axios.get(`${API_BASE_URL}/credit-sales`);
+        return response.data;
+    },
+    createEntry: async (payload) => {
+        const response = await axios.post(`${API_BASE_URL}/credit-sales`, payload);
+        return response.data;
+    },
+    updateEntry: async (id, payload) => {
+        const response = await axios.put(`${API_BASE_URL}/credit-sales/${id}`, payload);
+        return response.data;
+    },
+    deleteEntry: async (id) => {
+        const response = await axios.delete(`${API_BASE_URL}/credit-sales/${id}`);
+        return response.data;
+    },
+    bulkUpdateEntries: async (payload) => {
+        const response = await axios.put(`${API_BASE_URL}/credit-sales/bulk/update`, payload);
+        return response.data;
+    },
+    bulkDeleteEntries: async (payload) => {
+        const response = await axios.post(`${API_BASE_URL}/credit-sales/bulk/delete`, payload);
+        return response.data;
+    }
+};

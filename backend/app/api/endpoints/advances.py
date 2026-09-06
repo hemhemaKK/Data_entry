@@ -1,11 +1,37 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List
 from app.db.database import get_db
 from app.db.models import AdvanceEntry, User, Place
 from app.schemas.hierarchy import AdvanceEntry as AdvanceEntrySchema, AdvanceEntryCreate, AdvanceEntryOut, BulkDateUpdate
 
 router = APIRouter()
+
+@router.get("/all")
+def get_all_advances(db: Session = Depends(get_db)):
+    advances = db.query(AdvanceEntry)\
+        .options(joinedload(AdvanceEntry.user).joinedload(User.place), joinedload(AdvanceEntry.place))\
+        .order_by(AdvanceEntry.date.desc()).all()
+        
+    result = []
+    for adv in advances:
+        user_name = adv.user.name if adv.user else None
+        place_name = adv.user.place.name if adv.user and adv.user.place else (adv.place.name if adv.place else None)
+        
+        result.append({
+            "id": adv.id,
+            "date": adv.date,
+            "advance_amount": adv.advance_amount,
+            "deduction_amount": adv.deduction_amount,
+            "notes": adv.notes,
+            "user_id": adv.user_id,
+            "place_id": adv.place_id,
+            "user_name": user_name,
+            "place_name": place_name,
+            "created_at": adv.created_at
+        })
+    
+    return result
 
 @router.get("/user/{user_id}", response_model=List[AdvanceEntrySchema])
 def get_user_advances(user_id: int, db: Session = Depends(get_db)):
@@ -14,8 +40,6 @@ def get_user_advances(user_id: int, db: Session = Depends(get_db)):
 @router.get("/place/{place_id}", response_model=List[AdvanceEntrySchema])
 def get_place_advances(place_id: int, db: Session = Depends(get_db)):
     return db.query(AdvanceEntry).filter(AdvanceEntry.place_id == place_id).order_by(AdvanceEntry.date.desc()).all()
-
-from sqlalchemy.orm import joinedload
 
 @router.get("/year/{year_id}")
 def get_year_advances(year_id: int, db: Session = Depends(get_db)):

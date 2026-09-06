@@ -13,6 +13,7 @@ import YearDetails from './pages/YearDetails';
 import PlaceDetails from './pages/PlaceDetails';
 import BulkAdd from './pages/BulkAdd';
 import Ledger from './pages/Ledger';
+import CreditSales from './pages/CreditSales';
 import CustomPrint from './pages/CustomPrint';
 import ExportData from './pages/ExportData';
 
@@ -47,6 +48,7 @@ function App() {
               <Route path="/place/:placeId" element={<PlaceDetails />} />
               <Route path="/bulk-add" element={<BulkAdd />} />
               <Route path="/ledger" element={<Ledger />} />
+              <Route path="/credit-sales" element={<CreditSales />} />
               <Route path="/custom-print" element={<CustomPrint />} />
               <Route path="/export" element={<ExportData />} />
             </Routes>

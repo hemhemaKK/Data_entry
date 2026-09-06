@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.api.endpoints import uploads, dashboard, years, places, users, flowers, bill_records, advances, bulk, exports
+from app.api.endpoints import uploads, dashboard, years, places, users, flowers, bill_records, advances, bulk, exports, credit_sales
 from app.db.database import engine, Base
 import uvicorn
 
@@ -48,6 +48,7 @@ app.include_router(bill_records.router, prefix="/api/bill-records", tags=["BillR
 app.include_router(advances.router, prefix="/api/advances", tags=["Advances"])
 app.include_router(bulk.router, prefix="/api/bulk", tags=["Bulk"])
 app.include_router(exports.router, prefix="/api/exports", tags=["Exports"])
+app.include_router(credit_sales.router, prefix="/api/credit-sales", tags=["CreditSales"])
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -111,3 +111,27 @@ class ExportHistory(Base):
     export_date = Column(DateTime, default=datetime.utcnow)
     filters_used = Column(String(1000), nullable=True)
     file_path = Column(String(500), nullable=False)
+
+class CreditSalesUser(Base):
+    __tablename__ = "Credit_sales_users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    customer_name = Column(String(255), nullable=False, index=True)
+    phone_number = Column(String(50), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+class CreditSalesRecord(Base):
+    __tablename__ = "Credit_sales_records"
+
+    id = Column(Integer, primary_key=True, index=True)
+    credit_sales_user_id = Column(Integer, ForeignKey("Credit_sales_users.id"), index=True, nullable=True)
+    flower_id = Column(Integer, ForeignKey("flowers.id"), index=True)
+    date = Column(Date, nullable=True)
+    weight = Column(Float, nullable=True)
+    rate = Column(Float, nullable=True)
+    credit = Column(Float, nullable=True)
+    debit = Column(Float, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    
+    flower = relationship("Flower")
+    user = relationship("CreditSalesUser")
