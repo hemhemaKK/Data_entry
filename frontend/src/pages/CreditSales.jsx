@@ -354,6 +354,9 @@ const CreditSales = () => {
               inputRef={customerRef}
               options={(() => {
                 const names = [...new Set(data.users.map(u => u.customer_name))].filter(Boolean);
+                if (formData.customer_name && !names.includes(formData.customer_name) && formData.customer_name !== 'ADD_NEW') {
+                  names.push(formData.customer_name);
+                }
                 const opts = names.map(n => ({ id: n, name: n }));
                 return opts.concat([{ id: 'ADD_NEW', name: 'New Customer...' }]);
               })()}
@@ -515,7 +518,7 @@ const CreditSales = () => {
                           <input type="number" step="0.01" name="amount" value={editFormData.amount} onChange={handleEditChange} className="input" style={{ width: '80px' }} />
                         </td>
                         <td style={{ textAlign: 'center' }}>
-                          <button className="btn btn-primary btn-sm" onClick={handleSaveEdit} style={{ marginRight: '0.5rem' }}>Save</button>
+                          <button className="btn btn-primary btn-sm" onClick={handleSaveEdit} style={{ marginRight: 'rem' }}>Save</button>
                           <button className="btn btn-secondary btn-sm" onClick={() => setEditingRecordId(null)}>Cancel</button>
                         </td>
                       </>
@@ -531,7 +534,7 @@ const CreditSales = () => {
                         <td style={{ textAlign: 'right', fontWeight: '600', color: '#ef4444' }}>{item.debit ? `₹${item.debit.toLocaleString('en-IN')}` : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: '700', color: item.daily_balance >= 0 ? '#10b981' : '#ef4444' }}>{item.daily_balance != null ? `₹${item.daily_balance.toLocaleString('en-IN')}` : '-'}</td>
                         <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }}>
-                          <button className="btn btn-icon" onClick={() => {
+                          <button className="btn btn-icon" style={{ marginRight: '0.5rem' }} onClick={() => {
                             setEditingRecordId(item.id);
                             setEditFormData({
                               date: item.date || '',
@@ -594,7 +597,7 @@ const CreditSales = () => {
                           <td style={{ textAlign: 'right', color: '#ef4444' }}>{user.total_debited ? `₹${user.total_debited.toLocaleString('en-IN')}` : '-'}</td>
                           <td style={{ textAlign: 'right', fontWeight: '700', color: user.balance >= 0 ? '#10b981' : '#ef4444' }}>{user.balance != null ? `₹${user.balance.toLocaleString('en-IN')}` : '-'}</td>
                           <td style={{ textAlign: 'center', whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
-                            <button className="btn btn-icon" onClick={(e) => {
+                            <button className="btn btn-icon" style={{ marginRight: '0.5rem' }} onClick={(e) => {
                               e.stopPropagation();
                               setEditingUserId(user.id);
                               setEditUserFormData({ customer_name: user.customer_name || '' });
