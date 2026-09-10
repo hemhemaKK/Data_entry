@@ -100,7 +100,11 @@ const CreditSales = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.customer_name || !formData.amount || !formData.flower_id) return alert('Customer Name, Flower, and Amount are required');
+    const finalAmount = formData.type === 'Credit'
+      ? (parseFloat(formData.weight) || 0) * (parseFloat(formData.rate) || 0)
+      : parseFloat(formData.amount);
+
+    if (!formData.customer_name || !finalAmount) return alert('Customer Name and valid Amount are required');
     try {
       setSubmitting(true);
       await creditSalesApi.createEntry({
@@ -110,7 +114,7 @@ const CreditSales = () => {
         weight: formData.weight ? parseFloat(formData.weight) : null,
         rate: formData.rate ? parseFloat(formData.rate) : null,
         type: formData.type,
-        amount: parseFloat(formData.amount)
+        amount: finalAmount
       });
       setFormData(prev => ({ ...prev, customer_name: '', flower_id: '', amount: '', weight: '', rate: '', type: 'Credit' }));
       fetchData();
@@ -129,7 +133,11 @@ const CreditSales = () => {
   };
 
   const handleSaveEdit = async () => {
-    if (!editFormData.customer_name || !editFormData.amount) return alert('Customer Name and Amount are required');
+    const finalAmount = editFormData.type === 'Credit'
+      ? (parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)
+      : parseFloat(editFormData.amount);
+
+    if (!editFormData.customer_name || !finalAmount) return alert('Customer Name and valid Amount are required');
     try {
       await creditSalesApi.updateEntry(editingRecordId, {
         date: editFormData.date,
@@ -138,7 +146,7 @@ const CreditSales = () => {
         weight: editFormData.weight ? parseFloat(editFormData.weight) : null,
         rate: editFormData.rate ? parseFloat(editFormData.rate) : null,
         type: editFormData.type,
-        amount: parseFloat(editFormData.amount)
+        amount: finalAmount
       });
       setEditingRecordId(null);
       fetchData();
@@ -400,7 +408,16 @@ const CreditSales = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 120px' }}>
             <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>Type:</label>
-            <select ref={typeRef} onKeyDown={(e) => handleEnterKey(e, amountRef)} name="type" className="select" value={formData.type} onChange={handleChange} required style={{ padding: '0.5rem', fontSize: '1.1rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
+            <select ref={typeRef} onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                if (formData.type === 'Credit') {
+                  submitBtnRef.current?.focus();
+                } else {
+                  amountRef.current?.focus();
+                }
+              }
+            }} name="type" className="select" value={formData.type} onChange={handleChange} required style={{ padding: '0.5rem', fontSize: '1.1rem', borderRadius: '4px', border: '1px solid var(--border)' }}>
               <option value="Credit">Credit</option>
               <option value="Debit">Debit</option>
             </select>
@@ -408,7 +425,7 @@ const CreditSales = () => {
 
           <div style={{ display: 'flex', flexDirection: 'column', flex: '1 1 120px' }}>
             <label style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.25rem' }}>Amount:</label>
-            <input ref={amountRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" name="amount" className="input" value={formData.amount} onChange={handleChange} required placeholder="Amt" style={{ padding: '0.5rem', fontSize: '1.1rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <input ref={amountRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" name="amount" className="input" value={formData.type === 'Credit' ? ((parseFloat(formData.weight) || 0) * (parseFloat(formData.rate) || 0)).toFixed(2) : formData.amount} onChange={handleChange} disabled={formData.type === 'Credit'} required={formData.type === 'Debit'} placeholder="Amt" style={{ padding: '0.5rem', fontSize: '1.1rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -482,7 +499,6 @@ const CreditSales = () => {
                   <th>Flower</th>
                   <th>Weight</th>
                   <th>Rate</th>
-                  <th>Total</th>
                   <th style={{ textAlign: 'right' }}>Credit (₹)</th>
                   <th style={{ textAlign: 'right' }}>Debit (₹)</th>
                   <th style={{ textAlign: 'right' }}>Daily Balance (₹)</th>
@@ -491,7 +507,7 @@ const CreditSales = () => {
               </thead>
               <tbody>
                 {filteredRecords.length === 0 ? (
-                  <tr><td colSpan="11" style={{textAlign: 'center'}}>No records found.</td></tr>
+                  <tr><td colSpan="10" style={{textAlign: 'center'}}>No records found.</td></tr>
                 ) : filteredRecords.map((item) => (
                   <tr key={item.id}>
                     <td style={{ textAlign: 'center' }}>
@@ -509,13 +525,12 @@ const CreditSales = () => {
                         </td>
                         <td><input type="number" step="0.01" name="weight" value={editFormData.weight} onChange={handleEditChange} className="input" style={{ width: '70px' }} /></td>
                         <td><input type="number" step="0.01" name="rate" value={editFormData.rate} onChange={handleEditChange} className="input" style={{ width: '70px' }} /></td>
-                        <td style={{ fontWeight: '600' }}>{(editFormData.weight && editFormData.rate) ? (parseFloat(editFormData.weight) * parseFloat(editFormData.rate)).toFixed(2) : '-'}</td>
                         <td colSpan="3" style={{ display: 'flex', gap: '0.5rem' }}>
                           <select name="type" value={editFormData.type} onChange={handleEditChange} className="select" style={{ width: '80px' }}>
                             <option value="Credit">Cr</option>
                             <option value="Debit">Db</option>
                           </select>
-                          <input type="number" step="0.01" name="amount" value={editFormData.amount} onChange={handleEditChange} className="input" style={{ width: '80px' }} />
+                          <input type="number" step="0.01" name="amount" value={editFormData.type === 'Credit' ? ((parseFloat(editFormData.weight) || 0) * (parseFloat(editFormData.rate) || 0)).toFixed(2) : editFormData.amount} onChange={handleEditChange} disabled={editFormData.type === 'Credit'} className="input" style={{ width: '80px' }} />
                         </td>
                         <td style={{ textAlign: 'center' }}>
                           <button className="btn btn-primary btn-sm" onClick={handleSaveEdit} style={{ marginRight: 'rem' }}>Save</button>
@@ -529,7 +544,6 @@ const CreditSales = () => {
                         <td>{item.flower_name || '-'}</td>
                         <td>{item.weight || '-'}</td>
                         <td>{item.rate || '-'}</td>
-                        <td style={{ fontWeight: '600' }}>{(item.weight && item.rate) ? (parseFloat(item.weight) * parseFloat(item.rate)).toFixed(2) : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: '700', color: '#10b981' }}>{item.credit ? `₹${item.credit.toLocaleString('en-IN')}` : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: '600', color: '#ef4444' }}>{item.debit ? `₹${item.debit.toLocaleString('en-IN')}` : '-'}</td>
                         <td style={{ textAlign: 'right', fontWeight: '700', color: item.daily_balance >= 0 ? '#10b981' : '#ef4444' }}>{item.daily_balance != null ? `₹${item.daily_balance.toLocaleString('en-IN')}` : '-'}</td>
@@ -652,7 +666,6 @@ const CreditSales = () => {
                                                       <th>Flower</th>
                                                       <th>Weight</th>
                                                       <th>Rate</th>
-                                                      <th>Total</th>
                                                       <th style={{ textAlign: 'right' }}>Credit (₹)</th>
                                                       <th style={{ textAlign: 'right' }}>Debit (₹)</th>
                                                       <th style={{ textAlign: 'right' }}>Daily Bal (₹)</th>
@@ -665,7 +678,6 @@ const CreditSales = () => {
                                                         <td>{item.flower_name || '-'}</td>
                                                         <td>{item.weight || '-'}</td>
                                                         <td>{item.rate || '-'}</td>
-                                                        <td style={{ fontWeight: '600' }}>{(item.weight && item.rate) ? (parseFloat(item.weight) * parseFloat(item.rate)).toFixed(2) : '-'}</td>
                                                         <td style={{ textAlign: 'right', fontWeight: '700', color: '#10b981' }}>{item.credit ? `₹${item.credit.toLocaleString('en-IN')}` : '-'}</td>
                                                         <td style={{ textAlign: 'right', fontWeight: '600', color: '#ef4444' }}>{item.debit ? `₹${item.debit.toLocaleString('en-IN')}` : '-'}</td>
                                                         <td style={{ textAlign: 'right', fontWeight: '700', color: item.daily_balance >= 0 ? '#10b981' : '#ef4444' }}>{item.daily_balance != null ? `₹${item.daily_balance.toLocaleString('en-IN')}` : '-'}</td>
