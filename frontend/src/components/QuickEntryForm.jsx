@@ -44,8 +44,8 @@ const QuickEntryForm = ({ onRecordAdded }) => {
   const [weight, setWeight] = useState('');
   const [van, setVan] = useState('');
   const [rate, setRate] = useState('');
-  const [laggage, setLaggage] = useState('');
-  const [collie, setCollie] = useState('');
+  const [laggage, setLuggage] = useState('');
+  const [collie, setCoolie] = useState('');
 
   const [loading, setLoading] = useState(false);
   const [newYear, setNewYear] = useState('');
@@ -319,12 +319,12 @@ const QuickEntryForm = ({ onRecordAdded }) => {
             <input ref={rateRef} onKeyDown={(e) => handleEnterKey(e, laggageRef)} type="number" step="0.01" value={rate} onChange={e => setRate(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 70px', minWidth: '70px' }}>
-            <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Laggage</label>
-            <input ref={laggageRef} onKeyDown={(e) => handleEnterKey(e, collieRef)} type="number" step="0.01" value={laggage} onChange={e => setLaggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Luggage</label>
+            <input ref={laggageRef} onKeyDown={(e) => handleEnterKey(e, collieRef)} type="number" step="0.01" value={laggage} onChange={e => setLuggage(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '1 1 70px', minWidth: '70px' }}>
-            <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Collie</label>
-            <input ref={collieRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" value={collie} onChange={e => setCollie(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
+            <label style={{ display: 'block', fontSize: '1.2rem', marginBottom: '4px' }}>Coolie</label>
+            <input ref={collieRef} onKeyDown={(e) => handleEnterKey(e, submitBtnRef)} type="number" step="0.01" value={collie} onChange={e => setCoolie(e.target.value)} style={{ width: '100%', padding: '0.5rem', fontSize: '1.2rem', borderRadius: '4px', border: '1px solid var(--border)' }} />
           </div>
           <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
             <button ref={submitBtnRef} type="submit" className="btn btn-primary" style={{ padding: '0.75rem 1.5rem', fontSize: '1.2rem', whiteSpace: 'nowrap' }} disabled={loading || !selectedFlower}>

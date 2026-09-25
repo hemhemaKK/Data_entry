@@ -357,17 +357,17 @@ const PlaceDetails = () => {
            const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
            
            const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
-           const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
-           const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
+           const clientTotalLuggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+           const clientTotalCoolie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
            
            const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-           const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+           const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLuggage - clientTotalCoolie;
            const grandTotal = baseTotal - periodDeduction;
            
            group.finalBalance = finalBalance;
            group.clientTotalPrice = clientTotalPrice;
-           group.clientTotalLaggage = clientTotalLaggage;
-           group.clientTotalCollie = clientTotalCollie;
+           group.clientTotalLuggage = clientTotalLuggage;
+           group.clientTotalCoolie = clientTotalCoolie;
            group.commissionDeduction = commissionDeduction;
            group.grandTotal = grandTotal;
            group.totalAdvance = historicalAdvance;
@@ -526,17 +526,17 @@ const PlaceDetails = () => {
               const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
               
               const clientTotalPrice = group.flowers.reduce((sum, f) => sum + f.totals.price, 0);
-              const clientTotalLaggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
-              const clientTotalCollie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
+              const clientTotalLuggage = group.flowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+              const clientTotalCoolie = group.flowers.reduce((sum, f) => sum + f.totals.collie, 0);
               
               const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-              const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+              const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLuggage - clientTotalCoolie;
               const grandTotal = baseTotal - periodDeduction;
               
               group.finalBalance = finalBalance;
               group.clientTotalPrice = clientTotalPrice;
-              group.clientTotalLaggage = clientTotalLaggage;
-              group.clientTotalCollie = clientTotalCollie;
+              group.clientTotalLuggage = clientTotalLuggage;
+              group.clientTotalCoolie = clientTotalCoolie;
               group.commissionDeduction = commissionDeduction;
               group.grandTotal = grandTotal;
               group.totalAdvance = historicalAdvance;
@@ -606,8 +606,8 @@ const PlaceDetails = () => {
 
   // Calculate Client Summary
   let summaryWeight = 0;
-  let summaryLaggage = 0;
-  let summaryCollie = 0;
+  let summaryLuggage = 0;
+  let summaryCoolie = 0;
   let summaryFlowerPrice = 0;
 
   filteredFlowers.forEach(flower => {
@@ -638,8 +638,8 @@ const PlaceDetails = () => {
           const l = r.laggage || 0;
           const c = r.collie || 0;
           summaryWeight += w;
-          summaryLaggage += l;
-          summaryCollie += c;
+          summaryLuggage += l;
+          summaryCoolie += c;
           summaryFlowerPrice += (w * rt) + l + c;
       });
   });
@@ -665,8 +665,8 @@ const PlaceDetails = () => {
                     flowers={group.flowers}
                     commissionPercent={commissionPercent}
                     commissionDeduction={group.commissionDeduction}
-                    clientTotalLaggage={group.clientTotalLaggage}
-                    clientTotalCollie={group.clientTotalCollie}
+                    clientTotalLuggage={group.clientTotalLuggage}
+                    clientTotalCoolie={group.clientTotalCoolie}
                     clientTotalPrice={group.clientTotalPrice}
                     periodDeduction={group.periodDeduction}
                     grandTotal={group.grandTotal}

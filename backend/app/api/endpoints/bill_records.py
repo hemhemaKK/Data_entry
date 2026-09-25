@@ -20,11 +20,11 @@ def get_all_transactions(
     limit: int = Query(500),
     db: Session = Depends(get_db)
 ):
-    # If no complex cross-table filters are applied, use the fast path with selectinload
+    # If no complex cross-table filters are applied, use the fast path with joinedload
     if not any([search, place_name, flower_name, date_from, date_to, month]):
-        from sqlalchemy.orm import selectinload
+        from sqlalchemy.orm import joinedload
         records = db.query(BillRecord).options(
-            selectinload(BillRecord.flower), selectinload(BillRecord.user).selectinload(User.place)
+            joinedload(BillRecord.flower), joinedload(BillRecord.user).joinedload(User.place)
         ).order_by(BillRecord.id.desc()).limit(limit).all()
     else:
         # If filters are applied, use joins
@@ -53,9 +53,9 @@ def get_all_transactions(
             from sqlalchemy import func
             query = query.filter(func.substr(func.date(BillRecord.date), 1, 7) == month)
             
-        from sqlalchemy.orm import selectinload
+        from sqlalchemy.orm import joinedload
         records = query.options(
-            selectinload(BillRecord.flower), selectinload(BillRecord.user).selectinload(User.place)
+            joinedload(BillRecord.flower), joinedload(BillRecord.user).joinedload(User.place)
         ).order_by(BillRecord.id.desc()).limit(limit).all()
 
     result = []

@@ -244,11 +244,11 @@ const CustomPrint = () => {
 
         const periodDeduction = periodAdvancesList.reduce((sum, a) => sum + (parseFloat(a.deduction_amount) || 0), 0);
 
-        const clientTotalLaggage = processedFlowers.reduce((sum, f) => sum + f.totals.laggage, 0);
-        const clientTotalCollie = processedFlowers.reduce((sum, f) => sum + f.totals.collie, 0);
+        const clientTotalLuggage = processedFlowers.reduce((sum, f) => sum + f.totals.laggage, 0);
+        const clientTotalCoolie = processedFlowers.reduce((sum, f) => sum + f.totals.collie, 0);
         
         const commissionDeduction = clientTotalPrice * (commissionPercent / 100);
-        const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLaggage - clientTotalCollie;
+        const baseTotal = clientTotalPrice - commissionDeduction - clientTotalLuggage - clientTotalCoolie;
         const grandTotal = baseTotal - periodDeduction;
 
         printGroups.push({
@@ -256,8 +256,8 @@ const CustomPrint = () => {
             placeName: placeName,
             flowers: processedFlowers,
             clientTotalPrice,
-            clientTotalLaggage,
-            clientTotalCollie,
+            clientTotalLuggage,
+            clientTotalCoolie,
             commissionDeduction,
             grandTotal,
             finalBalance,
@@ -407,8 +407,8 @@ const CustomPrint = () => {
                     flowers={group.flowers}
                     commissionPercent={commissionPercent}
                     commissionDeduction={group.commissionDeduction}
-                    clientTotalLaggage={group.clientTotalLaggage}
-                    clientTotalCollie={group.clientTotalCollie}
+                    clientTotalLuggage={group.clientTotalLuggage}
+                    clientTotalCoolie={group.clientTotalCoolie}
                     clientTotalPrice={group.clientTotalPrice}
                     periodDeduction={group.periodDeduction}
                     grandTotal={group.grandTotal}

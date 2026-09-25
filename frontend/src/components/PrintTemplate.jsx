@@ -10,8 +10,8 @@ const PrintTemplate = ({
     flowers,
     commissionPercent,
     commissionDeduction,
-    clientTotalLaggage,
-    clientTotalCollie,
+    clientTotalLuggage,
+    clientTotalCoolie,
     clientTotalPrice,
     periodDeduction,
     grandTotal,
@@ -72,9 +72,9 @@ const PrintTemplate = ({
                                 {columns?.weight && <th className="col-weight" style={{ padding: '4px', fontWeight: 'bold' }}>Weight</th>}
                                 {columns?.rate && <th className="col-rate" style={{ padding: '4px', fontWeight: 'bold' }}>Rate</th>}
                                 {columns?.total && <th className="col-total" style={{ padding: '4px', fontWeight: 'bold' }}>Total</th>}
-                                {columns?.laggage && <th className="col-laggage" style={{ padding: '4px', fontWeight: 'bold' }}>Laggage</th>}
-                                {columns?.laggageTotal && <th className="col-laggage-total" style={{ padding: '4px', fontWeight: 'bold', textAlign: 'right' }}>Laggage Total</th>}
-                                {columns?.collie && <th className="col-collie" style={{ padding: '4px', fontWeight: 'bold' }}>Collie</th>}
+                                {columns?.laggage && <th className="col-laggage" style={{ padding: '4px', fontWeight: 'bold' }}>Luggage</th>}
+                                {columns?.laggageTotal && <th className="col-laggage-total" style={{ padding: '4px', fontWeight: 'bold', textAlign: 'right' }}>Luggage Total</th>}
+                                {columns?.collie && <th className="col-collie" style={{ padding: '4px', fontWeight: 'bold' }}>Coolie</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -115,16 +115,16 @@ const PrintTemplate = ({
                         </div>
                     )}
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>Laggage:</span>
-                        <span>{Number(clientTotalLaggage || 0).toFixed(2)}</span>
+                        <span>Luggage:</span>
+                        <span>{Number(clientTotalLuggage || 0).toFixed(2)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span>Collie:</span>
-                        <span>{Number(clientTotalCollie || 0).toFixed(2)}</span>
+                        <span>Coolie:</span>
+                        <span>{Number(clientTotalCoolie || 0).toFixed(2)}</span>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid black', paddingTop: '4px' }}>
                         <span>Total Deductions:</span>
-                        <span>{Number((commissionDeduction || 0) + (clientTotalLaggage || 0) + (clientTotalCollie || 0)).toFixed(2)}</span>
+                        <span>{Number((commissionDeduction || 0) + (clientTotalLuggage || 0) + (clientTotalCoolie || 0)).toFixed(2)}</span>
                     </div>
                 </div>
                 
@@ -135,7 +135,7 @@ const PrintTemplate = ({
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'red' }}>
                         <span>Less: Total Deductions:</span>
-                        <span>-{Number((commissionDeduction || 0) + (clientTotalLaggage || 0) + (clientTotalCollie || 0)).toFixed(2)}</span>
+                        <span>-{Number((commissionDeduction || 0) + (clientTotalLuggage || 0) + (clientTotalCoolie || 0)).toFixed(2)}</span>
                     </div>
                     {periodDeduction !== null && periodDeduction !== undefined && (
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px', color: 'red' }}>

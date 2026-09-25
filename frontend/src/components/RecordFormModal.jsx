@@ -95,11 +95,11 @@ const RecordFormModal = ({ isOpen, onClose, onSubmit, initialData, flowerId }) =
             <input type="number" step="0.01" name="rate" className="form-control" value={formData.rate} onChange={handleChange} onKeyDown={(e) => handleEnterKey(e, laggageRef)} ref={rateRef} />
           </div>
           <div className="form-group">
-            <label>Laggage ()</label>
+            <label>Luggage ()</label>
             <input type="number" step="0.01" name="laggage" className="form-control" value={formData.laggage} onChange={handleChange} onKeyDown={(e) => handleEnterKey(e, collieRef)} ref={laggageRef} />
           </div>
           <div className="form-group">
-            <label>Collie ()</label>
+            <label>Coolie ()</label>
             <input type="number" step="0.01" name="collie" className="form-control" value={formData.collie} onChange={handleChange} onKeyDown={(e) => handleEnterKey(e, saveBtnRef)} ref={collieRef} />
           </div>
           <div className="modal-actions">

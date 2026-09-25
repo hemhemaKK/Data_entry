@@ -25,16 +25,16 @@ const Home = () => {
   const [entryMode, setEntryMode] = useState('quick'); // 'quick' or 'excel'
 
   const [selectedRecords, setSelectedRecords] = useState([]);
-  const [bulkLaggage, setBulkLaggage] = useState('');
-  const [bulkCollie, setBulkCollie] = useState('');
+  const [bulkLuggage, setBulkLuggage] = useState('');
+  const [bulkCoolie, setBulkCoolie] = useState('');
   const [isBulkUpdating, setIsBulkUpdating] = useState(false);
 
   const inlineDateRef = useRef(null);
   const inlineVanRef = useRef(null);
   const inlineWeightRef = useRef(null);
   const inlineRateRef = useRef(null);
-  const inlineLaggageRef = useRef(null);
-  const inlineCollieRef = useRef(null);
+  const inlineLuggageRef = useRef(null);
+  const inlineCoolieRef = useRef(null);
   const inlineSaveRef = useRef(null);
 
   const handleInlineEnterKey = (e, nextRef) => {
@@ -167,8 +167,8 @@ const Home = () => {
 
   const handleBulkUpdate = async () => {
     if (selectedRecords.length === 0) return;
-    if (bulkLaggage === '' && bulkCollie === '') {
-      alert("Please enter a value for Laggage or Collie to update.");
+    if (bulkLuggage === '' && bulkCoolie === '') {
+      alert("Please enter a value for Luggage or Coolie to update.");
       return;
     }
     
@@ -187,16 +187,16 @@ const Home = () => {
           rate: record.rate || 0,
           flower_id: record.flower_id,
           user_id: record.user_id || record.client_id,
-          laggage: bulkLaggage !== '' ? parseFloat(bulkLaggage) : record.laggage,
-          collie: bulkCollie !== '' ? parseFloat(bulkCollie) : record.collie,
+          laggage: bulkLuggage !== '' ? parseFloat(bulkLuggage) : record.laggage,
+          collie: bulkCoolie !== '' ? parseFloat(bulkCoolie) : record.collie,
         };
         return billRecordsApi.updateRecord(id, payload);
       }).filter(Boolean);
       
       await Promise.all(updates);
       setSelectedRecords([]);
-      setBulkLaggage('');
-      setBulkCollie('');
+      setBulkLuggage('');
+      setBulkCoolie('');
       refreshTransactions();
     } catch (err) {
       console.error(err);
@@ -229,6 +229,14 @@ const Home = () => {
   if (isDefaultView) {
     filteredTransactions = filteredTransactions.slice(0, 20);
   }
+
+  const totals = filteredTransactions.reduce((acc, curr) => ({
+    weight: acc.weight + (parseFloat(curr.weight) || 0),
+    rate: acc.rate + (parseFloat(curr.rate) || 0),
+    laggage: acc.laggage + (parseFloat(curr.laggage) || 0),
+    collie: acc.collie + (parseFloat(curr.collie) || 0),
+    totalAmount: acc.totalAmount + ((parseFloat(curr.weight) || 0) * (parseFloat(curr.rate) || 0))
+  }), { weight: 0, rate: 0, laggage: 0, collie: 0, totalAmount: 0 });
 
   if (loading) return <div className="page-title">Loading years...</div>;
   if (error) return <div className="page-title error">{error}</div>;
@@ -356,18 +364,18 @@ const Home = () => {
                 <input 
                   type="number" 
                   step="0.01" 
-                  placeholder="Laggage ()" 
-                  value={bulkLaggage}
-                  onChange={(e) => setBulkLaggage(e.target.value)}
+                  placeholder="Luggage ()" 
+                  value={bulkLuggage}
+                  onChange={(e) => setBulkLuggage(e.target.value)}
                   className="input"
                   style={{ width: '100px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }}
                 />
                 <input 
                   type="number" 
                   step="0.01" 
-                  placeholder="Collie ()" 
-                  value={bulkCollie}
-                  onChange={(e) => setBulkCollie(e.target.value)}
+                  placeholder="Coolie ()" 
+                  value={bulkCoolie}
+                  onChange={(e) => setBulkCoolie(e.target.value)}
                   className="input"
                   style={{ width: '100px', padding: '0.4rem', borderRadius: '4px', border: '1px solid var(--border)' }}
                 />
@@ -389,6 +397,14 @@ const Home = () => {
               </div>
             </div>
           )}
+          <div style={{ display: 'flex', gap: '2rem', padding: '1rem', background: '#e6ffe6', color: '#004d00', fontWeight: 'bold', borderRadius: '8px', border: '1px solid #00cc00', marginBottom: '1rem', flexWrap: 'wrap', fontSize: '1.1rem' }}>
+            <span style={{ marginRight: 'auto' }}>Totals Summary:</span>
+            <span>Weight: {totals.weight.toFixed(3)} kg</span>
+            <span>Rate: {totals.rate.toFixed(2)}</span>
+            <span>Luggage: {totals.laggage.toFixed(2)}</span>
+            <span>Coolie: {totals.collie.toFixed(2)}</span>
+            <span style={{ color: '#049e04' }}>Total Amount: {totals.totalAmount.toFixed(2)}</span>
+          </div>
           <div className="table-container" style={{ overflowX: 'auto' }}>
             <table className="table" style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
               <thead style={{ position: 'sticky', top: 0, zIndex: 10, background: 'var(--bg-secondary)', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
@@ -410,8 +426,8 @@ const Home = () => {
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Flower</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Weight</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Rate</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Laggage</th>
-                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Collie</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Luggage</th>
+                  <th style={{ padding: '0.75rem', textAlign: 'right' }}>Coolie</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total</th>
                   <th style={{ padding: '0.75rem', textAlign: 'right' }}>Actions</th>
                 </tr>
@@ -454,13 +470,13 @@ const Home = () => {
                             <input type="number" step="0.001" value={inlineForm.weight} onChange={e => setInlineForm({...inlineForm, weight: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineRateRef)} ref={inlineWeightRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} /> kg
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineLaggageRef)} ref={inlineRateRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
+                            <input type="number" step="0.01" value={inlineForm.rate} onChange={e => setInlineForm({...inlineForm, rate: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineLuggageRef)} ref={inlineRateRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="number" step="0.01" value={inlineForm.laggage} onChange={e => setInlineForm({...inlineForm, laggage: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineCollieRef)} ref={inlineLaggageRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
+                            <input type="number" step="0.01" value={inlineForm.laggage} onChange={e => setInlineForm({...inlineForm, laggage: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineCoolieRef)} ref={inlineLuggageRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', textAlign: 'right' }}>
-                            <input type="number" step="0.01" value={inlineForm.collie} onChange={e => setInlineForm({...inlineForm, collie: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineSaveRef)} ref={inlineCollieRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
+                            <input type="number" step="0.01" value={inlineForm.collie} onChange={e => setInlineForm({...inlineForm, collie: e.target.value})} onKeyDown={(e) => handleInlineEnterKey(e, inlineSaveRef)} ref={inlineCoolieRef} style={{ width: '60px', padding: '0.25rem', textAlign: 'right' }} />
                           </td>
                           <td style={{ padding: '0.75rem', fontWeight: 'bold', textAlign: 'right' }}>
                             {((parseFloat(inlineForm.weight) || 0) * (parseFloat(inlineForm.rate) || 0)).toFixed(2)}

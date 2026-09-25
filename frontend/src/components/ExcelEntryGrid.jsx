@@ -436,8 +436,8 @@ const ExcelEntryGrid = ({ onRecordsSaved }) => {
     { ...keyColumn('van', textColumn), title: 'Van' },
     { ...keyColumn('weight', floatColumn), title: 'Weight (kg)' },
     { ...keyColumn('rate', floatColumn), title: 'Rate (₹)' },
-    { ...keyColumn('laggage', floatColumn), title: 'Laggage (₹)' },
-    { ...keyColumn('collie', floatColumn), title: 'Collie (₹)' },
+    { ...keyColumn('laggage', floatColumn), title: 'Luggage (₹)' },
+    { ...keyColumn('collie', floatColumn), title: 'Coolie (₹)' },
   ];
 
   return (

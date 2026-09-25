@@ -122,7 +122,7 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
             <strong>{formatMonthLabel(month)}</strong>
             <span style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', background: 'var(--background)', padding: '2px 8px', borderRadius: '12px', border: '1px solid var(--border)' }}>
-                Laggage: <b>{totals.laggage.toFixed(2)}</b> &nbsp;|&nbsp; Collie: <b>{totals.collie.toFixed(2)}</b>
+                Luggage: <b>{totals.laggage.toFixed(2)}</b> &nbsp;|&nbsp; Coolie: <b>{totals.collie.toFixed(2)}</b>
             </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }} className="no-print">
@@ -225,9 +225,9 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 <th className="col-weight" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Weight (kg)</th>
                 <th className="col-rate" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Rate ()</th>
                 <th className="col-total" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Total ()</th>
-                <th className="col-laggage" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Laggage ()</th>
-                <th className="col-laggage-total" style={{ padding: '8px 4px', fontWeight: 'bold', textAlign: 'right' }}>Laggage Total ()</th>
-                <th className="col-collie" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Collie ()</th>
+                <th className="col-laggage" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Luggage ()</th>
+                <th className="col-laggage-total" style={{ padding: '8px 4px', fontWeight: 'bold', textAlign: 'right' }}>Luggage Total ()</th>
+                <th className="col-collie" style={{ padding: '8px 4px', fontWeight: 'bold' }}>Coolie ()</th>
                 <th className="col-actions no-print" style={{ padding: '8px 4px', textAlign: 'right', fontWeight: 'bold' }}>Actions</th>
               </tr>
             </thead>
@@ -330,8 +330,8 @@ const MonthCard = ({ month, records, commissionPercent, onUpdateRecord, onDelete
                 }]}
                 commissionPercent={commissionPercent}
                 commissionDeduction={totals.price * (commissionPercent / 100)}
-                clientTotalLaggage={totals.laggage}
-                clientTotalCollie={totals.collie}
+                clientTotalLuggage={totals.laggage}
+                clientTotalCoolie={totals.collie}
                 clientTotalPrice={totals.price}
                 periodDeduction={null}
                 grandTotal={totals.price - ((totals.price * (commissionPercent / 100)) + totals.laggage + totals.collie)}
@@ -385,11 +385,11 @@ const InlineAddForm = ({ flowerId, onSave, onCancel }) => {
           <input type="number" step="0.01" name="rate" value={formData.rate} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
         </div>
         <div style={{ flex: '1 1 80px' }}>
-          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Laggage</label>
+          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Luggage</label>
           <input type="number" step="0.01" name="laggage" value={formData.laggage} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
         </div>
         <div style={{ flex: '1 1 80px' }}>
-          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Collie</label>
+          <label style={{ fontSize: '0.75rem', display: 'block', marginBottom: '4px' }}>Coolie</label>
           <input type="number" step="0.01" name="collie" value={formData.collie} onChange={handleChange} style={{ width: '100%', padding: '6px', borderRadius: '4px', border: '1px solid var(--border)' }} />
         </div>
         <div style={{ display: 'flex', gap: '4px' }}>
